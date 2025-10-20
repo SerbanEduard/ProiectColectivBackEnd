@@ -1,2 +1,8 @@
 # IDE settings
 .idea/
+
+# Environment variables
+.env
+
+# Firebase credentials
+secret/
