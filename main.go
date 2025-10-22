@@ -1,19 +1,14 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/config"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/routes"
 )
 
 func main() {
-	r := gin.Default()
+	config.InitFirebase()
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello from ProiectColectivBackEnd!",
-		})
-	})
+	r := routes.SetupRoutes()
 
 	r.Run(":8080")
 }
