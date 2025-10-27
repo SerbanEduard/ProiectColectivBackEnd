@@ -16,6 +16,7 @@ func SetupRoutes() *gin.Engine {
 	})
 
 	SetupUserRoutes(r)
+	SetupFriendRequestRoutes(r)
 
 	return r
 }
