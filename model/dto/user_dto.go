@@ -35,3 +35,31 @@ func NewSignUpUserResponse(firstName, lastName, username string) *SignUpUserResp
 		Username:  username,
 	}
 }
+
+type LoginUserRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginUserResponse struct {
+	ID        string `json:"id"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Username  string `json:"username"`
+}
+
+func NewLoginUserRequest(email, password string) *LoginUserRequest {
+	return &LoginUserRequest{
+		Email:    email,
+		Password: password,
+	}
+}
+
+func NewLoginUserResponse(id, firstName, lastName, username string) *LoginUserResponse {
+	return &LoginUserResponse{
+		ID:        id,
+		FirstName: firstName,
+		LastName:  lastName,
+		Username:  username,
+	}
+}

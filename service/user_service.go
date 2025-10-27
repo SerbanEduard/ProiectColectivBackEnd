@@ -78,6 +78,23 @@ func (us *UserService) SignUp(request *dto.SignUpUserRequest) (*dto.SignUpUserRe
 	return dto.NewSignUpUserResponse(user.FirstName, user.LastName, user.Username), nil
 }
 
+// Login verifies credentials and returns basic user info on success.
+func (us *UserService) Login(request *dto.LoginUserRequest) (*dto.LoginUserResponse, error) {
+	// Find user by email
+	user, err := us.userRepo.GetByEmail(request.Email)
+	if err != nil {
+		// Do not leak whether email exists
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	// Compare hashed password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	return dto.NewLoginUserResponse(user.ID, user.FirstName, user.LastName, user.Username), nil
+}
+
 func (us *UserService) GetUserByID(id string) (*entity.User, error) {
 	return us.userRepo.GetByID(id)
 }

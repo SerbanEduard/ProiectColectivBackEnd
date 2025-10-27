@@ -27,6 +27,7 @@ func NewUserControllerWithService(userService UserServiceInterface) *UserControl
 
 type UserServiceInterface interface {
 	SignUp(request *dto.SignUpUserRequest) (*dto.SignUpUserResponse, error)
+	Login(request *dto.LoginUserRequest) (*dto.LoginUserResponse, error)
 	GetUserByID(id string) (*entity.User, error)
 	GetUserByEmail(email string) (*entity.User, error)
 	UpdateUser(user *entity.User) error
@@ -48,6 +49,23 @@ func (uc *UserController) SignUp(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, response)
+}
+
+func (uc *UserController) Login(c *gin.Context) {
+	var request dto.LoginUserRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response, err := uc.userService.Login(&request)
+	if err != nil {
+		// invalid credentials -> unauthorized
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (uc *UserController) GetUser(c *gin.Context) {

@@ -102,3 +102,11 @@ func (m *MockUserService) GetAllUsers() ([]*entity.User, error) {
 	}
 	return args.Get(0).([]*entity.User), args.Error(1)
 }
+
+func (m *MockUserService) Login(request *dto.LoginUserRequest) (*dto.LoginUserResponse, error) {
+	args := m.Called(request)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.LoginUserResponse), args.Error(1)
+}

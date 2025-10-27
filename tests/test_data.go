@@ -41,4 +41,26 @@ var (
 	ExistingUser = entity.User{
 		Username: "existinguser",
 	}
+
+	// Login test data
+	ValidLoginRequest = dto.LoginUserRequest{
+		Email:    "john@example.com",
+		Password: "password123",
+	}
+
+	ValidLoginResponse = dto.LoginUserResponse{
+		ID:        "user123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Username:  "johndoe",
+	}
+
+	ValidUserWithPassword = entity.User{
+		ID:        "user123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Username:  "johndoe",
+		Email:     "john@example.com",
+		Password:  "$2a$10$abcdefghijklmnopqrstuvwxyzABCDEF", // bcrypt hash pentru "password123"
+	}
 )
