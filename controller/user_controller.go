@@ -34,6 +34,14 @@ type UserServiceInterface interface {
 	GetAllUsers() ([]*entity.User, error)
 }
 
+// SignUp
+//
+//	@Summary	Register a new user
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		dto.SignUpUserRequest	true	"The sign-up request"
+//	@Success	201		{object}	dto.SignUpUserResponse
+//	@Router		/users/signup [post]
 func (uc *UserController) SignUp(c *gin.Context) {
 	var request dto.SignUpUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -50,6 +58,14 @@ func (uc *UserController) SignUp(c *gin.Context) {
 	c.JSON(http.StatusCreated, response)
 }
 
+// GetUser
+//
+//	@Summary	Get a user by ID
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		string	true	"The user's ID"
+//	@Success	200	{object}	entity.User
+//	@Router		/users/{id}  [get]
 func (uc *UserController) GetUser(c *gin.Context) {
 	id := c.Param("id")
 	user, err := uc.userService.GetUserByID(id)
@@ -61,6 +77,13 @@ func (uc *UserController) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// GetAllUsers
+//
+//	@Summary	Get all users
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{object}	[]entity.User
+//	@Router		/users [get]
 func (uc *UserController) GetAllUsers(c *gin.Context) {
 	users, err := uc.userService.GetAllUsers()
 	if err != nil {
@@ -71,6 +94,7 @@ func (uc *UserController) GetAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
+// UpdateUser TODO: Add Swagger comment
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 
@@ -93,6 +117,14 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// DeleteUser
+//
+//	@Summary	Delete a user
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path	string	true	"The user's ID"
+//	@Success	200
+//	@Router		/users/{id} [delete]
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 
