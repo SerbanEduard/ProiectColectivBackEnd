@@ -52,8 +52,13 @@ func (fs *FriendRequestService) SendFriendRequest(fromUserID, toUserID string) e
 	if _, err := fs.userService.GetUserByID(toUserID); err != nil {
 		return fmt.Errorf("recipient user not found")
 	}
-
-	if _, err := fs.friendRequestRepo.GetByUsers(fromUserID, toUserID); err == nil {
+	req, err := fs.friendRequestRepo.GetByUsers(fromUserID, toUserID)
+	if err != nil {
+		if err.Error() != "firebase: no such child" {
+			return err
+		}
+	}
+	if req != nil && req.FromUserID != "" {
 		return fmt.Errorf("friend request already exists")
 	}
 
