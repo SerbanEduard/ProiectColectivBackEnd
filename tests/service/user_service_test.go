@@ -14,7 +14,8 @@ import (
 
 func TestUserService_SignUp_Success(t *testing.T) {
 	mockRepo := new(tests.MockUserRepository)
-	userService := service.NewUserServiceWithRepo(mockRepo)
+	mockRepoTeams := new(tests.MockTeamsRepository)
+	userService := service.NewUserServiceWithRepo(mockRepo, mockRepoTeams)
 
 	request := &tests.ValidSignUpRequest
 
@@ -42,7 +43,8 @@ func TestUserService_SignUp_Success(t *testing.T) {
 
 func TestUserService_SignUp_UsernameExists(t *testing.T) {
 	mockRepo := new(tests.MockUserRepository)
-	userService := service.NewUserServiceWithRepo(mockRepo)
+	mockRepoTeams := new(tests.MockTeamsRepository)
+	userService := service.NewUserServiceWithRepo(mockRepo, mockRepoTeams)
 
 	request := &tests.ExistingUsernameRequest
 
@@ -59,7 +61,8 @@ func TestUserService_SignUp_UsernameExists(t *testing.T) {
 
 func TestUserService_SignUp_EmailExists(t *testing.T) {
 	mockRepo := new(tests.MockUserRepository)
-	userService := service.NewUserServiceWithRepo(mockRepo)
+	mockRepoTeams := new(tests.MockTeamsRepository)
+	userService := service.NewUserServiceWithRepo(mockRepo, mockRepoTeams)
 
 	request := &tests.ExistingEmailRequest
 

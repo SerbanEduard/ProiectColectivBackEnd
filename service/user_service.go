@@ -14,17 +14,20 @@ import (
 
 type UserService struct {
 	userRepo UserRepositoryInterface
+	teamRepo TeamRepositoryInterface
 }
 
 func NewUserService() *UserService {
 	return &UserService{
 		userRepo: persistence.NewUserRepository(),
+		teamRepo: persistence.NewTeamRepository(),
 	}
 }
 
-func NewUserServiceWithRepo(repo interface{}) *UserService {
+func NewUserServiceWithRepo(userRepo interface{}, teamRepo interface{}) *UserService {
 	return &UserService{
-		userRepo: repo.(UserRepositoryInterface),
+		userRepo: userRepo.(UserRepositoryInterface),
+		teamRepo: teamRepo.(TeamRepositoryInterface),
 	}
 }
 
@@ -90,7 +93,22 @@ func (us *UserService) UpdateUser(user *entity.User) error {
 	return us.userRepo.Update(user)
 }
 
+// also deletes all references to the user in the Teams' saved users
 func (us *UserService) DeleteUser(id string) error {
+	user, err := us.userRepo.GetByID(id)
+	if err != nil {
+		return err
+	}
+	for _, teamId := range user.TeamsIds {
+		team, err := us.teamRepo.GetTeamById(teamId)
+		if err != nil {
+			return err
+		}
+		team.UsersIds = removeString(team.UsersIds, user.ID)
+		if err := us.teamRepo.Update(team); err != nil {
+			return err
+		}
+	}
 	return us.userRepo.Delete(id)
 }
 

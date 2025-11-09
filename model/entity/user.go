@@ -10,6 +10,7 @@ type User struct {
 	Email            string                  `json:"email"`
 	Password         string                  `json:"password"`
 	TopicsOfInterest []model.TopicOfInterest `json:"topicsOfInterest"`
+	TeamsIds         []string                `json:"teams"`
 }
 
 func NewUser(id, firstName, lastName, username, email, password string, topicsOfInterest []model.TopicOfInterest) *User {
