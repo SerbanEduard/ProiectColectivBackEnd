@@ -41,6 +41,14 @@ Server runs on `http://localhost:8080`
 - `PUT /users/:id` - Update user
 - `DELETE /users/:id` - Delete user
 
+- `POST/teams` - Create a team  (+ Json example: {"name": "nameTest", "description": "descTest", "ispublic": true})
+- `POST/teams/addUserToTeam` - Add a user to a team (+Json example: {"userId":"id1", "teamId":"id2"})
+- `GET/teams/:id` - Get team by ID
+- `GET/teams` - Get all teams
+- `GET/teams/search?prefix= &limit= ` - Get the first "limit" teams whose names start with "prefix"
+- `GET/teams/by-name?name=` - Get team(s) by name
+- `PUT/teams/:id` - Update team
+- `DELETE/teams/:id`  - Delete team
 ## Swagger Support
 
 Swagger UI runs on `http://localhost:8080/swagger/index.html`
