@@ -102,3 +102,52 @@ func (m *MockUserService) GetAllUsers() ([]*entity.User, error) {
 	}
 	return args.Get(0).([]*entity.User), args.Error(1)
 }
+
+type MockFriendRequestRepository struct {
+	mock.Mock
+}
+
+func (m *MockFriendRequestRepository) Create(request *entity.FriendRequest) error {
+	args := m.Called(request)
+	return args.Error(0)
+}
+
+func (m *MockFriendRequestRepository) GetByUsers(fromUserID, toUserID string) (*entity.FriendRequest, error) {
+	args := m.Called(fromUserID, toUserID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.FriendRequest), args.Error(1)
+}
+
+func (m *MockFriendRequestRepository) Update(request *entity.FriendRequest) error {
+	args := m.Called(request)
+	return args.Error(0)
+}
+
+func (m *MockFriendRequestRepository) GetPendingRequestsForUser(userID string) ([]*entity.FriendRequest, error) {
+	args := m.Called(userID)
+	return args.Get(0).([]*entity.FriendRequest), args.Error(1)
+}
+
+type MockFriendRequestService struct {
+	mock.Mock
+}
+
+func (m *MockFriendRequestService) SendFriendRequest(fromUserID, toUserID string) error {
+	args := m.Called(fromUserID, toUserID)
+	return args.Error(0)
+}
+
+func (m *MockFriendRequestService) RespondToFriendRequest(fromUserID, toUserID string, accept bool) error {
+	args := m.Called(fromUserID, toUserID, accept)
+	return args.Error(0)
+}
+
+func (m *MockFriendRequestService) GetPendingRequests(userID string) ([]*entity.FriendRequest, error) {
+	args := m.Called(userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.FriendRequest), args.Error(1)
+}
