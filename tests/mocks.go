@@ -1,6 +1,9 @@
 package tests
 
 import (
+	"time"
+
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
 	"github.com/stretchr/testify/mock"
@@ -103,6 +106,14 @@ func (m *MockUserService) GetAllUsers() ([]*entity.User, error) {
 	return args.Get(0).([]*entity.User), args.Error(1)
 }
 
+func (m *MockUserService) UpdateUserStatistics(id string, timeSpentOnApp time.Duration, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error) {
+	args := m.Called(id, timeSpentOnApp, timeSpentOnTeam)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.User), args.Error(1)
+}
+
 type MockFriendRequestRepository struct {
 	mock.Mock
 }
@@ -150,4 +161,55 @@ func (m *MockFriendRequestService) GetPendingRequests(userID string) ([]*entity.
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*entity.FriendRequest), args.Error(1)
+}
+
+type MockTeamRepository struct {
+	mock.Mock
+}
+
+func (m *MockTeamRepository) Create(team *entity.Team) error {
+	args := m.Called(team)
+	return args.Error(0)
+}
+
+func (m *MockTeamRepository) GetTeamById(id string) (*entity.Team, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.Team), args.Error(1)
+}
+
+func (m *MockTeamRepository) GetXTeamsByPrefix(prefix string, x int) ([]*entity.Team, error) {
+	args := m.Called(prefix, x)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.Team), args.Error(1)
+}
+
+func (m *MockTeamRepository) GetTeamsByName(name string) ([]*entity.Team, error) {
+	args := m.Called(name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.Team), args.Error(1)
+}
+
+func (m *MockTeamRepository) GetAll() ([]*entity.Team, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.Team), args.Error(1)
+}
+
+func (m *MockTeamRepository) Update(team *entity.Team) error {
+	args := m.Called(team)
+	return args.Error(0)
+}
+
+func (m *MockTeamRepository) Delete(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
 }

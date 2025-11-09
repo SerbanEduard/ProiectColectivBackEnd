@@ -7,11 +7,20 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/controller"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/tests"
+	. "github.com/SerbanEduard/ProiectColectivBackEnd/tests"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	TestDuration150Min = 150 * time.Minute
 )
 
 func TestUserController_SignUp_Success(t *testing.T) {
@@ -30,8 +39,8 @@ func TestUserController_SignUp_Success(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 
 	jsonData, _ := json.Marshal(request)
-	c.Request, _ = http.NewRequest("POST", "/users/signup", bytes.NewBuffer(jsonData))
-	c.Request.Header.Set("Content-Type", "application/json")
+	c.Request, _ = http.NewRequest(HTTPMethodPOST, PathUsersSignup, bytes.NewBuffer(jsonData))
+	c.Request.Header.Set(ContentTypeJSON, ContentTypeJSON)
 
 	userController.SignUp(c)
 
@@ -47,14 +56,14 @@ func TestUserController_SignUp_UsernameExists(t *testing.T) {
 
 	request := tests.ExistingUsernameRequest
 
-	mockService.On("SignUp", &request).Return(nil, fmt.Errorf("username already exists"))
+	mockService.On("SignUp", &request).Return(nil, fmt.Errorf(ErrUsernameExists))
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 
 	jsonData, _ := json.Marshal(request)
-	c.Request, _ = http.NewRequest("POST", "/users/signup", bytes.NewBuffer(jsonData))
-	c.Request.Header.Set("Content-Type", "application/json")
+	c.Request, _ = http.NewRequest(HTTPMethodPOST, PathUsersSignup, bytes.NewBuffer(jsonData))
+	c.Request.Header.Set(ContentTypeJSON, ContentTypeJSON)
 
 	userController.SignUp(c)
 
@@ -62,7 +71,7 @@ func TestUserController_SignUp_UsernameExists(t *testing.T) {
 
 	var responseBody map[string]string
 	json.Unmarshal(w.Body.Bytes(), &responseBody)
-	assert.Equal(t, "username already exists", responseBody["error"])
+	assert.Equal(t, ErrUsernameExists, responseBody[JSONKeyError])
 
 	mockService.AssertExpectations(t)
 }
@@ -93,4 +102,62 @@ func TestUserController_SignUp_EmailExists(t *testing.T) {
 	assert.Equal(t, "email already exists", responseBody["error"])
 
 	mockService.AssertExpectations(t)
+}
+
+func TestUserController_UpdateUserStatistics_Success(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	
+	mockService := new(tests.MockUserService)
+	userController := controller.NewUserControllerWithService(mockService)
+
+	request := tests.ValidUpdateStatisticsRequest
+
+	mockService.On("UpdateUserStatistics", TestUserID, TestDuration150Min, tests.ValidTimeSpentOnTeam).Return(&entity.User{ID: TestUserID, Statistics: &model.Statistics{}}, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	jsonData, _ := json.Marshal(request)
+	c.Request, _ = http.NewRequest(HTTPMethodPUT, PathUserStatistics, bytes.NewBuffer(jsonData))
+	c.Request.Header.Set(ContentTypeJSON, ContentTypeJSON)
+	c.Params = []gin.Param{{Key: ParamKeyID, Value: TestUserID}}
+
+	userController.UpdateUserStatistics(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	
+	var responseBody dto.UpdateStatisticsResponse
+	json.Unmarshal(w.Body.Bytes(), &responseBody)
+	assert.Equal(t, TestUserID, responseBody.UserId)
+	
+	mockService.AssertExpectations(t)
+}
+
+func TestUserController_UpdateUserStatistics_InvalidDuration(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	
+	mockService := new(tests.MockUserService)
+	userController := controller.NewUserControllerWithService(mockService)
+
+	request := dto.UpdateStatisticsRequest{
+		TimeSpentOnApp:  TestDurationInvalid,
+		TeamId:          TestTeamID,
+		TimeSpentOnTeam: TestDurationTeam,
+	}
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	jsonData, _ := json.Marshal(request)
+	c.Request, _ = http.NewRequest(HTTPMethodPUT, PathUserStatistics, bytes.NewBuffer(jsonData))
+	c.Request.Header.Set(ContentTypeJSON, ContentTypeJSON)
+	c.Params = []gin.Param{{Key: ParamKeyID, Value: TestUserID}}
+
+	userController.UpdateUserStatistics(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	
+	var responseBody map[string]string
+	json.Unmarshal(w.Body.Bytes(), &responseBody)
+	assert.Equal(t, ErrInvalidDuration, responseBody[JSONKeyError])
 }

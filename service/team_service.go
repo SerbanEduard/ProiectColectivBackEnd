@@ -74,7 +74,10 @@ func (ts *TeamService) AddUserToTeam(idUser string, idTeam string) error {
 		}
 	}
 	team.UsersIds = append(team.UsersIds, idUser)
-	user.TeamsIds = append(user.TeamsIds, idTeam)
+	if user.TeamsIds == nil {
+		user.TeamsIds = &[]string{}
+	}
+	*user.TeamsIds = append(*user.TeamsIds, idTeam)
 
 	if err := ts.userRepository.Update(user); err != nil {
 		return err
@@ -116,7 +119,10 @@ func (ts *TeamService) Delete(id string) error {
 		if err != nil {
 			return err
 		}
-		user.TeamsIds = removeString(user.TeamsIds, team.Id)
+		if user.TeamsIds != nil {
+			updatedTeams := removeString(*user.TeamsIds, team.Id)
+			user.TeamsIds = &updatedTeams
+		}
 		if err := ts.userRepository.Update(user); err != nil {
 			return err
 		}

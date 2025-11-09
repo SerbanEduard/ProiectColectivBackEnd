@@ -12,5 +12,6 @@ func SetupUserRoutes(r *gin.Engine) {
 	r.GET("/users/:id", userController.GetUser)
 	r.GET("/users", userController.GetAllUsers)
 	r.PUT("/users/:id", userController.UpdateUser)
+	r.PUT("/users/:id/statistics", userController.UpdateUserStatistics)
 	r.DELETE("/users/:id", userController.DeleteUser)
 }
