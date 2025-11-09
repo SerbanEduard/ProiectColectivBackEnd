@@ -41,4 +41,22 @@ var (
 	ExistingUser = entity.User{
 		Username: "existinguser",
 	}
+
+	ValidFriendRequest = entity.FriendRequest{
+        FromUserID: "user1",
+        ToUserID:   "user2",
+        Status:     entity.PENDING,
+    }
+
+    AcceptedFriendRequest = entity.FriendRequest{
+        FromUserID: "user1",
+        ToUserID:   "user2",
+        Status:     entity.ACCEPTED,
+    }
+
+    DeniedFriendRequest = entity.FriendRequest{
+        FromUserID: "user1",
+        ToUserID:   "user2",
+        Status:     entity.DENIED,
+    }
 )

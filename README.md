@@ -49,3 +49,12 @@ Server runs on `http://localhost:8080`
 - `GET/teams/by-name?name=` - Get team(s) by name
 - `PUT/teams/:id` - Update team
 - `DELETE/teams/:id`  - Delete team
+## Swagger Support
+
+Swagger UI runs on `http://localhost:8080/swagger/index.html`
+
+### How to use
+
+- Annotate the controller functions with comments as seen in the documentation [here](https://github.com/swaggo/swag/blob/master/README.md#declarative-comments-format)
+- Optionally run `swag fmt -g main.go` in the project root to format the annotation comments
+- Generate the Swagger files using `swag init -g main.go` in the project root. The generated file are located in `docs/`
