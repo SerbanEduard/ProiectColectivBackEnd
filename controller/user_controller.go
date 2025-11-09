@@ -2,11 +2,21 @@ package controller
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/service"
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	userNotFoundError           = "User not found"
+	userDeletedSuccessfully     = "User deleted successfully"
+	statisticsUpdatedSuccessfully = "Statistics updated successfully"
+	invalidTimeSpentOnAppFormat = "Invalid timeSpentOnApp format"
+	invalidTimeSpentOnTeamFormat = "Invalid timeSpentOnTeam format"
 )
 
 type UserController struct {
@@ -32,6 +42,7 @@ type UserServiceInterface interface {
 	UpdateUser(user *entity.User) error
 	DeleteUser(id string) error
 	GetAllUsers() ([]*entity.User, error)
+	UpdateUserStatistics(id string, timeSpentOnApp time.Duration, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error)
 }
 
 // SignUp
@@ -70,7 +81,7 @@ func (uc *UserController) GetUser(c *gin.Context) {
 	id := c.Param("id")
 	user, err := uc.userService.GetUserByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": userNotFoundError})
 		return
 	}
 
@@ -100,7 +111,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 
 	user, err := uc.userService.GetUserByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": userNotFoundError})
 		return
 	}
 
@@ -133,5 +144,50 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": userDeletedSuccessfully})
+}
+
+// UpdateUserStatistics
+//
+//	@Summary	Update user statistics
+//	@Accept		json
+//	@Produce	json
+//	@Param		id		path		string						true	"The user's ID"
+//	@Param		request	body		dto.UpdateStatisticsRequest	true	"The statistics update request"
+//	@Success	200		{object}	dto.UpdateStatisticsResponse
+//	@Router		/users/{id}/statistics [put]
+func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
+	id := c.Param("id")
+
+	var request dto.UpdateStatisticsRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	timeSpentOnApp, err := time.ParseDuration(request.TimeSpentOnApp)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidTimeSpentOnAppFormat})
+		return
+	}
+
+	timeSpentOnTeam, err := time.ParseDuration(request.TimeSpentOnTeam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidTimeSpentOnTeamFormat})
+		return
+	}
+
+	teamTimeSpent := model.TimeSpentOnTeam{
+		TeamId:   request.TeamId,
+		Duration: timeSpentOnTeam,
+	}
+
+	updatedUser, err := uc.userService.UpdateUserStatistics(id, timeSpentOnApp, teamTimeSpent)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	response := dto.NewUpdateStatisticsResponse(updatedUser.ID, updatedUser.Statistics)
+	c.JSON(http.StatusOK, response)
 }

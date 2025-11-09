@@ -3,12 +3,12 @@ package dto
 import "github.com/SerbanEduard/ProiectColectivBackEnd/model"
 
 type SignUpUserRequest struct {
-	FirstName        string                  `json:"firstname"`
-	LastName         string                  `json:"lastname"`
-	Username         string                  `json:"username"`
-	Email            string                  `json:"email"`
-	Password         string                  `json:"password"`
-	TopicsOfInterest []model.TopicOfInterest `json:"topicsOfInterest"`
+	FirstName        string                   `json:"firstname"`
+	LastName         string                   `json:"lastname"`
+	Username         string                   `json:"username"`
+	Email            string                   `json:"email"`
+	Password         string                   `json:"password"`
+	TopicsOfInterest *[]model.TopicOfInterest `json:"topicsOfInterest,omitempty"`
 }
 
 type SignUpUserResponse struct {
@@ -17,7 +17,7 @@ type SignUpUserResponse struct {
 	Username  string `json:"username"`
 }
 
-func NewSignUpUserRequest(firstName, lastName, username, email, password string, topicsOfInterest []model.TopicOfInterest) *SignUpUserRequest {
+func NewSignUpUserRequest(firstName, lastName, username, email, password string, topicsOfInterest *[]model.TopicOfInterest) *SignUpUserRequest {
 	return &SignUpUserRequest{
 		FirstName:        firstName,
 		LastName:         lastName,
@@ -33,5 +33,17 @@ func NewSignUpUserResponse(firstName, lastName, username string) *SignUpUserResp
 		FirstName: firstName,
 		LastName:  lastName,
 		Username:  username,
+	}
+}
+
+type AddStatisticsToUserRequest struct {
+	Username   string           `json:"username"`
+	Statistics model.Statistics `json:"statistics"`
+}
+
+func NewAddStatisticsToUserRequest(username string, statistics model.Statistics) *AddStatisticsToUserRequest {
+	return &AddStatisticsToUserRequest{
+		Username:   username,
+		Statistics: statistics,
 	}
 }

@@ -4,12 +4,20 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"time"
 
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/persistence"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/validator"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	usernameAlreadyExistsError = "username already exists"
+	emailAlreadyExistsError    = "email already exists"
+	teamNotFoundError          = "team not found"
 )
 
 type UserService struct {
@@ -47,11 +55,11 @@ func (us *UserService) SignUp(request *dto.SignUpUserRequest) (*dto.SignUpUserRe
 	}
 
 	if _, err := us.userRepo.GetByUsername(request.Username); err == nil {
-		return nil, fmt.Errorf("username already exists")
+		return nil, fmt.Errorf(usernameAlreadyExistsError)
 	}
 
 	if _, err := us.userRepo.GetByEmail(request.Email); err == nil {
-		return nil, fmt.Errorf("email already exists")
+		return nil, fmt.Errorf(emailAlreadyExistsError)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
@@ -99,7 +107,10 @@ func (us *UserService) DeleteUser(id string) error {
 	if err != nil {
 		return err
 	}
-	for _, teamId := range user.TeamsIds {
+	if user.TeamsIds == nil {
+		return us.userRepo.Delete(id)
+	}
+	for _, teamId := range *user.TeamsIds {
 		team, err := us.teamRepo.GetTeamById(teamId)
 		if err != nil {
 			return err
@@ -114,6 +125,40 @@ func (us *UserService) DeleteUser(id string) error {
 
 func (us *UserService) GetAllUsers() ([]*entity.User, error) {
 	return us.userRepo.GetAll()
+}
+
+func (us *UserService) UpdateUserStatistics(id string, timeSpentOnApp time.Duration, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error) {
+	user, err := us.userRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	team, err := us.teamRepo.GetTeamById(timeSpentOnTeam.TeamId)
+	if err != nil || team.Id == "" {
+		return nil, fmt.Errorf(teamNotFoundError)
+	}
+
+	if user.Statistics == nil {
+		user.Statistics = &model.Statistics{}
+	}
+
+	user.Statistics.TotalTimeSpentOnApp += timeSpentOnApp
+
+	for i, teamTime := range user.Statistics.TimeSpentOnTeams {
+		if teamTime.TeamId == timeSpentOnTeam.TeamId {
+			user.Statistics.TimeSpentOnTeams[i].Duration += timeSpentOnTeam.Duration
+			if err := us.userRepo.Update(user); err != nil {
+				return nil, err
+			}
+			return user, nil
+		}
+	}
+
+	user.Statistics.TimeSpentOnTeams = append(user.Statistics.TimeSpentOnTeams, timeSpentOnTeam)
+	if err := us.userRepo.Update(user); err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func generateID() (string, error) {
