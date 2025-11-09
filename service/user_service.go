@@ -4,12 +4,17 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"os"
+
+	"time"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/persistence"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/validator"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserService struct {
@@ -92,7 +97,27 @@ func (us *UserService) Login(request *dto.LoginUserRequest) (*dto.LoginUserRespo
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	return dto.NewLoginUserResponse(user.ID, user.FirstName, user.LastName, user.Username), nil
+	// Create JWT token
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return nil, fmt.Errorf("JWT secret is not configured")
+	}
+
+	claims := jwt.MapClaims{
+		"sub":      user.ID,
+		"username": user.Username,
+		"exp":      time.Now().Add(24 * time.Hour).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return nil, err
+	}
+
+	resp := dto.NewLoginUserResponse(user.ID, user.FirstName, user.LastName, user.Username, user.TopicsOfInterest)
+	resp.Token = signed
+	return resp, nil
 }
 
 func (us *UserService) GetUserByID(id string) (*entity.User, error) {

@@ -49,18 +49,21 @@ var (
 	}
 
 	ValidLoginResponse = dto.LoginUserResponse{
-		ID:        "user123",
-		FirstName: "John",
-		LastName:  "Doe",
-		Username:  "johndoe",
+		ID:               "user123",
+		FirstName:        "John",
+		LastName:         "Doe",
+		Username:         "johndoe",
+		Token:            "",
+		TopicsOfInterest: []model.TopicOfInterest{model.Programming},
 	}
 
 	ValidUserWithPassword = entity.User{
-		ID:        "user123",
-		FirstName: "John",
-		LastName:  "Doe",
-		Username:  "johndoe",
-		Email:     "john@example.com",
-		Password:  "$2a$10$abcdefghijklmnopqrstuvwxyzABCDEF", // bcrypt hash pentru "password123"
+		ID:               "user123",
+		FirstName:        "John",
+		LastName:         "Doe",
+		Username:         "johndoe",
+		Email:            "john@example.com",
+		Password:         "$2a$10$abcdefghijklmnopqrstuvwxyzABCDEF", // bcrypt hash pentru "password123"
+		TopicsOfInterest: []model.TopicOfInterest{model.Programming},
 	}
 )

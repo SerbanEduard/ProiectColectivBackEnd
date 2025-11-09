@@ -2,8 +2,10 @@ package service_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/service"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/tests"
 	"github.com/stretchr/testify/assert"
@@ -11,6 +13,9 @@ import (
 )
 
 func TestUserService_Login_Success(t *testing.T) {
+	// ensure JWT secret for token generation during tests
+	os.Setenv("JWT_SECRET", "testsecret")
+	defer os.Unsetenv("JWT_SECRET")
 	mockRepo := new(tests.MockUserRepository)
 	userService := service.NewUserServiceWithRepo(mockRepo)
 
@@ -31,10 +36,20 @@ func TestUserService_Login_Success(t *testing.T) {
 	assert.Equal(t, expectedResponse.FirstName, response.FirstName)
 	assert.Equal(t, expectedResponse.LastName, response.LastName)
 	assert.Equal(t, expectedResponse.Username, response.Username)
+	assert.NotEmpty(t, response.Token)
+	assert.Equal(t, []string{string(model.Programming)}, func() []string {
+		ts := make([]string, len(response.TopicsOfInterest))
+		for i, t := range response.TopicsOfInterest {
+			ts[i] = string(t)
+		}
+		return ts
+	}())
 	mockRepo.AssertExpectations(t)
 }
 
 func TestUserService_Login_UserNotFound(t *testing.T) {
+	os.Setenv("JWT_SECRET", "testsecret")
+	defer os.Unsetenv("JWT_SECRET")
 	mockRepo := new(tests.MockUserRepository)
 	userService := service.NewUserServiceWithRepo(mockRepo)
 
@@ -51,6 +66,8 @@ func TestUserService_Login_UserNotFound(t *testing.T) {
 }
 
 func TestUserService_Login_WrongPassword(t *testing.T) {
+	os.Setenv("JWT_SECRET", "testsecret")
+	defer os.Unsetenv("JWT_SECRET")
 	mockRepo := new(tests.MockUserRepository)
 	userService := service.NewUserServiceWithRepo(mockRepo)
 

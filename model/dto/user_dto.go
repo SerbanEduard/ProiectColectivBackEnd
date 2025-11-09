@@ -42,10 +42,12 @@ type LoginUserRequest struct {
 }
 
 type LoginUserResponse struct {
-	ID        string `json:"id"`
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
-	Username  string `json:"username"`
+	ID               string                  `json:"id"`
+	FirstName        string                  `json:"firstname"`
+	LastName         string                  `json:"lastname"`
+	Username         string                  `json:"username"`
+	Token            string                  `json:"token,omitempty"`
+	TopicsOfInterest []model.TopicOfInterest `json:"topicsOfInterest,omitempty"`
 }
 
 func NewLoginUserRequest(email, password string) *LoginUserRequest {
@@ -55,11 +57,12 @@ func NewLoginUserRequest(email, password string) *LoginUserRequest {
 	}
 }
 
-func NewLoginUserResponse(id, firstName, lastName, username string) *LoginUserResponse {
+func NewLoginUserResponse(id, firstName, lastName, username string, topics []model.TopicOfInterest) *LoginUserResponse {
 	return &LoginUserResponse{
-		ID:        id,
-		FirstName: firstName,
-		LastName:  lastName,
-		Username:  username,
+		ID:               id,
+		FirstName:        firstName,
+		LastName:         lastName,
+		Username:         username,
+		TopicsOfInterest: topics,
 	}
 }
