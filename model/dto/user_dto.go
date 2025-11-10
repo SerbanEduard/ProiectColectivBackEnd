@@ -47,3 +47,40 @@ func NewAddStatisticsToUserRequest(username string, statistics model.Statistics)
 		Statistics: statistics,
 	}
 }
+
+// Login DTOs
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	AccessToken string `json:"accessToken"`
+	TokenType   string `json:"tokenType"`
+	ExpiresIn   string `json:"expiresIn"`
+	User        struct {
+		Id               string                   `json:"id"`
+		Username         string                   `json:"username"`
+		Email            string                   `json:"email"`
+		TopicsOfInterest *[]model.TopicOfInterest `json:"topicsOfInterest,omitempty"`
+	} `json:"user"`
+}
+
+func NewLoginResponse(token, expiresIn, userId, username, email string, topics *[]model.TopicOfInterest) *LoginResponse {
+	resp := &LoginResponse{
+		AccessToken: token,
+		TokenType:   "Bearer",
+		ExpiresIn:   expiresIn,
+	}
+	resp.User.Id = userId
+	resp.User.Username = username
+	resp.User.Email = email
+	// ensure we return an empty slice instead of omitting the field when topics is nil
+	if topics == nil {
+		empty := []model.TopicOfInterest{}
+		resp.User.TopicsOfInterest = &empty
+	} else {
+		resp.User.TopicsOfInterest = topics
+	}
+	return resp
+}

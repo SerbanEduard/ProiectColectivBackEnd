@@ -9,6 +9,7 @@ func SetupUserRoutes(r *gin.Engine) {
 	userController := controller.NewUserController()
 
 	r.POST("/users/signup", userController.SignUp)
+	r.POST("/users/login", userController.Login)
 	r.GET("/users/:id", userController.GetUser)
 	r.GET("/users", userController.GetAllUsers)
 	r.PUT("/users/:id", userController.UpdateUser)
