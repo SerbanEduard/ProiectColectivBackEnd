@@ -2,9 +2,16 @@ package persistence
 
 import (
 	"context"
+	"errors"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/config"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
+)
+
+const (
+	teamsCollection = "teams"
+	nameField       = "name"
+	teamNotFound    = "team not found"
 )
 
 type TeamRepository struct {
@@ -16,26 +23,29 @@ func NewTeamRepository() *TeamRepository {
 
 func (tr *TeamRepository) Create(team *entity.Team) error {
 	ctx := context.Background()
-	ref := config.FirebaseDB.NewRef("teams/" + team.Id)
+	ref := config.FirebaseDB.NewRef(teamsCollection + "/" + team.Id)
 	return ref.Set(ctx, team)
 }
 
 func (tr *TeamRepository) GetTeamById(id string) (*entity.Team, error) {
 	ctx := context.Background()
-	ref := config.FirebaseDB.NewRef("teams/" + id)
+	ref := config.FirebaseDB.NewRef(teamsCollection + "/" + id)
 
 	var team entity.Team
 	if err := ref.Get(ctx, &team); err != nil {
 		return nil, err
+	}
+	if team.Id == "" {
+		return nil, errors.New(teamNotFound)
 	}
 	return &team, nil
 }
 
 func (tr *TeamRepository) GetXTeamsByPrefix(prefix string, x int) ([]*entity.Team, error) {
 	ctx := context.Background()
-	ref := config.FirebaseDB.NewRef("teams")
+	ref := config.FirebaseDB.NewRef(teamsCollection)
 
-	query := ref.OrderByChild("name").
+	query := ref.OrderByChild(nameField).
 		StartAt(prefix).
 		EndAt(prefix + "\uf8ff")
 
@@ -62,9 +72,9 @@ func (tr *TeamRepository) GetXTeamsByPrefix(prefix string, x int) ([]*entity.Tea
 
 func (tr *TeamRepository) GetTeamsByName(name string) ([]*entity.Team, error) {
 	ctx := context.Background()
-	ref := config.FirebaseDB.NewRef("teams")
+	ref := config.FirebaseDB.NewRef(teamsCollection)
 
-	query := ref.OrderByChild("name").EqualTo(name)
+	query := ref.OrderByChild(nameField).EqualTo(name)
 
 	results, err := query.GetOrdered(ctx)
 	if err != nil {
@@ -85,7 +95,7 @@ func (tr *TeamRepository) GetTeamsByName(name string) ([]*entity.Team, error) {
 
 func (tr *TeamRepository) GetAll() ([]*entity.Team, error) {
 	ctx := context.Background()
-	ref := config.FirebaseDB.NewRef("teams")
+	ref := config.FirebaseDB.NewRef(teamsCollection)
 
 	var teamsMap map[string]*entity.Team
 	if err := ref.Get(ctx, &teamsMap); err != nil {
@@ -101,12 +111,12 @@ func (tr *TeamRepository) GetAll() ([]*entity.Team, error) {
 
 func (tr *TeamRepository) Update(team *entity.Team) error {
 	ctx := context.Background()
-	ref := config.FirebaseDB.NewRef("teams/" + team.Id)
+	ref := config.FirebaseDB.NewRef(teamsCollection + "/" + team.Id)
 	return ref.Set(ctx, team)
 }
 
 func (tr *TeamRepository) Delete(id string) error {
 	ctx := context.Background()
-	ref := config.FirebaseDB.NewRef("teams/" + id)
+	ref := config.FirebaseDB.NewRef(teamsCollection + "/" + id)
 	return ref.Delete(ctx)
 }
