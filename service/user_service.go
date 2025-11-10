@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"time"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
@@ -127,7 +126,7 @@ func (us *UserService) GetAllUsers() ([]*entity.User, error) {
 	return us.userRepo.GetAll()
 }
 
-func (us *UserService) UpdateUserStatistics(id string, timeSpentOnApp time.Duration, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error) {
+func (us *UserService) UpdateUserStatistics(id string, timeSpentOnApp int64, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error) {
 	user, err := us.userRepo.GetByID(id)
 	if err != nil {
 		return nil, err

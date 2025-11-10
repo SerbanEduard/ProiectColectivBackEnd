@@ -1,19 +1,16 @@
 package dto
 
-import (
-	"time"
-	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
-)
+import "github.com/SerbanEduard/ProiectColectivBackEnd/model"
 
 type UpdateStatisticsRequest struct {
-	TimeSpentOnApp string `json:"timeSpentOnApp"`
-	TeamId         string `json:"teamId"`
-	TimeSpentOnTeam string `json:"timeSpentOnTeam"`
+	TimeSpentOnApp  int64  `json:"timeSpentOnApp" example:"1800000" description:"Time spent on app in milliseconds"`
+	TeamId          string `json:"teamId" example:"team123"`
+	TimeSpentOnTeam int64  `json:"timeSpentOnTeam" example:"900000" description:"Time spent on team in milliseconds"`
 }
 
 type UpdateStatisticsResponse struct {
 	UserId              string                  `json:"userId"`
-	TotalTimeSpentOnApp time.Duration           `json:"totalTimeSpentOnApp"`
+	TotalTimeSpentOnApp int64                   `json:"totalTimeSpentOnApp" example:"7200000" description:"Total time spent on app in milliseconds"`
 	TimeSpentOnTeams    []model.TimeSpentOnTeam `json:"timeSpentOnTeams"`
 }
 

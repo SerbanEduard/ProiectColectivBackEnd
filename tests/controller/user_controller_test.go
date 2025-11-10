@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/controller"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
@@ -20,7 +19,7 @@ import (
 )
 
 const (
-	TestDuration150Min = 150 * time.Minute
+	TestDuration150Min = int64(9000000) // 150 minutes in milliseconds
 )
 
 func TestUserController_SignUp_Success(t *testing.T) {
@@ -112,7 +111,7 @@ func TestUserController_UpdateUserStatistics_Success(t *testing.T) {
 
 	request := tests.ValidUpdateStatisticsRequest
 
-	mockService.On("UpdateUserStatistics", TestUserID, TestDuration150Min, tests.ValidTimeSpentOnTeam).Return(&entity.User{ID: TestUserID, Statistics: &model.Statistics{}}, nil)
+	mockService.On("UpdateUserStatistics", TestUserID, TestDurationApp, tests.ValidTimeSpentOnTeam).Return(&entity.User{ID: TestUserID, Statistics: &model.Statistics{}}, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -133,31 +132,4 @@ func TestUserController_UpdateUserStatistics_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-func TestUserController_UpdateUserStatistics_InvalidDuration(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	
-	mockService := new(tests.MockUserService)
-	userController := controller.NewUserControllerWithService(mockService)
 
-	request := dto.UpdateStatisticsRequest{
-		TimeSpentOnApp:  TestDurationInvalid,
-		TeamId:          TestTeamID,
-		TimeSpentOnTeam: TestDurationTeam,
-	}
-
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-
-	jsonData, _ := json.Marshal(request)
-	c.Request, _ = http.NewRequest(HTTPMethodPUT, PathUserStatistics, bytes.NewBuffer(jsonData))
-	c.Request.Header.Set(ContentTypeJSON, ContentTypeJSON)
-	c.Params = []gin.Param{{Key: ParamKeyID, Value: TestUserID}}
-
-	userController.UpdateUserStatistics(c)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-	
-	var responseBody map[string]string
-	json.Unmarshal(w.Body.Bytes(), &responseBody)
-	assert.Equal(t, ErrInvalidDuration, responseBody[JSONKeyError])
-}
