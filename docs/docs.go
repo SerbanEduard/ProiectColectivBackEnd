@@ -102,10 +102,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.AddUserToTeamRequest"
                         }
                     }
                 ],
@@ -484,6 +481,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.AddUserToTeamRequest": {
+            "type": "object",
+            "properties": {
+                "teamId": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.SignUpUserRequest": {
             "type": "object",
             "properties": {

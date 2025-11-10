@@ -1,5 +1,12 @@
 basePath: /
 definitions:
+  dto.AddUserToTeamRequest:
+    properties:
+      teamId:
+        type: string
+      userId:
+        type: string
+    type: object
   dto.SignUpUserRequest:
     properties:
       email:
@@ -292,9 +299,7 @@ paths:
         name: request
         required: true
         schema:
-          additionalProperties:
-            type: string
-          type: object
+          $ref: '#/definitions/dto.AddUserToTeamRequest'
       produces:
       - application/json
       responses:
