@@ -132,9 +132,9 @@ func (us *UserService) UpdateUserStatistics(id string, timeSpentOnApp int64, tim
 		return nil, err
 	}
 
-	team, err := us.teamRepo.GetTeamById(timeSpentOnTeam.TeamId)
-	if err != nil || team.Id == "" {
-		return nil, fmt.Errorf(teamNotFoundError)
+	_, err = us.teamRepo.GetTeamById(timeSpentOnTeam.TeamId)
+	if err != nil {
+		return nil, err
 	}
 
 	if user.Statistics == nil {
