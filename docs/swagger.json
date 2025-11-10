@@ -109,6 +109,43 @@
                     }
                 }
             }
+        },
+        "/users/{id}/statistics": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update user statistics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The user's ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The statistics update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateStatisticsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateStatisticsResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -152,6 +189,41 @@
                 }
             }
         },
+        "dto.UpdateStatisticsRequest": {
+            "type": "object",
+            "properties": {
+                "teamId": {
+                    "type": "string",
+                    "example": "team123"
+                },
+                "timeSpentOnApp": {
+                    "type": "integer",
+                    "example": 1800000
+                },
+                "timeSpentOnTeam": {
+                    "type": "integer",
+                    "example": 900000
+                }
+            }
+        },
+        "dto.UpdateStatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "timeSpentOnTeams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TimeSpentOnTeam"
+                    }
+                },
+                "totalTimeSpentOnApp": {
+                    "type": "integer",
+                    "example": 7200000
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.User": {
             "type": "object",
             "properties": {
@@ -170,6 +242,15 @@
                 "password": {
                     "type": "string"
                 },
+                "statistics": {
+                    "$ref": "#/definitions/model.Statistics"
+                },
+                "teams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "topicsOfInterest": {
                     "type": "array",
                     "items": {
@@ -177,6 +258,33 @@
                     }
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Statistics": {
+            "type": "object",
+            "properties": {
+                "timeSpentOnTeams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TimeSpentOnTeam"
+                    }
+                },
+                "totalTimeSpentOnApp": {
+                    "type": "integer",
+                    "example": 7200000
+                }
+            }
+        },
+        "model.TimeSpentOnTeam": {
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "integer",
+                    "example": 3600000
+                },
+                "teamId": {
                     "type": "string"
                 }
             }

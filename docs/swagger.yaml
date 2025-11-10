@@ -26,6 +26,30 @@ definitions:
       username:
         type: string
     type: object
+  dto.UpdateStatisticsRequest:
+    properties:
+      teamId:
+        example: team123
+        type: string
+      timeSpentOnApp:
+        example: 1800000
+        type: integer
+      timeSpentOnTeam:
+        example: 900000
+        type: integer
+    type: object
+  dto.UpdateStatisticsResponse:
+    properties:
+      timeSpentOnTeams:
+        items:
+          $ref: '#/definitions/model.TimeSpentOnTeam'
+        type: array
+      totalTimeSpentOnApp:
+        example: 7200000
+        type: integer
+      userId:
+        type: string
+    type: object
   entity.User:
     properties:
       email:
@@ -38,11 +62,35 @@ definitions:
         type: string
       password:
         type: string
+      statistics:
+        $ref: '#/definitions/model.Statistics'
+      teams:
+        items:
+          type: string
+        type: array
       topicsOfInterest:
         items:
           $ref: '#/definitions/model.TopicOfInterest'
         type: array
       username:
+        type: string
+    type: object
+  model.Statistics:
+    properties:
+      timeSpentOnTeams:
+        items:
+          $ref: '#/definitions/model.TimeSpentOnTeam'
+        type: array
+      totalTimeSpentOnApp:
+        example: 7200000
+        type: integer
+    type: object
+  model.TimeSpentOnTeam:
+    properties:
+      duration:
+        example: 3600000
+        type: integer
+      teamId:
         type: string
     type: object
   model.TopicOfInterest:
@@ -117,6 +165,30 @@ paths:
           schema:
             $ref: '#/definitions/entity.User'
       summary: Get a user by ID
+  /users/{id}/statistics:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: The user's ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: The statistics update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateStatisticsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UpdateStatisticsResponse'
+      summary: Update user statistics
   /users/signup:
     post:
       consumes:
