@@ -26,6 +26,24 @@ definitions:
       username:
         type: string
     type: object
+  dto.TeamRequest:
+    properties:
+      description:
+        type: string
+      ispublic:
+        type: boolean
+      name:
+        type: string
+    type: object
+  dto.TeamResponse:
+    properties:
+      description:
+        type: string
+      ispublic:
+        type: boolean
+      name:
+        type: string
+    type: object
   dto.UpdateStatisticsRequest:
     properties:
       teamId:
@@ -49,6 +67,21 @@ definitions:
         type: integer
       userId:
         type: string
+    type: object
+  entity.Team:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      ispublic:
+        type: boolean
+      name:
+        type: string
+      users:
+        items:
+          type: string
+        type: array
     type: object
   entity.User:
     properties:
@@ -118,6 +151,228 @@ info:
   title: StudyWithMe API
   version: "1.0"
 paths:
+  /teams:
+    get:
+      description: Get a list of all teams
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Team'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all teams
+    post:
+      consumes:
+      - application/json
+      description: Create a new team with the provided details
+      parameters:
+      - description: Team details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TeamRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.TeamResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new team
+  /teams/{id}:
+    delete:
+      description: Delete a team by providing team ID
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team deleted
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'Bad Request: Missing team ID'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a team
+    get:
+      description: Get team details by ID
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Team'
+        "404":
+          description: Team not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a team by ID
+    put:
+      consumes:
+      - application/json
+      description: Update team details by providing team ID and updated details
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated team details
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Team'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Team'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update a team
+  /teams/addUserToTeam:
+    post:
+      consumes:
+      - application/json
+      description: Add a user to a team by providing user ID and team ID
+      parameters:
+      - description: User ID and Team ID
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User added to team
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'Bad Request: Invalid request body or missing userId or teamId'
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Add a user to a team
+  /teams/by-name:
+    get:
+      description: Get a list of teams that match the specified name
+      parameters:
+      - description: Name to search for
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Team'
+            type: array
+        "400":
+          description: 'Bad Request: Missing ''name'' query parameter'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get teams by name
+  /teams/search:
+    get:
+      description: Get a list of X teams that start with the specified prefix
+      parameters:
+      - description: Prefix to search for
+        in: query
+        name: prefix
+        required: true
+        type: string
+      - description: Number of teams to retrieve
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Team'
+            type: array
+        "400":
+          description: 'Bad Request: Missing prefix or limit query parameters, or
+            limit is NaN'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get X teams by prefix
   /users:
     get:
       consumes:
