@@ -3,6 +3,8 @@ package service
 import (
 	"fmt"
 
+	"firebase.google.com/go/v4/errorutils"
+
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/persistence"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/validator"
@@ -53,18 +55,29 @@ func (fs *FriendRequestService) SendFriendRequest(fromUserID, toUserID string) e
 		return fmt.Errorf("recipient user not found")
 	}
 
-	if _, err := fs.friendRequestRepo.GetByUsers(fromUserID, toUserID); err == nil {
+	_, err := fs.friendRequestRepo.GetByUsers(fromUserID, toUserID)
+	if err == nil {
 		return fmt.Errorf("friend request already exists")
 	}
 
+	if !errorutils.IsNotFound(err) {
+		return fmt.Errorf("checking existing friend request: %w", err)
+	}
+
 	request := entity.NewFriendRequest(fromUserID, toUserID)
-	return fs.friendRequestRepo.Create(request)
+	if err := fs.friendRequestRepo.Create(request); err != nil {
+		return fmt.Errorf("create friend request: %w", err)
+	}
+	return nil
 }
 
 func (fs *FriendRequestService) RespondToFriendRequest(fromUserID, toUserID string, accept bool) error {
 	request, err := fs.friendRequestRepo.GetByUsers(fromUserID, toUserID)
 	if err != nil {
-		return fmt.Errorf("friend request not found")
+		if errorutils.IsNotFound(err) {
+			return fmt.Errorf("friend request not found")
+		}
+		return fmt.Errorf("get friend request: %w", err)
 	}
 
 	if request.Status != entity.PENDING {
@@ -77,14 +90,20 @@ func (fs *FriendRequestService) RespondToFriendRequest(fromUserID, toUserID stri
 		request.Status = entity.DENIED
 	}
 
-	return fs.friendRequestRepo.Update(request)
+	if err := fs.friendRequestRepo.Update(request); err != nil {
+		return fmt.Errorf("update friend request: %w", err)
+	}
+	return nil
 }
 
 func (fs *FriendRequestService) GetPendingRequests(userID string) ([]*entity.FriendRequest, error) {
-	return fs.friendRequestRepo.GetPendingRequestsForUser(userID)
+	reqs, err := fs.friendRequestRepo.GetPendingRequestsForUser(userID)
+	if err != nil {
+		return nil, fmt.Errorf("get pending requests: %w", err)
+	}
+	return reqs, nil
 }
 
-// Add these methods for testing
 func (fs *FriendRequestService) SetFriendRequestRepo(repo FriendRequestRepositoryInterface) {
 	fs.friendRequestRepo = repo
 }
