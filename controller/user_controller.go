@@ -45,6 +45,7 @@ type UserServiceInterface interface {
 	SignUp(request *dto.SignUpUserRequest) (*dto.SignUpUserResponse, error)
 	GetUserByID(id string) (*entity.User, error)
 	GetUserByEmail(email string) (*entity.User, error)
+	GetUserByUsername(username string) (*entity.User, error)
 	UpdateUser(user *entity.User) error
 	DeleteUser(id string) error
 	GetAllUsers() ([]*entity.User, error)
@@ -212,8 +213,17 @@ func (uc *UserController) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	user, err := uc.userService.GetUserByEmail(req.Email)
+	var user *entity.User
+	var err error
+	// allow login by email or username
+	if req.Email != "" {
+		user, err = uc.userService.GetUserByEmail(req.Email)
+	} else if req.Username != "" {
+		user, err = uc.userService.GetUserByUsername(req.Username)
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "email or username required"})
+		return
+	}
 	if err != nil || user == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": invalidCredentials})
 		return
@@ -242,6 +252,6 @@ func (uc *UserController) Login(c *gin.Context) {
 		return
 	}
 
-	resp := dto.NewLoginResponse(signed, "24h", user.ID, user.Username, user.Email, user.TopicsOfInterest)
+	resp := dto.NewLoginResponse(signed, "24h", user)
 	c.JSON(http.StatusOK, resp)
 }
