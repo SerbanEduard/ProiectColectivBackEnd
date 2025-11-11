@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice Chat Test</title>
+</head>
+<body>
+    <h1>Voice Chat Test</h1>
+    <button id="join">Join & Start Call</button>
+    <button id="call">Manual Start Call</button>
+    <button id="mute">Mute</button>
+    <button id="unmute-audio">Enable Audio</button>
+    <button id="leave">Leave</button>
+    <div id="status">Disconnected</div>
+    <div id="log"></div>
+    
+    <script>
+        const teamId = 'test-team';
+        const userId = 'user-' + Math.random().toString(36).substr(2, 9);
+        let ws, localStream, peerConnection, isMuted = false, remoteAudio = null;
+        
+        function log(msg) {
+            document.getElementById('log').innerHTML += '<div>' + msg + '</div>';
+        }
+        
+        document.getElementById('join').onclick = async () => {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                log('Microphone access granted');
+                
+                ws = new WebSocket(`ws://localhost:8080/voice/${teamId}?userId=${userId}`);
+                
+                ws.onopen = () => {
+                    document.getElementById('status').textContent = 'Connected - ' + userId;
+                    log('WebSocket connected');
+                    setupWebRTC();
+                };
+                
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    log('Received: ' + data.type);
+                    handleSignaling(data);
+                };
+            } catch (err) {
+                log('Error: ' + err.message);
+            }
+        };
+        
+        async function startCall() {
+            if (peerConnection) {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                ws.send(JSON.stringify({ 
+                    type: 'offer', 
+                    offer,
+                    from: userId
+                }));
+                log('Sent offer');
+            }
+        }
+        
+        document.getElementById('call').onclick = startCall;
+        
+        function setupWebRTC() {
+            peerConnection = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+            
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+            
+            peerConnection.ontrack = async (event) => {
+                log('Received remote audio stream');
+                remoteAudio = new Audio();
+                remoteAudio.srcObject = event.streams[0];
+                remoteAudio.autoplay = true;
+                remoteAudio.volume = 1.0;
+                
+                try {
+                    await remoteAudio.play();
+                    log('Audio playback started');
+                } catch (err) {
+                    log('Audio play failed (click Enable Audio): ' + err.message);
+                }
+            };
+            
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    ws.send(JSON.stringify({
+                        type: 'ice-candidate',
+                        candidate: event.candidate,
+                        from: userId
+                    }));
+                }
+            };
+            
+            log('WebRTC setup complete');
+        }
+        
+        async function handleSignaling(data) {
+            if (data.type === 'room-info') {
+                if (!data.canJoin) {
+                    log('ERROR: Room is full (max 2 users)');
+                    document.getElementById('status').textContent = 'Room Full';
+                    return;
+                }
+                // If we're the first user, start a call
+                if (data.userCount === 2) {
+                    setTimeout(() => startCall(), 1000);
+                    log('First user - will start call');
+                } else {
+                    log('Joined existing room with ' + data.userCount + ' users');
+                }
+            } else if (data.type === 'error') {
+                log('ERROR: ' + data.error);
+                document.getElementById('status').textContent = 'Error: ' + data.error;
+                return;
+            } else if (data.type === 'offer' && data.from !== userId) {
+                await peerConnection.setRemoteDescription(data.offer);
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                ws.send(JSON.stringify({ 
+                    type: 'answer', 
+                    answer,
+                    from: userId
+                }));
+                log('Sent answer');
+            } else if (data.type === 'answer') {
+                await peerConnection.setRemoteDescription(data.answer);
+                log('Call established');
+            } else if (data.type === 'ice-candidate' && data.from !== userId) {
+                await peerConnection.addIceCandidate(data.candidate);
+            }
+        }
+        
+        document.getElementById('unmute-audio').onclick = async () => {
+            if (remoteAudio) {
+                try {
+                    await remoteAudio.play();
+                    log('Audio manually enabled');
+                } catch (err) {
+                    log('Manual audio enable failed: ' + err.message);
+                }
+            }
+        };
+        
+        document.getElementById('mute').onclick = () => {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    isMuted = !isMuted;
+                    audioTrack.enabled = !isMuted;
+                    document.getElementById('mute').textContent = isMuted ? 'Unmute' : 'Mute';
+                    log(isMuted ? 'Muted' : 'Unmuted');
+                }
+            }
+        };
+        
+        document.getElementById('leave').onclick = () => {
+            if (ws) ws.close();
+            if (localStream) localStream.getTracks().forEach(track => track.stop());
+            if (peerConnection) peerConnection.close();
+            document.getElementById('status').textContent = 'Disconnected';
+            document.getElementById('mute').textContent = 'Mute';
+            isMuted = false;
+            log('Disconnected');
+        };
+    </script>
+</body>
+</html>
