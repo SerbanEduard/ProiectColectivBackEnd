@@ -35,10 +35,9 @@ const (
 	// Content Types
 	ContentTypeJSON = "application/json"
 
-	// Test Duration Strings
-	TestDurationApp   = "2h30m"
-	TestDurationTeam  = "1h15m"
-	TestDurationInvalid = "invalid"
+	// Test Duration Values (milliseconds)
+	TestDurationApp   = int64(9000000)  // 2h30m in milliseconds
+	TestDurationTeam  = int64(4500000)  // 1h15m in milliseconds
 
 	// Gin Param Keys
 	ParamKeyID = "id"

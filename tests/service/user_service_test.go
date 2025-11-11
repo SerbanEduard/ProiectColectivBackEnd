@@ -3,7 +3,6 @@ package service_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
@@ -15,13 +14,13 @@ import (
 )
 
 const (
-	TestDuration2Hour  = 2 * time.Hour
-	TestDuration1Hour  = 1 * time.Hour
-	TestDuration30Min  = 30 * time.Minute
-	TestDuration75Min  = 75 * time.Minute
-	TestDuration45Min  = 45 * time.Minute
-	TestDuration3Hour  = 3 * time.Hour
-	TestDuration105Min = 105 * time.Minute
+	TestDuration2Hour  = int64(7200000)  // 2 hours in milliseconds
+	TestDuration1Hour  = int64(3600000)  // 1 hour in milliseconds
+	TestDuration30Min  = int64(1800000)  // 30 minutes in milliseconds
+	TestDuration75Min  = int64(4500000)  // 75 minutes in milliseconds
+	TestDuration45Min  = int64(2700000)  // 45 minutes in milliseconds
+	TestDuration3Hour  = int64(10800000) // 3 hours in milliseconds
+	TestDuration105Min = int64(6300000)  // 105 minutes in milliseconds
 )
 
 func TestUserService_SignUp_Success(t *testing.T) {

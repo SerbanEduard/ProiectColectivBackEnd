@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"time"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
@@ -131,15 +130,15 @@ func (us *UserService) GetAllUsers() ([]*entity.User, error) {
 	return us.userRepo.GetAll()
 }
 
-func (us *UserService) UpdateUserStatistics(id string, timeSpentOnApp time.Duration, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error) {
+func (us *UserService) UpdateUserStatistics(id string, timeSpentOnApp int64, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error) {
 	user, err := us.userRepo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	team, err := us.teamRepo.GetTeamById(timeSpentOnTeam.TeamId)
-	if err != nil || team.Id == "" {
-		return nil, fmt.Errorf(teamNotFoundError)
+	_, err = us.teamRepo.GetTeamById(timeSpentOnTeam.TeamId)
+	if err != nil {
+		return nil, err
 	}
 
 	if user.Statistics == nil {

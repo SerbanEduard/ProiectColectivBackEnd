@@ -1,8 +1,6 @@
 package tests
 
 import (
-	"time"
-
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
@@ -52,7 +50,7 @@ var (
 
 	ValidTimeSpentOnTeam = model.TimeSpentOnTeam{
 		TeamId:   TestTeamID,
-		Duration: 75 * time.Minute,
+		Duration: int64(4500000), // 75 minutes in milliseconds
 	}
 
 	ValidFriendRequest = entity.FriendRequest{

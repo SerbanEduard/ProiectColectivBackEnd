@@ -2,7 +2,6 @@ package controller
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/config"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
@@ -49,7 +48,7 @@ type UserServiceInterface interface {
 	UpdateUser(user *entity.User) error
 	DeleteUser(id string) error
 	GetAllUsers() ([]*entity.User, error)
-	UpdateUserStatistics(id string, timeSpentOnApp time.Duration, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error)
+	UpdateUserStatistics(id string, timeSpentOnApp int64, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error)
 }
 
 // SignUp
@@ -172,24 +171,12 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 		return
 	}
 
-	timeSpentOnApp, err := time.ParseDuration(request.TimeSpentOnApp)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": invalidTimeSpentOnAppFormat})
-		return
-	}
-
-	timeSpentOnTeam, err := time.ParseDuration(request.TimeSpentOnTeam)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": invalidTimeSpentOnTeamFormat})
-		return
-	}
-
 	teamTimeSpent := model.TimeSpentOnTeam{
 		TeamId:   request.TeamId,
-		Duration: timeSpentOnTeam,
+		Duration: request.TimeSpentOnTeam,
 	}
 
-	updatedUser, err := uc.userService.UpdateUserStatistics(id, timeSpentOnApp, teamTimeSpent)
+	updatedUser, err := uc.userService.UpdateUserStatistics(id, request.TimeSpentOnApp, teamTimeSpent)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

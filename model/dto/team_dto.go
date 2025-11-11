@@ -27,3 +27,15 @@ func NewTeamResponse(name, desc string, isPublic bool) *TeamResponse {
 		IsPublic:    isPublic,
 	}
 }
+
+type AddUserToTeamRequest struct {
+	UserID string `json:"userId" binding:"required"`
+	TeamID string `json:"teamId" binding:"required"`
+}
+
+func NewAddUserToTeamRequest(userId, teamId string) *AddUserToTeamRequest {
+	return &AddUserToTeamRequest{
+		UserID: userId,
+		TeamID: teamId,
+	}
+}
