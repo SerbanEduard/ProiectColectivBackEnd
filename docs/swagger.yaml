@@ -437,6 +437,12 @@ paths:
             items:
               $ref: '#/definitions/entity.User'
             type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Get all users
   /users/{id}:
     delete:
@@ -453,6 +459,16 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Delete a user
     get:
       consumes:
@@ -470,6 +486,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/entity.User'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Get a user by ID
   /users/{id}/statistics:
     put:
@@ -494,6 +516,18 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.UpdateStatisticsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Update user statistics
   /users/login:
     post:
@@ -546,6 +580,18 @@ paths:
           description: Created
           schema:
             $ref: '#/definitions/dto.SignUpUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Register a new user
   /voice/{teamId}:
     get:
@@ -560,7 +606,23 @@ paths:
         name: userId
         required: true
         type: string
-      responses: {}
+      responses:
+        "101":
+          description: Switching Protocols - WebSocket connection established
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Room is full
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Join voice chat room
   /voice/{teamId}/leave:
     delete:
@@ -575,6 +637,18 @@ paths:
         name: userId
         required: true
         type: string
-      responses: {}
+      responses:
+        "200":
+          description: Successfully left room
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Room not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Leave voice chat room
 swagger: "2.0"
