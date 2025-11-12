@@ -3,13 +3,16 @@ package service
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
+	"github.com/SerbanEduard/ProiectColectivBackEnd/config"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/persistence"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/validator"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -170,4 +173,56 @@ func generateID() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
+}
+
+// Errors returned by user service
+var (
+	ErrInvalidCredentials = errors.New("invalid email or password")
+)
+
+const jwtExpiresHours = 24
+
+// Login performs authentication by email or username and returns a LoginResponse
+func (us *UserService) Login(request *dto.LoginRequest) (*dto.LoginResponse, error) {
+	if request == nil {
+		return nil, fmt.Errorf("request required")
+	}
+
+	var user *entity.User
+	var err error
+	if request.Email != "" {
+		user, err = us.userRepo.GetByEmail(request.Email)
+	} else if request.Username != "" {
+		user, err = us.userRepo.GetByUsername(request.Username)
+	} else {
+		return nil, fmt.Errorf("email or username required")
+	}
+
+	if err != nil || user == nil {
+		return nil, ErrInvalidCredentials
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		return nil, ErrInvalidCredentials
+	}
+
+	secret := config.GetJWTSecret()
+	expiration := time.Now().Add(time.Hour * jwtExpiresHours)
+
+	claims := jwt.MapClaims{
+		"sub":      user.ID,
+		"username": user.Username,
+		"email":    user.Email,
+		"exp":      expiration.Unix(),
+		"iat":      time.Now().Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return nil, err
+	}
+
+	resp := dto.NewLoginResponse(signed, "24h", user)
+	return resp, nil
 }
