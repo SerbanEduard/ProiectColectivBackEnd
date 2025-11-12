@@ -57,6 +57,8 @@ type UserServiceInterface interface {
 //	@Produce	json
 //	@Param		request	body		dto.SignUpUserRequest	true	"The sign-up request"
 //	@Success	201		{object}	dto.SignUpUserResponse
+//	@Failure	400		{object}	map[string]string
+//	@Failure	500		{object}	map[string]string
 //	@Router		/users/signup [post]
 func (uc *UserController) SignUp(c *gin.Context) {
 	var request dto.SignUpUserRequest
@@ -81,6 +83,7 @@ func (uc *UserController) SignUp(c *gin.Context) {
 //	@Produce	json
 //	@Param		id	path		string	true	"The user's ID"
 //	@Success	200	{object}	entity.User
+//	@Failure	404	{object}	map[string]string
 //	@Router		/users/{id}  [get]
 func (uc *UserController) GetUser(c *gin.Context) {
 	id := c.Param("id")
@@ -99,6 +102,7 @@ func (uc *UserController) GetUser(c *gin.Context) {
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	[]entity.User
+//	@Failure	500	{object}	map[string]string
 //	@Router		/users [get]
 func (uc *UserController) GetAllUsers(c *gin.Context) {
 	users, err := uc.userService.GetAllUsers()
@@ -139,7 +143,8 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path	string	true	"The user's ID"
-//	@Success	200
+//	@Success	200	{object}	map[string]string
+//	@Failure	500	{object}	map[string]string
 //	@Router		/users/{id} [delete]
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
@@ -160,6 +165,8 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 //	@Param		id		path		string						true	"The user's ID"
 //	@Param		request	body		dto.UpdateStatisticsRequest	true	"The statistics update request"
 //	@Success	200		{object}	dto.UpdateStatisticsResponse
+//	@Failure	400		{object}	map[string]string
+//	@Failure	500		{object}	map[string]string
 //	@Router		/users/{id}/statistics [put]
 func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 	id := c.Param("id")

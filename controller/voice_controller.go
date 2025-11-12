@@ -48,6 +48,9 @@ func NewVoiceController() *VoiceController {
 // @Summary Join voice chat room
 // @Param teamId path string true "Team ID"
 // @Param userId query string true "User ID"
+// @Success 101 {string} string "Switching Protocols - WebSocket connection established"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 403 {object} map[string]string "Room is full"
 // @Router /voice/{teamId} [get]
 func (vc *VoiceController) JoinVoiceRoom(c *gin.Context) {
 	teamId := c.Param("teamId")
@@ -228,6 +231,8 @@ func (vc *VoiceController) CreateVoiceRoom(c *gin.Context) {
 // @Summary Leave voice chat room
 // @Param teamId path string true "Team ID"
 // @Param userId query string true "User ID"
+// @Success 200 {object} map[string]string "Successfully left room"
+// @Failure 404 {object} map[string]string "Room not found"
 // @Router /voice/{teamId}/leave [delete]
 func (vc *VoiceController) LeaveVoiceRoom(c *gin.Context) {
 	teamId := c.Param("teamId")
