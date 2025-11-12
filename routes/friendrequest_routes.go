@@ -8,7 +8,12 @@ import (
 func SetupFriendRequestRoutes(r *gin.Engine) {
     friendRequestController := controller.NewFriendRequestController()
 
-    r.POST("/friend-requests/:fromUserId/:toUserId", friendRequestController.SendFriendRequest)
-    r.PUT("/friend-requests/:fromUserId/:toUserId", friendRequestController.RespondToFriendRequest)
-    r.GET("/friend-requests/pending/:userId", friendRequestController.GetPendingRequests)
+    // Protected endpoints - require JWT
+    protected := r.Group("/")
+    protected.Use(controller.JWTAuthMiddleware())
+    {
+        protected.POST("/friend-requests/:fromUserId/:toUserId", friendRequestController.SendFriendRequest)
+        protected.PUT("/friend-requests/:fromUserId/:toUserId", friendRequestController.RespondToFriendRequest)
+        protected.GET("/friend-requests/pending/:userId", friendRequestController.GetPendingRequests)
+    }
 }

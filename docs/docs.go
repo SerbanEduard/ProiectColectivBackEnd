@@ -576,6 +576,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/dto.UpdateStatisticsResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
                     "400": {
                         "description": "Bad Request",
                         "schema": {
@@ -632,6 +634,15 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "403": {
                         "description": "Room is full",
                         "schema": {
@@ -666,6 +677,15 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "Successfully left room",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
