@@ -1,7 +1,7 @@
 package validator
 
 import (
-	"fmt"
+	"errors"
 	"regexp"
 	"strings"
 
@@ -29,21 +29,21 @@ func ValidateSignUpRequest(request *dto.SignUpUserRequest) error {
 
 func validateRequired(value, message string) error {
 	if strings.TrimSpace(value) == "" {
-		return fmt.Errorf(message)
+		return errors.New(message)
 	}
 	return nil
 }
 
 func validateMinLength(value string, minLen int, message string) error {
 	if len(value) < minLen {
-		return fmt.Errorf(message)
+		return errors.New(message)
 	}
 	return nil
 }
 
 func validateEmail(email string) error {
 	if !IsValidEmail(email) {
-		return fmt.Errorf("invalid email format")
+		return errors.New("invalid email format")
 	}
 	return nil
 }

@@ -92,6 +92,10 @@ func (us *UserService) GetUserByID(id string) (*entity.User, error) {
 	return us.userRepo.GetByID(id)
 }
 
+func (us *UserService) GetUserByUsername(username string) (*entity.User, error) {
+	return us.userRepo.GetByUsername(username)
+}
+
 func (us *UserService) GetUserByEmail(email string) (*entity.User, error) {
 	return us.userRepo.GetByEmail(email)
 }

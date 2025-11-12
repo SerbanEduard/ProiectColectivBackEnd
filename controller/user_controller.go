@@ -3,17 +3,25 @@ package controller
 import (
 	"net/http"
 
+	"github.com/SerbanEduard/ProiectColectivBackEnd/config"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/service"
 	"github.com/gin-gonic/gin"
+
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
-	userNotFoundError           = "User not found"
-	userDeletedSuccessfully     = "User deleted successfully"
+	userNotFoundError             = "User not found"
+	userDeletedSuccessfully       = "User deleted successfully"
 	statisticsUpdatedSuccessfully = "Statistics updated successfully"
+	invalidTimeSpentOnAppFormat   = "Invalid timeSpentOnApp format"
+	invalidTimeSpentOnTeamFormat  = "Invalid timeSpentOnTeam format"
+	invalidCredentials            = "invalid email or password"
+	jwtExpiresHours               = 24
 )
 
 type UserController struct {
@@ -36,6 +44,7 @@ type UserServiceInterface interface {
 	SignUp(request *dto.SignUpUserRequest) (*dto.SignUpUserResponse, error)
 	GetUserByID(id string) (*entity.User, error)
 	GetUserByEmail(email string) (*entity.User, error)
+	GetUserByUsername(username string) (*entity.User, error)
 	UpdateUser(user *entity.User) error
 	DeleteUser(id string) error
 	GetAllUsers() ([]*entity.User, error)
@@ -175,4 +184,61 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 
 	response := dto.NewUpdateStatisticsResponse(updatedUser.ID, updatedUser.Statistics)
 	c.JSON(http.StatusOK, response)
+}
+
+// Login
+//
+//	@Summary    Login user and return JWT
+//	@Accept     json
+//	@Produce    json
+//	@Param      request body        dto.LoginRequest true "The login request"
+//	@Success    200     {object}    dto.LoginResponse
+//	@Router     /users/login [post]
+func (uc *UserController) Login(c *gin.Context) {
+	var req dto.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var user *entity.User
+	var err error
+	// allow login by email or username
+	if req.Email != "" {
+		user, err = uc.userService.GetUserByEmail(req.Email)
+	} else if req.Username != "" {
+		user, err = uc.userService.GetUserByUsername(req.Username)
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "email or username required"})
+		return
+	}
+	if err != nil || user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": invalidCredentials})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": invalidCredentials})
+		return
+	}
+
+	secret := config.GetJWTSecret()
+	expiration := time.Now().Add(time.Hour * jwtExpiresHours)
+
+	claims := jwt.MapClaims{
+		"sub":      user.ID,
+		"username": user.Username,
+		"email":    user.Email,
+		"exp":      expiration.Unix(),
+		"iat":      time.Now().Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString([]byte(secret))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp := dto.NewLoginResponse(signed, "24h", user)
+	c.JSON(http.StatusOK, resp)
 }
