@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
@@ -11,9 +13,13 @@ import (
 )
 
 const (
-	userNotFoundError           = "User not found"
-	userDeletedSuccessfully     = "User deleted successfully"
+	userNotFoundError             = "User not found"
+	userDeletedSuccessfully       = "User deleted successfully"
 	statisticsUpdatedSuccessfully = "Statistics updated successfully"
+	invalidTimeSpentOnAppFormat   = "Invalid timeSpentOnApp format"
+	invalidTimeSpentOnTeamFormat  = "Invalid timeSpentOnTeam format"
+	invalidCredentials            = "invalid email or password"
+	jwtExpiresHours               = 24
 )
 
 type UserController struct {
@@ -36,6 +42,8 @@ type UserServiceInterface interface {
 	SignUp(request *dto.SignUpUserRequest) (*dto.SignUpUserResponse, error)
 	GetUserByID(id string) (*entity.User, error)
 	GetUserByEmail(email string) (*entity.User, error)
+	GetUserByUsername(username string) (*entity.User, error)
+	Login(request *dto.LoginRequest) (*dto.LoginResponse, error)
 	UpdateUser(user *entity.User) error
 	DeleteUser(id string) error
 	GetAllUsers() ([]*entity.User, error)
@@ -175,4 +183,41 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 
 	response := dto.NewUpdateStatisticsResponse(updatedUser.ID, updatedUser.Statistics)
 	c.JSON(http.StatusOK, response)
+}
+
+// Login
+//
+//	@Summary    Login user and return JWT
+//
+// @Summary Login user by email or username and return JWT
+// @Description Accepts either `email` or `username` along with `password`. Returns an access token and the full user (without password).
+// @Accept  json
+// @Produce json
+// @Param   request body        dto.LoginRequest true "The login request (email or username + password)"
+// @Success 200     {object}    dto.LoginResponse
+// @Failure 400     {object}    map[string]string
+// @Failure 401     {object}    map[string]string
+// @Router  /users/login [post]
+func (uc *UserController) Login(c *gin.Context) {
+	var req dto.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp, err := uc.userService.Login(&req)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidCredentials) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": invalidCredentials})
+			return
+		}
+		if strings.Contains(err.Error(), "required") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

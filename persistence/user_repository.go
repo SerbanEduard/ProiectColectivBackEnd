@@ -2,7 +2,7 @@ package persistence
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/config"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
@@ -35,6 +35,9 @@ func (ur *UserRepository) GetByID(id string) (*entity.User, error) {
 	if err := ref.Get(ctx, &user); err != nil {
 		return nil, err
 	}
+	if user.ID == "" {
+		return nil, errors.New(userNotFound)
+	}
 	return &user, nil
 }
 
@@ -49,7 +52,7 @@ func (ur *UserRepository) GetByEmail(email string) (*entity.User, error) {
 	}
 
 	if len(results) == 0 {
-		return nil, fmt.Errorf(userNotFound)
+		return nil, errors.New(userNotFound)
 	}
 
 	var user entity.User
@@ -82,7 +85,7 @@ func (ur *UserRepository) GetByUsername(username string) (*entity.User, error) {
 	}
 
 	if len(results) == 0 {
-		return nil, fmt.Errorf(userNotFound)
+		return nil, errors.New(userNotFound)
 	}
 
 	var user entity.User
