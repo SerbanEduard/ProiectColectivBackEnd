@@ -576,10 +576,17 @@ const docTemplate = `{
                             "$ref": "#/definitions/dto.UpdateStatisticsResponse"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {

@@ -516,10 +516,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.UpdateStatisticsResponse'
-        "401":
-          description: Unauthorized
         "400":
           description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
           schema:
             additionalProperties:
               type: string
