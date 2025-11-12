@@ -16,11 +16,11 @@ const (
 )
 
 const (
-	MsgTypeError     = "error"
-	MsgTypeRoomInfo  = "room-info"
-	MsgTypeUserLeft  = "user-left"
-	ErrorRoomFull    = "Room is full (max 2 users)"
-	ErrorRoomExists  = "Voice room already exists for this team"
+	MsgTypeError      = "error"
+	MsgTypeRoomInfo   = "room-info"
+	MsgTypeUserLeft   = "user-left"
+	ErrorRoomFull     = "Room is full (max 2 users)"
+	ErrorRoomExists   = "Voice room already exists for this team"
 	ErrorRoomNotFound = "Voice room not found"
 )
 
@@ -47,6 +47,7 @@ func NewVoiceController() *VoiceController {
 // JoinVoiceRoom
 // @Summary Join voice chat room
 // @Param teamId path string true "Team ID"
+// @Param userId query string true "User ID"
 // @Router /voice/{teamId} [get]
 func (vc *VoiceController) JoinVoiceRoom(c *gin.Context) {
 	teamId := c.Param("teamId")
