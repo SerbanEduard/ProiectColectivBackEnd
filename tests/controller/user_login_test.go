@@ -3,7 +3,7 @@ package controller_test
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,10 +12,11 @@ import (
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/service"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/tests"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestUserController_Login_Success(t *testing.T) {
@@ -24,23 +25,19 @@ func TestUserController_Login_Success(t *testing.T) {
 	mockService := new(tests.MockUserService)
 	userController := controller.NewUserControllerWithService(mockService)
 
-	// prepare hashed password same as service stores
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(tests.TestPassword), bcrypt.DefaultCost)
-
 	topics := &[]model.TopicOfInterest{model.Programming}
 	user := &entity.User{
 		ID:               tests.TestUserID,
 		Username:         tests.TestUsername,
 		Email:            tests.TestEmail,
-		Password:         string(hashed),
 		TopicsOfInterest: topics,
 	}
 
-	// mock service behavior
-	mockService.On("GetUserByEmail", tests.TestEmail).Return(user, nil)
+	// mock service behavior: return a prepared LoginResponse
+	loginReq := dto.LoginRequest{Email: tests.TestEmail, Password: tests.TestPassword}
+	mockService.On("Login", mock.Anything).Return(dto.NewLoginResponse("token", "24h", user), nil)
 
 	// build request
-	loginReq := dto.LoginRequest{Email: tests.TestEmail, Password: tests.TestPassword}
 	jsonData, _ := json.Marshal(loginReq)
 
 	w := httptest.NewRecorder()
@@ -56,7 +53,7 @@ func TestUserController_Login_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp.AccessToken)
-	assert.Equal(t, tests.TestUserID, resp.User.Id)
+	assert.Equal(t, tests.TestUserID, resp.User.ID)
 	assert.Equal(t, tests.TestUsername, resp.User.Username)
 	assert.Equal(t, tests.TestEmail, resp.User.Email)
 
@@ -70,9 +67,8 @@ func TestUserController_Login_InvalidCredentials(t *testing.T) {
 	userController := controller.NewUserControllerWithService(mockService)
 
 	// service returns error (user not found)
-	mockService.On("GetUserByEmail", tests.TestEmail).Return(nil, fmt.Errorf("not found"))
-
 	loginReq := dto.LoginRequest{Email: tests.TestEmail, Password: "wrongpass"}
+	mockService.On("Login", mock.Anything).Return(nil, service.ErrInvalidCredentials)
 	jsonData, _ := json.Marshal(loginReq)
 
 	w := httptest.NewRecorder()

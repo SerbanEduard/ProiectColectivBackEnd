@@ -153,6 +153,65 @@ definitions:
     - Music
     - Photography
     - Language
+  dto.LoginRequest:
+    type: object
+    properties:
+      email:
+        type: string
+      username:
+        type: string
+      password:
+        type: string
+  dto.LoginResponse:
+    type: object
+    properties:
+      accessToken:
+        type: string
+      tokenType:
+        type: string
+      expiresIn:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+  dto.UserResponse:
+    type: object
+    properties:
+      id:
+        type: string
+      firstname:
+        type: string
+      lastname:
+        type: string
+      username:
+        type: string
+      email:
+        type: string
+      topicsOfInterest:
+        type: array
+        items:
+          $ref: '#/definitions/model.TopicOfInterest'
+      teams:
+        type: array
+        items:
+          type: string
+      statistics:
+        $ref: '#/definitions/model.Statistics'
+  model.Statistics:
+    type: object
+    properties:
+      totalTimeSpentOnApp:
+        type: string
+      timeSpentOnTeams:
+        type: array
+        items:
+          $ref: '#/definitions/model.TimeSpentOnTeam'
+  model.TimeSpentOnTeam:
+    type: object
+    properties:
+      teamId:
+        type: string
+      duration:
+        type: string
 info:
   contact: {}
   title: StudyWithMe API
@@ -468,4 +527,26 @@ paths:
           schema:
             $ref: '#/definitions/dto.SignUpUserResponse'
       summary: Register a new user
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+      summary: Login user by email or username
 swagger: "2.0"
