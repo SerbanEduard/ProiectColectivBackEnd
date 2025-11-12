@@ -27,8 +27,9 @@ func NewTeamControllerWithService(teamService TeamServiceInterface) *TeamControl
 }
 
 type TeamServiceInterface interface {
-	CreateTeam(request *dto.TeamRequest) (*dto.TeamResponse, error)
+	CreateTeam(request *dto.TeamRequest) (*entity.Team, error)
 	AddUserToTeam(idUser string, idTeam string) error
+	DeleteUserFromTeam(idUser string, idTeam string) error
 	GetTeamById(id string) (*entity.Team, error)
 	GetXTeamsByPrefix(prefix string, x int) ([]*entity.Team, error)
 	GetTeamsByName(name string) ([]*entity.Team, error)
@@ -44,7 +45,7 @@ type TeamServiceInterface interface {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.TeamRequest	true	"Team details"
-//	@Success		201		{object}	dto.TeamResponse
+//	@Success		201		{object}	entity.Team
 //	@Failure		400		{object}	map[string]interface{}	"Bad Request"
 //	@Failure		500		{object}	map[string]interface{}	"Internal Server Error"
 //	@Router			/teams [post]
@@ -110,9 +111,9 @@ func (tc *TeamController) GetAllTeams(c *gin.Context) {
 //	@Param			request	body		dto.AddUserToTeamRequest	true	"User ID and Team ID"
 //	@Success		200		{object}	map[string]interface{}	"User added to team"
 //	@Failure		400		{object}	map[string]interface{}	"Bad Request: Invalid request body or missing userId or teamId"
-//	@Router			/teams/addUserToTeam [post]
+//	@Router			/teams/addUserToTeam [put]
 func (tc *TeamController) AddUserToTeam(c *gin.Context) {
-	var req dto.AddUserToTeamRequest
+	var req dto.UserToTeamRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
@@ -124,6 +125,34 @@ func (tc *TeamController) AddUserToTeam(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User added to team"})
+}
+
+// AddUserToTeam
+//
+//	@Summary		Delete a team
+//	@Description	Delete a team by providing team ID
+//	@Produce		json
+//	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
+//	@Success		200		{object}	map[string]interface{}	"User deleted from team"
+//	@Failure		400		{object}	map[string]interface{}	"Bad Request: Invalid request body or missing userId or teamId"
+//	@Router			/teams/deleteUserFromTeam [delete]
+func (tc *TeamController) DeleteUserFromTeam(c *gin.Context) {
+	var req dto.UserToTeamRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+	if req.TeamID == "" || req.UserID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body, empty parameters"})
+		return
+	}
+
+	if err := tc.teamService.DeleteUserFromTeam(req.UserID, req.TeamID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted from team"})
 }
 
 // GetXTeamsByPrefix
