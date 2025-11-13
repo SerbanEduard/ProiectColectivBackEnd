@@ -10,6 +10,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	TeamNotFoundError           = "Team not found"
+	LimitParameterRequiredError = "limit parameter required when using prefix"
+	LimitMustBeANumberError     = "limit must be a number"
+	InvalidRequestBodyError     = "Invalid request body"
+	EmptyParametersError        = "Invalid request body, empty parameters"
+	MissingTeamIDError          = "Missing team ID"
+	UserAddedToTeamMessage      = "User added to team"
+	UserDeletedFromTeamMessage  = "User deleted from team"
+	TeamDeletedMessage          = "Team deleted"
+)
+
 type TeamController struct {
 	teamService TeamServiceInterface
 }
@@ -77,7 +89,7 @@ func (tc *TeamController) GetTeam(c *gin.Context) {
 	id := c.Param("id")
 	team, err := tc.teamService.GetTeamById(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": TeamNotFoundError})
 		return
 	}
 
@@ -86,19 +98,58 @@ func (tc *TeamController) GetTeam(c *gin.Context) {
 
 // GetAllTeams
 //
-//	@Summary		Get all teams
-//	@Description	Get a list of all teams
+//	@Summary		Get teams with optional filtering
+//	@Description	Get teams - all teams, by name, or by prefix with limit
 //	@Produce		json
+//	@Param			name	query		string	false	"Filter by exact name"
+//	@Param			prefix	query		string	false	"Filter by name prefix"
+//	@Param			limit	query		int		false	"Limit results (required with prefix)"
 //	@Success		200	{array}		entity.Team
+//	@Failure		400	{object}	map[string]interface{}	"Bad Request"
 //	@Failure		500	{object}	map[string]interface{}	"Internal Server Error"
 //	@Router			/teams [get]
 func (tc *TeamController) GetAllTeams(c *gin.Context) {
+	name := c.Query("name")
+	prefix := c.Query("prefix")
+	limitStr := c.Query("limit")
+
+	// Filter by exact name
+	if name != "" {
+		teams, err := tc.teamService.GetTeamsByName(name)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, teams)
+		return
+	}
+
+	// Filter by prefix with limit
+	if prefix != "" {
+		if limitStr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": LimitParameterRequiredError})
+			return
+		}
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": LimitMustBeANumberError})
+			return
+		}
+		teams, err := tc.teamService.GetXTeamsByPrefix(prefix, limit)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, teams)
+		return
+	}
+
+	// Get all teams (no filters)
 	teams, err := tc.teamService.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, teams)
 }
 
@@ -108,14 +159,14 @@ func (tc *TeamController) GetAllTeams(c *gin.Context) {
 //	@Description	Add a user to a team by providing user ID and team ID
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		dto.AddUserToTeamRequest	true	"User ID and Team ID"
+//	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
 //	@Success		200		{object}	map[string]interface{}	"User added to team"
 //	@Failure		400		{object}	map[string]interface{}	"Bad Request: Invalid request body or missing userId or teamId"
-//	@Router			/teams/addUserToTeam [put]
+//	@Router			/teams/users [put]
 func (tc *TeamController) AddUserToTeam(c *gin.Context) {
 	var req dto.UserToTeamRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": InvalidRequestBodyError})
 		return
 	}
 
@@ -124,26 +175,26 @@ func (tc *TeamController) AddUserToTeam(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User added to team"})
+	c.JSON(http.StatusOK, gin.H{"message": UserAddedToTeamMessage})
 }
 
-// AddUserToTeam
+// DeleteUserFromTeam
 //
-//	@Summary		Delete a team
-//	@Description	Delete a team by providing team ID
-//	@Produce		json
-//	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
-//	@Success		200		{object}	map[string]interface{}	"User deleted from team"
-//	@Failure		400		{object}	map[string]interface{}	"Bad Request: Invalid request body or missing userId or teamId"
-//	@Router			/teams/deleteUserFromTeam [delete]
+// @Summary		Delete a user from a team
+// @Description	Delete a user from a team by providing team ID
+// @Produce		json
+// @Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
+// @Success		200		{object}	map[string]interface{}	"User deleted from team"
+// @Failure		400		{object}	map[string]interface{}	"Bad Request: Invalid request body or missing userId or teamId"
+// @Router			/teams/users [delete]
 func (tc *TeamController) DeleteUserFromTeam(c *gin.Context) {
 	var req dto.UserToTeamRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": InvalidRequestBodyError})
 		return
 	}
 	if req.TeamID == "" || req.UserID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body, empty parameters"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": EmptyParametersError})
 		return
 	}
 
@@ -152,68 +203,7 @@ func (tc *TeamController) DeleteUserFromTeam(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User deleted from team"})
-}
-
-// GetXTeamsByPrefix
-//
-//	@Summary		Get X teams by prefix
-//	@Description	Get a list of X teams that start with the specified prefix
-//	@Produce		json
-//	@Param			prefix	query		string	true	"Prefix to search for"
-//	@Param			limit	query		int		true	"Number of teams to retrieve"
-//	@Success		200		{array}		entity.Team
-//	@Failure		400		{object}	map[string]interface{}	"Bad Request: Missing prefix or limit query parameters, or limit is NaN"
-//	@Failure		500		{object}	map[string]interface{}	"Internal Server Error"
-//	@Router			/teams/search [get]
-func (tc *TeamController) GetXTeamsByPrefix(c *gin.Context) {
-	prefix := c.Query("prefix")
-	xStr := c.Query("limit")
-
-	if prefix == "" || xStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing prefix or limit query parameters"})
-		return
-	}
-
-	x, err := strconv.Atoi(xStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Limit must be a number"})
-		return
-	}
-
-	teams, err := tc.teamService.GetXTeamsByPrefix(prefix, x)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, teams)
-}
-
-// GetTeamsByName
-//
-//	@Summary		Get teams by name
-//	@Description	Get a list of teams that match the specified name
-//	@Produce		json
-//	@Param			name	query		string	true	"Name to search for"
-//	@Success		200		{array}		entity.Team
-//	@Failure		400		{object}	map[string]interface{}	"Bad Request: Missing 'name' query parameter"
-//	@Failure		500		{object}	map[string]interface{}	"Internal Server Error"
-//	@Router			/teams/by-name [get]
-func (tc *TeamController) GetTeamsByName(c *gin.Context) {
-	name := c.Query("name")
-	if name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing 'name' query parameter"})
-		return
-	}
-
-	teams, err := tc.teamService.GetTeamsByName(name)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, teams)
+	c.JSON(http.StatusOK, gin.H{"message": UserDeletedFromTeamMessage})
 }
 
 // UpdateTeam
@@ -256,7 +246,7 @@ func (tc *TeamController) UpdateTeam(c *gin.Context) {
 func (tc *TeamController) DeleteTeam(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing team ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": MissingTeamIDError})
 		return
 	}
 
@@ -265,5 +255,5 @@ func (tc *TeamController) DeleteTeam(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Team deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": TeamDeletedMessage})
 }

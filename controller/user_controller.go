@@ -13,13 +13,9 @@ import (
 )
 
 const (
-	userNotFoundError             = "User not found"
-	userDeletedSuccessfully       = "User deleted successfully"
-	statisticsUpdatedSuccessfully = "Statistics updated successfully"
-	invalidTimeSpentOnAppFormat   = "Invalid timeSpentOnApp format"
-	invalidTimeSpentOnTeamFormat  = "Invalid timeSpentOnTeam format"
-	invalidCredentials            = "invalid email or password"
-	jwtExpiresHours               = 24
+	userNotFoundError       = "User not found"
+	userDeletedSuccessfully = "User deleted successfully"
+	invalidCredentials      = "invalid email or password"
 )
 
 type UserController struct {

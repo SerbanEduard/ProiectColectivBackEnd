@@ -1,15 +1,5 @@
 basePath: /
 definitions:
-  dto.AddUserToTeamRequest:
-    properties:
-      teamId:
-        type: string
-      userId:
-        type: string
-    required:
-    - teamId
-    - userId
-    type: object
   dto.LoginRequest:
     properties:
       email:
@@ -64,14 +54,9 @@ definitions:
         type: boolean
       name:
         type: string
-    type: object
-  dto.TeamResponse:
-    properties:
-      description:
-        type: string
-      ispublic:
-        type: boolean
-      name:
+      teamtopic:
+        $ref: '#/definitions/model.TopicOfInterest'
+      userid:
         type: string
     type: object
   dto.UpdateStatisticsRequest:
@@ -121,6 +106,16 @@ definitions:
       username:
         type: string
     type: object
+  dto.UserToTeamRequest:
+    properties:
+      teamId:
+        type: string
+      userId:
+        type: string
+    required:
+    - teamId
+    - userId
+    type: object
   entity.Team:
     properties:
       description:
@@ -131,6 +126,8 @@ definitions:
         type: boolean
       name:
         type: string
+      teamtopic:
+        $ref: '#/definitions/model.TopicOfInterest'
       users:
         items:
           type: string
@@ -206,7 +203,20 @@ info:
 paths:
   /teams:
     get:
-      description: Get a list of all teams
+      description: Get teams - all teams, by name, or by prefix with limit
+      parameters:
+      - description: Filter by exact name
+        in: query
+        name: name
+        type: string
+      - description: Filter by name prefix
+        in: query
+        name: prefix
+        type: string
+      - description: Limit results (required with prefix)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -216,12 +226,17 @@ paths:
             items:
               $ref: '#/definitions/entity.Team'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
         "500":
           description: Internal Server Error
           schema:
             additionalProperties: true
             type: object
-      summary: Get all teams
+      summary: Get teams with optional filtering
     post:
       consumes:
       - application/json
@@ -239,7 +254,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.TeamResponse'
+            $ref: '#/definitions/entity.Team'
         "400":
           description: Bad Request
           schema:
@@ -334,8 +349,31 @@ paths:
             additionalProperties: true
             type: object
       summary: Update a team
-  /teams/addUserToTeam:
-    post:
+  /teams/users:
+    delete:
+      description: Delete a user from a team by providing team ID
+      parameters:
+      - description: User ID and Team ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserToTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted from team
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'Bad Request: Invalid request body or missing userId or teamId'
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a user from a team
+    put:
       consumes:
       - application/json
       description: Add a user to a team by providing user ID and team ID
@@ -345,7 +383,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.AddUserToTeamRequest'
+          $ref: '#/definitions/dto.UserToTeamRequest'
       produces:
       - application/json
       responses:
@@ -360,70 +398,6 @@ paths:
             additionalProperties: true
             type: object
       summary: Add a user to a team
-  /teams/by-name:
-    get:
-      description: Get a list of teams that match the specified name
-      parameters:
-      - description: Name to search for
-        in: query
-        name: name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entity.Team'
-            type: array
-        "400":
-          description: 'Bad Request: Missing ''name'' query parameter'
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get teams by name
-  /teams/search:
-    get:
-      description: Get a list of X teams that start with the specified prefix
-      parameters:
-      - description: Prefix to search for
-        in: query
-        name: prefix
-        required: true
-        type: string
-      - description: Number of teams to retrieve
-        in: query
-        name: limit
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entity.Team'
-            type: array
-        "400":
-          description: 'Bad Request: Missing prefix or limit query parameters, or
-            limit is NaN'
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get X teams by prefix
   /users:
     get:
       consumes:

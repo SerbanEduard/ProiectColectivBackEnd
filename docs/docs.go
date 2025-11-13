@@ -17,11 +17,31 @@ const docTemplate = `{
     "paths": {
         "/teams": {
             "get": {
-                "description": "Get a list of all teams",
+                "description": "Get teams - all teams, by name, or by prefix with limit",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Get all teams",
+                "summary": "Get teams with optional filtering",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exact name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by name prefix",
+                        "name": "prefix",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results (required with prefix)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -30,6 +50,13 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/entity.Team"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
@@ -65,7 +92,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.TeamResponse"
+                            "$ref": "#/definitions/entity.Team"
                         }
                     },
                     "400": {
@@ -85,8 +112,8 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams/addUserToTeam": {
-            "post": {
+        "/teams/users": {
+            "put": {
                 "description": "Add a user to a team by providing user ID and team ID",
                 "consumes": [
                     "application/json"
@@ -102,7 +129,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.AddUserToTeamRequest"
+                            "$ref": "#/definitions/dto.UserToTeamRequest"
                         }
                     }
                 ],
@@ -122,93 +149,34 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/teams/by-name": {
-            "get": {
-                "description": "Get a list of teams that match the specified name",
+            },
+            "delete": {
+                "description": "Delete a user from a team by providing team ID",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Get teams by name",
+                "summary": "Delete a user from a team",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Name to search for",
-                        "name": "name",
-                        "in": "query",
-                        "required": true
+                        "description": "User ID and Team ID",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserToTeamRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "User deleted from team",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Team"
-                            }
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Missing 'name' query parameter",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/teams/search": {
-            "get": {
-                "description": "Get a list of X teams that start with the specified prefix",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Get X teams by prefix",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Prefix to search for",
-                        "name": "prefix",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of teams to retrieve",
-                        "name": "limit",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Team"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request: Missing prefix or limit query parameters, or limit is NaN",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
+                        "description": "Bad Request: Invalid request body or missing userId or teamId",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -714,21 +682,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.AddUserToTeamRequest": {
-            "type": "object",
-            "required": [
-                "teamId",
-                "userId"
-            ],
-            "properties": {
-                "teamId": {
-                    "type": "string"
-                },
-                "userId": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.LoginRequest": {
             "type": "object",
             "properties": {
@@ -811,19 +764,11 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.TeamResponse": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
                 },
-                "ispublic": {
-                    "type": "boolean"
+                "teamtopic": {
+                    "$ref": "#/definitions/model.TopicOfInterest"
                 },
-                "name": {
+                "userid": {
                     "type": "string"
                 }
             }
@@ -898,6 +843,21 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UserToTeamRequest": {
+            "type": "object",
+            "required": [
+                "teamId",
+                "userId"
+            ],
+            "properties": {
+                "teamId": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Team": {
             "type": "object",
             "properties": {
@@ -912,6 +872,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "teamtopic": {
+                    "$ref": "#/definitions/model.TopicOfInterest"
                 },
                 "users": {
                     "type": "array",
