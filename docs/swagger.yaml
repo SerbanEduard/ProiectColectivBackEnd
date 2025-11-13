@@ -116,6 +116,15 @@ definitions:
     - teamId
     - userId
     type: object
+  dto.addUserToTeam:
+    properties:
+      user:
+        type:entity.User
+      team:
+        type:entity.Team
+      required:
+        -user
+        -team
   entity.Team:
     properties:
       description:
