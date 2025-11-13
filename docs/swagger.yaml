@@ -522,6 +522,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
           description: Internal Server Error
           schema:
@@ -617,6 +623,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "403":
           description: Room is full
           schema:
@@ -640,6 +652,12 @@ paths:
       responses:
         "200":
           description: Successfully left room
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
           schema:
             additionalProperties:
               type: string

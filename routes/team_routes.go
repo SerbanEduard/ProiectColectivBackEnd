@@ -20,4 +20,17 @@ func SetupTeamRoutes(r *gin.Engine) {
 	r.PUT("/teams/:id", teamController.UpdateTeam)    // Update a team
 	r.DELETE("/teams/:id", teamController.DeleteTeam) // Delete a team
 
+	// Protected endpoints - require JWT
+	protected := r.Group("/")
+	protected.Use(controller.JWTAuthMiddleware())
+	{
+		protected.POST("/teams", teamController.NewTeam)
+		protected.GET("/teams/:id", teamController.GetTeam)
+		protected.GET("/teams", teamController.GetAllTeams)
+		protected.PUT("/teams/:id", teamController.UpdateTeam)
+		protected.DELETE("/teams/:id", teamController.DeleteTeam)
+		protected.GET("/teams/search", teamController.GetXTeamsByPrefix)
+		protected.GET("/teams/by-name", teamController.GetTeamsByName)
+		protected.POST("/teams/addUserToTeam", teamController.AddUserToTeam)
+	}
 }

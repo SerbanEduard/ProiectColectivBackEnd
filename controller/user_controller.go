@@ -165,6 +165,7 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 //	@Param		id		path		string						true	"The user's ID"
 //	@Param		request	body		dto.UpdateStatisticsRequest	true	"The statistics update request"
 //	@Success	200		{object}	dto.UpdateStatisticsResponse
+//	@Failure	401		{object}	map[string]string
 //	@Failure	400		{object}	map[string]string
 //	@Failure	500		{object}	map[string]string
 //	@Router		/users/{id}/statistics [put]
