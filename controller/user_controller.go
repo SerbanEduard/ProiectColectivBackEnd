@@ -114,7 +114,15 @@ func (uc *UserController) GetAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-// UpdateUser TODO: Add Swagger comment
+// UpdateUser
+//
+//	@Summary	Update a user
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		string	true	"The user's ID"
+//	@Success	200	{object}	entity.User
+//	@Failure	404	{object}	map[string]string
+//	@Router		/users/{id} [put]
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 
@@ -142,7 +150,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 //	@Summary	Delete a user
 //	@Accept		json
 //	@Produce	json
-//	@Param		id	path	string	true	"The user's ID"
+//	@Param		id	path		string	true	"The user's ID"
 //	@Success	200	{object}	map[string]string
 //	@Failure	500	{object}	map[string]string
 //	@Router		/users/{id} [delete]
@@ -195,17 +203,17 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 
 // Login
 //
-//	@Summary    Login user and return JWT
+//	@Summary		Login user and return JWT
 //
-// @Summary Login user by email or username and return JWT
-// @Description Accepts either `email` or `username` along with `password`. Returns an access token and the full user (without password).
-// @Accept  json
-// @Produce json
-// @Param   request body        dto.LoginRequest true "The login request (email or username + password)"
-// @Success 200     {object}    dto.LoginResponse
-// @Failure 400     {object}    map[string]string
-// @Failure 401     {object}    map[string]string
-// @Router  /users/login [post]
+//	@Summary		Login user by email or username and return JWT
+//	@Description	Accepts either `email` or `username` along with `password`. Returns an access token and the full user (without password).
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		dto.LoginRequest	true	"The login request (email or username + password)"
+//	@Success		200		{object}	dto.LoginResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Router			/users/login [post]
 func (uc *UserController) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

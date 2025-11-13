@@ -45,14 +45,15 @@ func NewVoiceController() *VoiceController {
 }
 
 // JoinVoiceRoom
-// @Summary Join voice chat room
-// @Param teamId path string true "Team ID"
-// @Param userId query string true "User ID"
-// @Success 101 {string} string "Switching Protocols - WebSocket connection established"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Failure 403 {object} map[string]string "Room is full"
-// @Router /voice/{teamId} [get]
+//
+//	@Summary	Join voice chat room
+//	@Param		teamId	path		string				true	"Team ID"
+//	@Param		userId	query		string				true	"User ID"
+//	@Success	101		{string}	string				"Switching Protocols - WebSocket connection established"
+//	@Failure	400		{object}	map[string]string	"Bad Request"
+//	@Failure	401		{object}	map[string]string	"Unauthorized"
+//	@Failure	403		{object}	map[string]string	"Room is full"
+//	@Router		/voice/{teamId} [get]
 func (vc *VoiceController) JoinVoiceRoom(c *gin.Context) {
 	teamId := c.Param("teamId")
 	userId := c.Query("userId")
@@ -98,15 +99,15 @@ func (vc *VoiceController) JoinVoiceRoom(c *gin.Context) {
 }
 
 // CreateVoiceRoom
-// @Summary Create voice room
-// @Accept json
-// @Produce json
-// @Param teamId path string true "Team ID"
-// @Param userId query string true "User ID"
-// @Success 201 {object} entity.VoiceRoom
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Failure 409 {object} map[string]string "Room already exists"
-// @Router /voice/rooms/{teamId} [post]
+//	@Summary	Create voice room
+//	@Accept		json
+//	@Produce	json
+//	@Param		teamId	path		string	true	"Team ID"
+//	@Param		userId	query		string	true	"User ID"
+//	@Success	201		{object}	entity.VoiceRoom
+//	@Failure	401		{object}	map[string]string	"Unauthorized"
+//	@Failure	409		{object}	map[string]string	"Room already exists"
+//	@Router		/voice/rooms/{teamId} [post]
 // Helper methods
 
 func (vc *VoiceController) canJoinRoom(room *VoiceRoom) bool {
@@ -232,13 +233,14 @@ func (vc *VoiceController) CreateVoiceRoom(c *gin.Context) {
 }
 
 // LeaveVoiceRoom
-// @Summary Leave voice chat room
-// @Param teamId path string true "Team ID"
-// @Param userId query string true "User ID"
-// @Success 200 {object} map[string]string "Successfully left room"
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Failure 404 {object} map[string]string "Room not found"
-// @Router /voice/{teamId}/leave [delete]
+//
+//	@Summary	Leave voice chat room
+//	@Param		teamId	path		string				true	"Team ID"
+//	@Param		userId	query		string				true	"User ID"
+//	@Success	200		{object}	map[string]string	"Successfully left room"
+//	@Failure	401		{object}	map[string]string	"Unauthorized"
+//	@Failure	404		{object}	map[string]string	"Room not found"
+//	@Router		/voice/{teamId}/leave [delete]
 func (vc *VoiceController) LeaveVoiceRoom(c *gin.Context) {
 	teamId := c.Param("teamId")
 	userId := c.Query("userId")
