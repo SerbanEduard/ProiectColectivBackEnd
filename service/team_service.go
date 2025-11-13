@@ -38,7 +38,7 @@ func NewTeamServiceWithRepo(UserRepositoryInterface UserRepositoryInterface, tea
 	}
 }
 
-func (ts *TeamService) CreateTeam(request *dto.TeamRequest) (*dto.TeamResponse, error) {
+func (ts *TeamService) CreateTeam(request *dto.TeamRequest) (*entity.Team, error) {
 	if err := validator.ValidateTeamRequest(request); err != nil {
 		return nil, err
 	}
@@ -52,11 +52,12 @@ func (ts *TeamService) CreateTeam(request *dto.TeamRequest) (*dto.TeamResponse, 
 		request.Description,
 		request.IsPublic,
 		nil,
+		request.TeamTopic,
 	)
 	if err := ts.teamRepository.Create(&team); err != nil {
 		return nil, err
 	}
-	return dto.NewTeamResponse(team.Name, team.Description, team.IsPublic), nil
+	return &team, nil
 }
 
 func (ts *TeamService) AddUserToTeam(idUser string, idTeam string) error {
@@ -69,8 +70,8 @@ func (ts *TeamService) AddUserToTeam(idUser string, idTeam string) error {
 		return err
 	}
 	for _, u := range team.UsersIds {
-		if user.ID == u {
-			return errors.New("User is already part of the team")
+		if idUser == u {
+			return errors.New("user is already part of the team")
 		}
 	}
 	team.UsersIds = append(team.UsersIds, idUser)
@@ -78,6 +79,40 @@ func (ts *TeamService) AddUserToTeam(idUser string, idTeam string) error {
 		user.TeamsIds = &[]string{}
 	}
 	*user.TeamsIds = append(*user.TeamsIds, idTeam)
+
+	if err := ts.userRepository.Update(user); err != nil {
+		return err
+	}
+	if err := ts.teamRepository.Update(team); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ts *TeamService) DeleteUserFromTeam(idUser string, idTeam string) error {
+	user, err := ts.userRepository.GetByID(idUser)
+	if err != nil {
+		return err
+	}
+	team, err := ts.teamRepository.GetTeamById(idTeam)
+	if err != nil {
+		return err
+	}
+	var ok bool = false
+	for _, u := range team.UsersIds {
+		if idUser == u {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		return errors.New("the user is not a part of this team")
+	}
+	usersIds := removeString(team.UsersIds, user.ID)
+	teamsIds := removeString(*user.TeamsIds, team.Id)
+
+	team.UsersIds = usersIds
+	user.TeamsIds = &teamsIds
 
 	if err := ts.userRepository.Update(user); err != nil {
 		return err
