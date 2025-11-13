@@ -8,12 +8,11 @@ import (
 func SetupTeamRoutes(r *gin.Engine) {
 	teamController := controller.NewTeamController()
 	// Protected endpoints - require JWT
-	r.DELETE("/teams/deleteUserFromTeam", teamController.DeleteUserFromTeam)
 	protected := r.Group("/")
 	protected.Use(controller.JWTAuthMiddleware())
 	{
-		protected.PUT("/teams/addUserToTeam", teamController.AddUserToTeam) // Add a user to a team
-		//protected.DELETE("/teams/deleteUserFromTeam", teamController.DeleteUserFromTeam) // Delete a user from a team
+		protected.PUT("/teams/addUserToTeam", teamController.AddUserToTeam)              // Add a user to a team
+		protected.DELETE("/teams/deleteUserFromTeam", teamController.DeleteUserFromTeam) // Delete a user from a team
 
 		protected.GET("/teams/search", teamController.GetXTeamsByPrefix) // Query ?prefix=&limit=
 		protected.GET("/teams/by-name", teamController.GetTeamsByName)   // Query ?name=
