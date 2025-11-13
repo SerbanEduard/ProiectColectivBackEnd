@@ -108,7 +108,7 @@ func (tc *TeamController) GetAllTeams(c *gin.Context) {
 //	@Description	Add a user to a team by providing user ID and team ID
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		dto.AddUserToTeamRequest	true	"User ID and Team ID"
+//	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
 //	@Success		200		{object}	map[string]interface{}	"User added to team"
 //	@Failure		400		{object}	map[string]interface{}	"Bad Request: Invalid request body or missing userId or teamId"
 //	@Router			/teams/addUserToTeam [put]
@@ -127,10 +127,10 @@ func (tc *TeamController) AddUserToTeam(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User added to team"})
 }
 
-// AddUserToTeam
+// DeleteUserFromTeam
 //
-//	@Summary		Delete a team
-//	@Description	Delete a team by providing team ID
+//	@Summary		Delete a user from a team
+//	@Description	Delete a user from a team by providing the user ID and team ID
 //	@Produce		json
 //	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
 //	@Success		200		{object}	map[string]interface{}	"User deleted from team"

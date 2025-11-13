@@ -65,7 +65,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.TeamResponse"
+                            "$ref": "#/definitions/entity.Team"
                         }
                     },
                     "400": {
@@ -86,7 +86,7 @@ const docTemplate = `{
             }
         },
         "/teams/addUserToTeam": {
-            "post": {
+            "put": {
                 "description": "Add a user to a team by providing user ID and team ID",
                 "consumes": [
                     "application/json"
@@ -102,7 +102,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.AddUserToTeamRequest"
+                            "$ref": "#/definitions/dto.UserToTeamRequest"
                         }
                     }
                 ],
@@ -159,6 +159,42 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/teams/deleteUserFromTeam": {
+            "delete": {
+                "description": "Delete a user from a team by providing the user ID and team ID",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete a user from a team",
+                "parameters": [
+                    {
+                        "description": "User ID and Team ID",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserToTeamRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User deleted from team",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid request body or missing userId or teamId",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -503,6 +539,68 @@ const docTemplate = `{
                     }
                 }
             },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update\ta user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The user's ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The updated user",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "delete": {
                 "consumes": [
                     "application/json"
@@ -714,21 +812,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.AddUserToTeamRequest": {
-            "type": "object",
-            "required": [
-                "teamId",
-                "userId"
-            ],
-            "properties": {
-                "teamId": {
-                    "type": "string"
-                },
-                "userId": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.LoginRequest": {
             "type": "object",
             "properties": {
@@ -811,19 +894,11 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.TeamResponse": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
                 },
-                "ispublic": {
-                    "type": "boolean"
+                "teamtopic": {
+                    "$ref": "#/definitions/model.TopicOfInterest"
                 },
-                "name": {
+                "userid": {
                     "type": "string"
                 }
             }
@@ -898,6 +973,21 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UserToTeamRequest": {
+            "type": "object",
+            "required": [
+                "teamId",
+                "userId"
+            ],
+            "properties": {
+                "teamId": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Team": {
             "type": "object",
             "properties": {
@@ -912,6 +1002,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "teamtopic": {
+                    "$ref": "#/definitions/model.TopicOfInterest"
                 },
                 "users": {
                     "type": "array",
