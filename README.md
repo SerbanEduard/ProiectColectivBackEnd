@@ -43,6 +43,7 @@ Server runs on `http://localhost:8080`
 
 - `POST/teams` - Create a team  (+ Json example: {"name": "nameTest", "description": "descTest", "ispublic": true})
 - `POST/teams/addUserToTeam` - Add a user to a team (+Json example: {"userId":"id1", "teamId":"id2"})
+- `DELETE/teams/deleteUserFromTeam` - Delete a user from a team (+Json example: {"userId":"id1", "teamId":"id2"})
 - `GET/teams/:id` - Get team by ID
 - `GET/teams` - Get all teams
 - `GET/teams/search?prefix= &limit= ` - Get the first "limit" teams whose names start with "prefix"

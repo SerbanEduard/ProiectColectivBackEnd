@@ -42,16 +42,21 @@ func (ts *TeamService) CreateTeam(request *dto.TeamRequest) (*entity.Team, error
 	if err := validator.ValidateTeamRequest(request); err != nil {
 		return nil, err
 	}
+	_, err := ts.userRepository.GetByID(request.UserId)
+	if err != nil {
+		return nil, err
+	}
 	id, err := generateID()
 	if err != nil {
 		return nil, err
 	}
+	usersIds := []string{request.UserId}
 	team := *entity.NewTeam(
 		id,
 		request.Name,
 		request.Description,
 		request.IsPublic,
-		nil,
+		usersIds,
 		request.TeamTopic,
 	)
 	if err := ts.teamRepository.Create(&team); err != nil {
