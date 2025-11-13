@@ -104,9 +104,9 @@ func (tc *TeamController) GetTeam(c *gin.Context) {
 //	@Param			name	query		string	false	"Filter by exact name"
 //	@Param			prefix	query		string	false	"Filter by name prefix"
 //	@Param			limit	query		int		false	"Limit results (required with prefix)"
-//	@Success		200	{array}		entity.Team
-//	@Failure		400	{object}	map[string]interface{}	"Bad Request"
-//	@Failure		500	{object}	map[string]interface{}	"Internal Server Error"
+//	@Success		200		{array}		entity.Team
+//	@Failure		400		{object}	map[string]interface{}	"Bad Request"
+//	@Failure		500		{object}	map[string]interface{}	"Internal Server Error"
 //	@Router			/teams [get]
 func (tc *TeamController) GetAllTeams(c *gin.Context) {
 	name := c.Query("name")
@@ -150,6 +150,7 @@ func (tc *TeamController) GetAllTeams(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusOK, teams)
 }
 
@@ -180,13 +181,13 @@ func (tc *TeamController) AddUserToTeam(c *gin.Context) {
 
 // DeleteUserFromTeam
 //
-// @Summary		Delete a user from a team
-// @Description	Delete a user from a team by providing team ID
-// @Produce		json
-// @Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
-// @Success		200		{object}	map[string]interface{}	"User deleted from team"
-// @Failure		400		{object}	map[string]interface{}	"Bad Request: Invalid request body or missing userId or teamId"
-// @Router			/teams/users [delete]
+//	@Summary		Delete a user from a team
+//	@Description	Delete a user from a team by providing team ID
+//	@Produce		json
+//	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
+//	@Success		200		{object}	map[string]interface{}	"User deleted from team"
+//	@Failure		400		{object}	map[string]interface{}	"Bad Request: Invalid request body or missing userId or teamId"
+//	@Router			/teams/users [delete]
 func (tc *TeamController) DeleteUserFromTeam(c *gin.Context) {
 	var req dto.UserToTeamRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
