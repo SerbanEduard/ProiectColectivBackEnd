@@ -11,11 +11,8 @@ func SetupTeamRoutes(r *gin.Engine) {
 	protected := r.Group("/")
 	protected.Use(controller.JWTAuthMiddleware())
 	{
-		protected.PUT("/teams/addUserToTeam", teamController.AddUserToTeam)              // Add a user to a team
-		protected.DELETE("/teams/deleteUserFromTeam", teamController.DeleteUserFromTeam) // Delete a user from a team
-
-		protected.GET("/teams/search", teamController.GetXTeamsByPrefix) // Query ?prefix=&limit=
-		protected.GET("/teams/by-name", teamController.GetTeamsByName)   // Query ?name=
+		protected.PUT("/teams/users", teamController.AddUserToTeam)         // Add a user to a team
+		protected.DELETE("/teams/users", teamController.DeleteUserFromTeam) // Delete a user from a team
 
 		protected.POST("/teams", teamController.NewTeam)          // Create a team
 		protected.GET("/teams/:id", teamController.GetTeam)       // Get a team by ID

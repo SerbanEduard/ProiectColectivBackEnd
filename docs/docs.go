@@ -17,11 +17,31 @@ const docTemplate = `{
     "paths": {
         "/teams": {
             "get": {
-                "description": "Get a list of all teams",
+                "description": "Get teams - all teams, by name, or by prefix with limit",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Get all teams",
+                "summary": "Get teams with optional filtering",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exact name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by name prefix",
+                        "name": "prefix",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results (required with prefix)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -30,6 +50,13 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/entity.Team"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
@@ -85,7 +112,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams/addUserToTeam": {
+        "/teams/users": {
             "put": {
                 "description": "Add a user to a team by providing user ID and team ID",
                 "consumes": [
@@ -122,54 +149,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/teams/by-name": {
-            "get": {
-                "description": "Get a list of teams that match the specified name",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Get teams by name",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Name to search for",
-                        "name": "name",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Team"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request: Missing 'name' query parameter",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/teams/deleteUserFromTeam": {
+            },
             "delete": {
-                "description": "Delete a user from a team by providing the user ID and team ID",
+                "description": "Delete a user from a team by providing team ID",
                 "produces": [
                     "application/json"
                 ],
@@ -195,56 +177,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request: Invalid request body or missing userId or teamId",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/teams/search": {
-            "get": {
-                "description": "Get a list of X teams that start with the specified prefix",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Get X teams by prefix",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Prefix to search for",
-                        "name": "prefix",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of teams to retrieve",
-                        "name": "limit",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Team"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request: Missing prefix or limit query parameters, or limit is NaN",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
