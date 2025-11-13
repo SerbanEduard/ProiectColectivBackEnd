@@ -467,6 +467,47 @@ paths:
               type: string
             type: object
       summary: Get a user by ID
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: The user's ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: The updated user
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/entity.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: "Update\ta user"
   /users/{id}/statistics:
     put:
       consumes:

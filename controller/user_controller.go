@@ -110,7 +110,18 @@ func (uc *UserController) GetAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-// UpdateUser TODO: Add Swagger comment
+// UpdateUser
+//
+//	@Summary		Update	a user
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string		true	"The user's ID"
+//	@Param			user	body		entity.User	true	"The updated user"
+//	@Success		200		{object}	entity.User
+//	@Failure		400		{object}	map[string]string	"Bad Request"
+//	@Failure		404		{object}	map[string]string	"User not found"
+//	@Failure		500		{object}	map[string]string	"Internal Server Error"
+//	@Router			/users/{id} [put]
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 
