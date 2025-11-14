@@ -24,7 +24,7 @@ func main() {
 	r := routes.SetupRoutes()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://studyflow-6qwx.onrender.co"},
+		AllowOrigins:     []string{"https://studyflow-6qwx.onrender.com"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
