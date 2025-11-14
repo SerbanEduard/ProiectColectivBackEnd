@@ -75,6 +75,7 @@ func (uc *UserController) SignUp(c *gin.Context) {
 // GetUser
 //
 //	@Summary	Get a user by ID
+//	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path		string	true	"The user's ID"
@@ -95,6 +96,7 @@ func (uc *UserController) GetUser(c *gin.Context) {
 // GetAllUsers
 //
 //	@Summary	Get all users
+//	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	[]entity.User
@@ -112,16 +114,17 @@ func (uc *UserController) GetAllUsers(c *gin.Context) {
 
 // UpdateUser
 //
-//	@Summary		Update	a user
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		string		true	"The user's ID"
-//	@Param			user	body		entity.User	true	"The updated user"
-//	@Success		200		{object}	entity.User
-//	@Failure		400		{object}	map[string]string	"Bad Request"
-//	@Failure		404		{object}	map[string]string	"User not found"
-//	@Failure		500		{object}	map[string]string	"Internal Server Error"
-//	@Router			/users/{id} [put]
+//	@Summary	Update	a user
+//	@Security	Bearer
+//	@Accept		json
+//	@Produce	json
+//	@Param		id		path		string		true	"The user's ID"
+//	@Param		user	body		entity.User	true	"The updated user"
+//	@Success	200		{object}	entity.User
+//	@Failure	400		{object}	map[string]string	"Bad Request"
+//	@Failure	404		{object}	map[string]string	"User not found"
+//	@Failure	500		{object}	map[string]string	"Internal Server Error"
+//	@Router		/users/{id} [put]
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 
@@ -147,6 +150,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 // DeleteUser
 //
 //	@Summary	Delete a user
+//	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path		string	true	"The user's ID"
@@ -167,6 +171,7 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 // UpdateUserStatistics
 //
 //	@Summary	Update user statistics
+//	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
 //	@Param		id		path		string						true	"The user's ID"
@@ -201,8 +206,6 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 }
 
 // Login
-//
-//	@Summary		Login user and return JWT
 //
 //	@Summary		Login user by email or username and return JWT
 //	@Description	Accepts either `email` or `username` along with `password`. Returns an access token and the full user (without password).

@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/teams": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Get teams - all teams, by name, or by prefix with limit",
                 "produces": [
                     "application/json"
@@ -69,6 +74,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Create a new team with the provided details",
                 "consumes": [
                     "application/json"
@@ -114,6 +124,11 @@ const docTemplate = `{
         },
         "/teams/users": {
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Add a user to a team by providing user ID and team ID",
                 "consumes": [
                     "application/json"
@@ -151,6 +166,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Delete a user from a team by providing team ID",
                 "produces": [
                     "application/json"
@@ -187,6 +207,11 @@ const docTemplate = `{
         },
         "/teams/{id}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Get team details by ID",
                 "produces": [
                     "application/json"
@@ -218,6 +243,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Update team details by providing team ID and updated details",
                 "consumes": [
                     "application/json"
@@ -268,6 +298,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Delete a team by providing team ID",
                 "produces": [
                     "application/json"
@@ -309,6 +344,11 @@ const docTemplate = `{
         },
         "/users": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -437,6 +477,11 @@ const docTemplate = `{
         },
         "/users/{id}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -472,6 +517,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -534,6 +584,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -574,6 +629,11 @@ const docTemplate = `{
         },
         "/users/{id}/statistics": {
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -638,6 +698,11 @@ const docTemplate = `{
         },
         "/voice/{teamId}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "summary": "Join voice chat room",
                 "parameters": [
                     {
@@ -694,6 +759,11 @@ const docTemplate = `{
         },
         "/voice/{teamId}/leave": {
             "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "summary": "Leave voice chat room",
                 "parameters": [
                     {
@@ -1033,6 +1103,14 @@ const docTemplate = `{
                 "Photography",
                 "Language"
             ]
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "description": "Bearer JWT token. Example: \"Bearer YOUR_TOKEN\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

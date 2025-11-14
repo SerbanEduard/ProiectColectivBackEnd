@@ -1,0 +1,3 @@
+# Always use LF for line endings in all text files
+* text=auto
+* eol=lf

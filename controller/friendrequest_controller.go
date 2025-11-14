@@ -21,6 +21,7 @@ func (fc *FriendRequestController) SetFriendRequestService(service service.Frien
 	fc.friendRequestService = service
 }
 
+// TODO: Add Swagger comment
 func (fc *FriendRequestController) SendFriendRequest(c *gin.Context) {
 	fromUserID := c.Param("fromUserId")
 	toUserID := c.Param("toUserId")
@@ -39,6 +40,7 @@ func (fc *FriendRequestController) SendFriendRequest(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Friend request sent successfully"})
 }
 
+// TODO: Add Swagger comment
 func (fc *FriendRequestController) RespondToFriendRequest(c *gin.Context) {
 	fromUserID := c.Param("fromUserId")
 	toUserID := c.Param("toUserId")
@@ -66,6 +68,7 @@ func (fc *FriendRequestController) RespondToFriendRequest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Friend request processed successfully"})
 }
 
+// TODO: Add swagger comment
 func (fc *FriendRequestController) GetPendingRequests(c *gin.Context) {
 	userID := c.Param("userId")
 

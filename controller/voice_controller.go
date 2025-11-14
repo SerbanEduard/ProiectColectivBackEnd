@@ -47,6 +47,7 @@ func NewVoiceController() *VoiceController {
 // JoinVoiceRoom
 //
 //	@Summary	Join voice chat room
+//	@Security	Bearer
 //	@Param		teamId	path		string				true	"Team ID"
 //	@Param		userId	query		string				true	"User ID"
 //	@Success	101		{string}	string				"Switching Protocols - WebSocket connection established"
@@ -100,6 +101,7 @@ func (vc *VoiceController) JoinVoiceRoom(c *gin.Context) {
 
 // CreateVoiceRoom
 //	@Summary	Create voice room
+//	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
 //	@Param		teamId	path		string	true	"Team ID"
@@ -235,6 +237,7 @@ func (vc *VoiceController) CreateVoiceRoom(c *gin.Context) {
 // LeaveVoiceRoom
 //
 //	@Summary	Leave voice chat room
+//	@Security	Bearer
 //	@Param		teamId	path		string				true	"Team ID"
 //	@Param		userId	query		string				true	"User ID"
 //	@Success	200		{object}	map[string]string	"Successfully left room"

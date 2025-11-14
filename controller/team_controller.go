@@ -54,6 +54,7 @@ type TeamServiceInterface interface {
 //
 //	@Summary		Create a new team
 //	@Description	Create a new team with the provided details
+//	@Security		Bearer
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.TeamRequest	true	"Team details"
@@ -80,6 +81,7 @@ func (tc *TeamController) NewTeam(c *gin.Context) {
 //
 //	@Summary		Get a team by ID
 //	@Description	Get team details by ID
+//	@Security		Bearer
 //	@Produce		json
 //	@Param			id	path		string	true	"Team ID"
 //	@Success		200	{object}	entity.Team
@@ -100,6 +102,7 @@ func (tc *TeamController) GetTeam(c *gin.Context) {
 //
 //	@Summary		Get teams with optional filtering
 //	@Description	Get teams - all teams, by name, or by prefix with limit
+//	@Security		Bearer
 //	@Produce		json
 //	@Param			name	query		string	false	"Filter by exact name"
 //	@Param			prefix	query		string	false	"Filter by name prefix"
@@ -158,6 +161,7 @@ func (tc *TeamController) GetAllTeams(c *gin.Context) {
 //
 //	@Summary		Add a user to a team
 //	@Description	Add a user to a team by providing user ID and team ID
+//	@Security		Bearer
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
@@ -183,6 +187,7 @@ func (tc *TeamController) AddUserToTeam(c *gin.Context) {
 //
 //	@Summary		Delete a user from a team
 //	@Description	Delete a user from a team by providing team ID
+//	@Security		Bearer
 //	@Produce		json
 //	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
 //	@Success		200		{object}	map[string]interface{}	"User deleted from team"
@@ -211,6 +216,7 @@ func (tc *TeamController) DeleteUserFromTeam(c *gin.Context) {
 //
 //	@Summary		Update a team
 //	@Description	Update team details by providing team ID and updated details
+//	@Security		Bearer
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string		true	"Team ID"
@@ -238,6 +244,7 @@ func (tc *TeamController) UpdateTeam(c *gin.Context) {
 //
 //	@Summary		Delete a team
 //	@Description	Delete a team by providing team ID
+//	@Security		Bearer
 //	@Produce		json
 //	@Param			id	path		string					true	"Team ID"
 //	@Success		200	{object}	map[string]interface{}	"Team deleted"
