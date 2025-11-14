@@ -8,9 +8,13 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title		StudyWithMe API
-// @version	1.0
-// @BasePath	/
+// @title						StudyWithMe API
+// @version					1.0
+// @BasePath					/
+// @SecurityDefinitions.apiKey	Bearer
+// @in							header
+// @name						Authorization
+// @description				Bearer JWT token. Example: "Bearer YOUR_TOKEN"
 func main() {
 	config.InitFirebase()
 

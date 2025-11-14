@@ -236,6 +236,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Get teams with optional filtering
     post:
       consumes:
@@ -265,6 +267,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Create a new team
   /teams/{id}:
     delete:
@@ -293,6 +297,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Delete a team
     get:
       description: Get team details by ID
@@ -314,6 +320,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Get a team by ID
     put:
       consumes:
@@ -348,6 +356,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Update a team
   /teams/users:
     delete:
@@ -372,6 +382,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Delete a user from a team
     put:
       consumes:
@@ -397,6 +409,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Add a user to a team
   /users:
     get:
@@ -417,6 +431,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Get all users
   /users/{id}:
     delete:
@@ -443,6 +459,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Delete a user
     get:
       consumes:
@@ -466,6 +484,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Get a user by ID
     put:
       consumes:
@@ -507,6 +527,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: "Update\ta user"
   /users/{id}/statistics:
     put:
@@ -549,6 +571,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Update user statistics
   /users/login:
     post:
@@ -650,6 +674,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Join voice chat room
   /voice/{teamId}/leave:
     delete:
@@ -683,5 +709,13 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Leave voice chat room
+securityDefinitions:
+  Bearer:
+    description: 'Bearer JWT token. Example: "Bearer YOUR_TOKEN"'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

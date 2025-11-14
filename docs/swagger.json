@@ -9,6 +9,11 @@
     "paths": {
         "/teams": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Get teams - all teams, by name, or by prefix with limit",
                 "produces": [
                     "application/json"
@@ -61,6 +66,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Create a new team with the provided details",
                 "consumes": [
                     "application/json"
@@ -106,6 +116,11 @@
         },
         "/teams/users": {
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Add a user to a team by providing user ID and team ID",
                 "consumes": [
                     "application/json"
@@ -143,6 +158,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Delete a user from a team by providing team ID",
                 "produces": [
                     "application/json"
@@ -179,6 +199,11 @@
         },
         "/teams/{id}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Get team details by ID",
                 "produces": [
                     "application/json"
@@ -210,6 +235,11 @@
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Update team details by providing team ID and updated details",
                 "consumes": [
                     "application/json"
@@ -260,6 +290,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Delete a team by providing team ID",
                 "produces": [
                     "application/json"
@@ -301,6 +336,11 @@
         },
         "/users": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -429,6 +469,11 @@
         },
         "/users/{id}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -464,6 +509,11 @@
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -526,6 +576,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -566,6 +621,11 @@
         },
         "/users/{id}/statistics": {
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -630,6 +690,11 @@
         },
         "/voice/{teamId}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "summary": "Join voice chat room",
                 "parameters": [
                     {
@@ -686,6 +751,11 @@
         },
         "/voice/{teamId}/leave": {
             "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "summary": "Leave voice chat room",
                 "parameters": [
                     {
@@ -1025,6 +1095,14 @@
                 "Photography",
                 "Language"
             ]
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "description": "Bearer JWT token. Example: \"Bearer YOUR_TOKEN\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }
