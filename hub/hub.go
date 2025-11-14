@@ -22,7 +22,8 @@ func (h *Hub[T]) Register(client *Client[T]) {
 	h.clients[client.ClientID] = client
 	h.mu.Unlock()
 
-	// Start the write pump
+	// Start the read and write pump
+	go h.readPump(client)
 	go h.writePump(client)
 }
 
@@ -78,6 +79,21 @@ func (h *Hub[T]) writePump(client *Client[T]) {
 	for msg := range client.outbound {
 		if err := client.Conn.WriteJSON(msg); err != nil {
 			// Client disconnected
+			return
+		}
+	}
+}
+
+// readPump continuously checks for disconnection
+func (h *Hub[T]) readPump(client *Client[T]) {
+	defer func() {
+		h.Unregister(client)
+	}()
+
+	for {
+		_, _, err := client.Conn.ReadMessage()
+		if err != nil {
+			// WebSocket sent a disconnect message
 			return
 		}
 	}
