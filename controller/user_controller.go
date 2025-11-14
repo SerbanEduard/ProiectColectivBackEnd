@@ -41,6 +41,8 @@ type UserServiceInterface interface {
 	GetUserByUsername(username string) (*entity.User, error)
 	Login(request *dto.LoginRequest) (*dto.LoginResponse, error)
 	UpdateUser(user *entity.User) error
+	UpdateUserProfile(userID string, req *dto.UserUpdateRequestDTO) (*dto.UserUpdateResponseDTO, error)
+	UpdateUserPassword(userID string, req *dto.UserPasswordRequestDTO) error
 	DeleteUser(id string) error
 	GetAllUsers() ([]*entity.User, error)
 	UpdateUserStatistics(id string, timeSpentOnApp int64, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error)
@@ -114,37 +116,63 @@ func (uc *UserController) GetAllUsers(c *gin.Context) {
 
 // UpdateUser
 //
-//	@Summary	Update	a user
+//	@Summary	Update user profile (selective fields)
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
-//	@Param		id		path		string		true	"The user's ID"
-//	@Param		user	body		entity.User	true	"The updated user"
-//	@Success	200		{object}	entity.User
-//	@Failure	400		{object}	map[string]string	"Bad Request"
-//	@Failure	404		{object}	map[string]string	"User not found"
-//	@Failure	500		{object}	map[string]string	"Internal Server Error"
+//	@Param		id		path		string						true	"The user's ID"
+//	@Param		request	body		dto.UserUpdateRequestDTO	true	"The user profile update (all fields optional)"
+//	@Success	200		{object}	dto.UserUpdateResponseDTO
+//	@Failure	400		{object}	map[string]string
+//	@Failure	404		{object}	map[string]string
+//	@Failure	500		{object}	map[string]string
 //	@Router		/users/{id} [put]
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 
-	user, err := uc.userService.GetUserByID(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": userNotFoundError})
-		return
-	}
-
-	if err := c.ShouldBindJSON(user); err != nil {
+	var req dto.UserUpdateRequestDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := uc.userService.UpdateUser(user); err != nil {
+	resp, err := uc.userService.UpdateUserProfile(id, &req)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, resp)
+}
+
+// UpdateUserPassword
+//
+//	@Summary	Update user password
+//	@Security	Bearer
+//	@Accept		json
+//	@Produce	json
+//	@Param		id		path		string						true	"The user's ID"
+//	@Param		request	body		dto.UserPasswordRequestDTO	true	"The password update request"
+//	@Success	200		{object}	map[string]string
+//	@Failure	400		{object}	map[string]string
+//	@Failure	500		{object}	map[string]string
+//	@Router		/users/{id}/password [put]
+func (uc *UserController) UpdateUserPassword(c *gin.Context) {
+	id := c.Param("id")
+
+	var req dto.UserPasswordRequestDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	req.ID = id
+	if err := uc.userService.UpdateUserPassword(id, &req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password updated successfully"})
 }
 
 // DeleteUser
