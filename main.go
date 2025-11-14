@@ -1,12 +1,9 @@
 package main
 
 import (
-	"time"
-
 	"github.com/SerbanEduard/ProiectColectivBackEnd/config"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/docs"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/routes"
-	"github.com/gin-contrib/cors"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -22,15 +19,6 @@ func main() {
 	config.InitFirebase()
 
 	r := routes.SetupRoutes()
-
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://studyflow-6qwx.onrender.com", "http://localhost:3000"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
 
 	// Setup Swagger
 	docs.SwaggerInfo.BasePath = "/"
