@@ -73,6 +73,7 @@ The WebSocket then sends messages of type:
 - **type**: `"direct_message"` or `"team_message"`
 - **senderId**: the sending `userID`
 - **receiverId**: either a `userID` or `teamID` depending on `type`
+- **textContent**: the actual message content
 
 ## Swagger Support
 
