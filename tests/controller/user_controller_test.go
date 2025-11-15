@@ -66,7 +66,7 @@ func TestUserController_SignUp_UsernameExists(t *testing.T) {
 
 	userController.SignUp(c)
 
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusConflict, w.Code)
 
 	var responseBody map[string]string
 	json.Unmarshal(w.Body.Bytes(), &responseBody)
@@ -94,7 +94,7 @@ func TestUserController_SignUp_EmailExists(t *testing.T) {
 
 	userController.SignUp(c)
 
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusConflict, w.Code)
 
 	var responseBody map[string]string
 	json.Unmarshal(w.Body.Bytes(), &responseBody)
