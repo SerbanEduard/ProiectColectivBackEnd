@@ -12,6 +12,7 @@ func SetupMessageRoutes(r *gin.Engine) {
 	protected := r.Group("/")
 	protected.Use(controller.JWTAuthMiddleware())
 	{
+		protected.GET("/messages/connect", messageController.Connect)
 		protected.POST("/messages/direct", messageController.NewDirectMessage)
 		protected.POST("/messages/team", messageController.NewTeamMessage)
 

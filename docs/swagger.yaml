@@ -234,6 +234,32 @@ info:
   title: StudyWithMe API
   version: "1.0"
 paths:
+  /messages/connect:
+    get:
+      responses:
+        "101":
+          description: Switching Protocols - WebSocket connection established
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Connect the user to the message WebSocket
   /messages/direct:
     post:
       consumes:

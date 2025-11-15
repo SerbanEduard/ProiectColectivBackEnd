@@ -4,7 +4,7 @@ type MessageType string
 
 const (
 	DirectMessage MessageType = "direct_message"
-	TeamBroadcast MessageType = "team_broadcast"
+	TeamBroadcast MessageType = "team_message"
 )
 
 type Message struct {
