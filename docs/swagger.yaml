@@ -1,5 +1,14 @@
 basePath: /
 definitions:
+  dto.DirectMessagesRequest:
+    properties:
+      receiverId:
+        type: string
+      senderId:
+        type: string
+      textContent:
+        type: string
+    type: object
   dto.LoginRequest:
     properties:
       email:
@@ -44,6 +53,15 @@ definitions:
       lastname:
         type: string
       username:
+        type: string
+    type: object
+  dto.TeamMessagesRequest:
+    properties:
+      senderId:
+        type: string
+      teamId:
+        type: string
+      textContent:
         type: string
     type: object
   dto.TeamRequest:
@@ -115,6 +133,21 @@ definitions:
     required:
     - teamId
     - userId
+    type: object
+  entity.Message:
+    properties:
+      convKey:
+        type: string
+      id:
+        type: string
+      senderId:
+        type: string
+      teamId:
+        type: string
+      textContent:
+        type: string
+      timestamp:
+        type: string
     type: object
   entity.Team:
     properties:
@@ -201,6 +234,68 @@ info:
   title: StudyWithMe API
   version: "1.0"
 paths:
+  /messages/direct:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: The direct message request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DirectMessagesRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Message'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Create and send a direct message
+  /messages/team:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: The team message request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TeamMessagesRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Message'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Create and send a team message
   /teams:
     get:
       description: Get teams - all teams, by name, or by prefix with limit
