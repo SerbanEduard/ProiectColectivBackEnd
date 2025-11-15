@@ -7,13 +7,13 @@ const (
 	TeamBroadcast MessageType = "team_broadcast"
 )
 
-type Message[T any] struct {
+type Message struct {
 	Type    MessageType `json:"type"`
-	Payload T           `json:"payload"`
+	Payload interface{} `json:"payload"`
 }
 
-func NewMessage[T any](msgType MessageType, payload T) *Message[T] {
-	return &Message[T]{
+func NewMessage(msgType MessageType, payload interface{}) *Message {
+	return &Message{
 		Type:    msgType,
 		Payload: payload,
 	}
