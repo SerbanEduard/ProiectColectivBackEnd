@@ -17,6 +17,7 @@ func SetupRoutes() *gin.Engine {
 
 	SetupUserRoutes(r)
 	SetupTeamRoutes(r)
+	SetupMessageRoutes(r)
 	SetupFriendRequestRoutes(r)
 	VoiceRoutes(r)
 
