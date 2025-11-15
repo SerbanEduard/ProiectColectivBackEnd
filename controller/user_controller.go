@@ -54,6 +54,7 @@ type UserServiceInterface interface {
 //	@Param		request	body		dto.SignUpUserRequest	true	"The sign-up request"
 //	@Success	201		{object}	dto.SignUpUserResponse
 //	@Failure	400		{object}	map[string]string
+//	@Failure	409		{object}	map[string]string
 //	@Failure	500		{object}	map[string]string
 //	@Router		/users/signup [post]
 func (uc *UserController) SignUp(c *gin.Context) {
@@ -65,6 +66,18 @@ func (uc *UserController) SignUp(c *gin.Context) {
 
 	response, err := uc.userService.SignUp(&request)
 	if err != nil {
+		if strings.Contains(err.Error(), "already exists") ||
+			strings.Contains(err.Error(), "invalid") ||
+			strings.Contains(err.Error(), "required") ||
+			strings.Contains(err.Error(), "must") {
+			if strings.Contains(err.Error(), "already exists") {
+				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			return
+		}
+		// All other errors are server errors
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -155,12 +168,17 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 //	@Produce	json
 //	@Param		id	path		string	true	"The user's ID"
 //	@Success	200	{object}	map[string]string
+//	@Failure	404	{object}	map[string]string
 //	@Failure	500	{object}	map[string]string
 //	@Router		/users/{id} [delete]
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := uc.userService.DeleteUser(id); err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -177,8 +195,8 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 //	@Param		id		path		string						true	"The user's ID"
 //	@Param		request	body		dto.UpdateStatisticsRequest	true	"The statistics update request"
 //	@Success	200		{object}	dto.UpdateStatisticsResponse
-//	@Failure	401		{object}	map[string]string
 //	@Failure	400		{object}	map[string]string
+//	@Failure	404		{object}	map[string]string
 //	@Failure	500		{object}	map[string]string
 //	@Router		/users/{id}/statistics [put]
 func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
@@ -197,6 +215,10 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 
 	updatedUser, err := uc.userService.UpdateUserStatistics(id, request.TimeSpentOnApp, teamTimeSpent)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -215,6 +237,7 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 //	@Success		200		{object}	dto.LoginResponse
 //	@Failure		400		{object}	map[string]string
 //	@Failure		401		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
 //	@Router			/users/login [post]
 func (uc *UserController) Login(c *gin.Context) {
 	var req dto.LoginRequest
