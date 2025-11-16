@@ -534,7 +534,7 @@ paths:
       security:
       - Bearer: []
       summary: Get a user by ID
-    put:
+    patch:
       consumes:
       - application/json
       parameters:

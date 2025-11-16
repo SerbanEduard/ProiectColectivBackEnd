@@ -126,7 +126,7 @@ func (uc *UserController) GetAllUsers(c *gin.Context) {
 //	@Failure	400		{object}	map[string]string
 //	@Failure	404		{object}	map[string]string
 //	@Failure	500		{object}	map[string]string
-//	@Router		/users/{id} [put]
+//	@Router		/users/{id} [patch]
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 
