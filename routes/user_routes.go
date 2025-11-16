@@ -8,18 +8,12 @@ import (
 func SetupUserRoutes(r *gin.Engine) {
 	userController := controller.NewUserController()
 
-	// Public endpoints
 	r.POST("/users/signup", userController.SignUp)
 	r.POST("/users/login", userController.Login)
-
-	// Protected endpoints
-	protected := r.Group("/")
-	protected.Use(controller.JWTAuthMiddleware())
-	{
-		protected.GET("/users/:id", userController.GetUser)
-		protected.GET("/users", userController.GetAllUsers)
-		protected.PUT("/users/:id", userController.UpdateUser)
-		protected.PUT("/users/:id/statistics", userController.UpdateUserStatistics)
-		protected.DELETE("/users/:id", userController.DeleteUser)
-	}
+	r.GET("/users/:id", userController.GetUser)
+	r.GET("/users", userController.GetAllUsers)
+	r.PATCH("/users/:id", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.UpdateUser)
+	r.PUT("/users/:id/password", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.UpdateUserPassword)
+	r.PUT("/users/:id/statistics", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.UpdateUserStatistics)
+	r.DELETE("/users/:id", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.DeleteUser)
 }
