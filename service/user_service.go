@@ -108,6 +108,65 @@ func (us *UserService) UpdateUser(user *entity.User) error {
 	return us.userRepo.Update(user)
 }
 
+// UpdateUserProfile updates only the provided fields in the user profile (firstname, lastname, username, email, topicsOfInterest)
+// If a field is empty/nil, it is not updated
+func (us *UserService) UpdateUserProfile(userID string, req *dto.UserUpdateRequestDTO) (*dto.UserUpdateResponseDTO, error) {
+	user, err := us.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update only non-empty fields
+	if req.FirstName != "" {
+		user.FirstName = req.FirstName
+	}
+	if req.LastName != "" {
+		user.LastName = req.LastName
+	}
+	if req.Username != "" {
+		user.Username = req.Username
+	}
+	if req.Email != "" {
+		user.Email = req.Email
+	}
+	if req.TopicsOfInterest != nil {
+		user.TopicsOfInterest = req.TopicsOfInterest
+	}
+
+	if err := us.userRepo.Update(user); err != nil {
+		return nil, err
+	}
+
+	return dto.NewUserUpdateResponseDTO(user), nil
+}
+
+// UpdateUserPassword updates the user's password (requires old password verification)
+func (us *UserService) UpdateUserPassword(userID string, req *dto.UserPasswordRequestDTO) error {
+	if userID != req.ID {
+		return fmt.Errorf("user id mismatch")
+	}
+
+	user, err := us.userRepo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+
+	// Verify the old password
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.OldPassword))
+	if err != nil {
+		return fmt.Errorf("old password is incorrect")
+	}
+
+	// Hash the new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user.Password = string(hashedPassword)
+	return us.userRepo.Update(user)
+}
+
 // also deletes all references to the user in the Teams' saved users
 func (us *UserService) DeleteUser(id string) error {
 	user, err := us.userRepo.GetByID(id)

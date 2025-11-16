@@ -1,14 +1,5 @@
 basePath: /
 definitions:
-  dto.DirectMessagesRequest:
-    properties:
-      receiverId:
-        type: string
-      senderId:
-        type: string
-      textContent:
-        type: string
-    type: object
   dto.LoginRequest:
     properties:
       email:
@@ -55,15 +46,6 @@ definitions:
       username:
         type: string
     type: object
-  dto.TeamMessagesRequest:
-    properties:
-      senderId:
-        type: string
-      teamId:
-        type: string
-      textContent:
-        type: string
-    type: object
   dto.TeamRequest:
     properties:
       description:
@@ -101,6 +83,15 @@ definitions:
       userId:
         type: string
     type: object
+  dto.UserPasswordRequestDTO:
+    properties:
+      id:
+        type: string
+      newPassword:
+        type: string
+      oldPassword:
+        type: string
+    type: object
   dto.UserResponse:
     properties:
       email:
@@ -134,19 +125,42 @@ definitions:
     - teamId
     - userId
     type: object
-  entity.Message:
+  dto.UserUpdateRequestDTO:
     properties:
-      convKey:
+      email:
+        type: string
+      firstname:
+        type: string
+      lastname:
+        type: string
+      topicsOfInterest:
+        items:
+          $ref: '#/definitions/model.TopicOfInterest'
+        type: array
+      username:
+        type: string
+    type: object
+  dto.UserUpdateResponseDTO:
+    properties:
+      email:
+        type: string
+      firstname:
         type: string
       id:
         type: string
-      senderId:
+      lastname:
         type: string
-      teamId:
-        type: string
-      textContent:
-        type: string
-      timestamp:
+      statistics:
+        $ref: '#/definitions/model.Statistics'
+      teams:
+        items:
+          type: string
+        type: array
+      topicsOfInterest:
+        items:
+          $ref: '#/definitions/model.TopicOfInterest'
+        type: array
+      username:
         type: string
     type: object
   entity.Team:
@@ -234,94 +248,6 @@ info:
   title: StudyWithMe API
   version: "1.0"
 paths:
-  /messages/connect:
-    get:
-      responses:
-        "101":
-          description: Switching Protocols - WebSocket connection established
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - Bearer: []
-      summary: Connect the user to the message WebSocket
-  /messages/direct:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: The direct message request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.DirectMessagesRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/entity.Message'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - Bearer: []
-      summary: Create and send a direct message
-  /messages/team:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: The team message request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.TeamMessagesRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/entity.Message'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - Bearer: []
-      summary: Create and send a team message
   /teams:
     get:
       description: Get teams - all teams, by name, or by prefix with limit
@@ -608,7 +534,7 @@ paths:
       security:
       - Bearer: []
       summary: Get a user by ID
-    put:
+    patch:
       consumes:
       - application/json
       parameters:
@@ -617,19 +543,19 @@ paths:
         name: id
         required: true
         type: string
-      - description: The updated user
+      - description: The user profile update (all fields optional)
         in: body
-        name: user
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/entity.User'
+          $ref: '#/definitions/dto.UserUpdateRequestDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.User'
+            $ref: '#/definitions/dto.UserUpdateResponseDTO'
         "400":
           description: Bad Request
           schema:
@@ -637,7 +563,7 @@ paths:
               type: string
             type: object
         "404":
-          description: User not found
+          description: Not Found
           schema:
             additionalProperties:
               type: string
@@ -650,7 +576,47 @@ paths:
             type: object
       security:
       - Bearer: []
-      summary: "Update\ta user"
+      summary: Update user profile (selective fields)
+  /users/{id}/password:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: The user's ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: The password update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserPasswordRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update user password
   /users/{id}/statistics:
     put:
       consumes:
