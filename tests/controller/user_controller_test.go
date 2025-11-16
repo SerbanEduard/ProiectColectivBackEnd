@@ -105,7 +105,7 @@ func TestUserController_SignUp_EmailExists(t *testing.T) {
 
 func TestUserController_UpdateUserStatistics_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	mockService := new(tests.MockUserService)
 	userController := controller.NewUserControllerWithService(mockService)
 
@@ -124,12 +124,10 @@ func TestUserController_UpdateUserStatistics_Success(t *testing.T) {
 	userController.UpdateUserStatistics(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var responseBody dto.UpdateStatisticsResponse
 	json.Unmarshal(w.Body.Bytes(), &responseBody)
 	assert.Equal(t, TestUserID, responseBody.UserId)
-	
+
 	mockService.AssertExpectations(t)
 }
-
-
