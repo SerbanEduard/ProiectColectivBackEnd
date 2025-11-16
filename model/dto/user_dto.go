@@ -110,3 +110,55 @@ func NewLoginResponse(token, expiresIn string, user *entity.User) *LoginResponse
 	}
 	return resp
 }
+
+// UserUpdateRequestDTO is used for updating user profile (all fields optional)
+type UserUpdateRequestDTO struct {
+	FirstName        string                   `json:"firstname,omitempty"`
+	LastName         string                   `json:"lastname,omitempty"`
+	Username         string                   `json:"username,omitempty"`
+	Email            string                   `json:"email,omitempty"`
+	TopicsOfInterest *[]model.TopicOfInterest `json:"topicsOfInterest,omitempty"`
+}
+
+// UserUpdateResponseDTO is a safe representation after update (no password)
+type UserUpdateResponseDTO struct {
+	ID               string                   `json:"id"`
+	FirstName        string                   `json:"firstname"`
+	LastName         string                   `json:"lastname"`
+	Username         string                   `json:"username"`
+	Email            string                   `json:"email"`
+	TopicsOfInterest *[]model.TopicOfInterest `json:"topicsOfInterest,omitempty"`
+	TeamsIds         *[]string                `json:"teams,omitempty"`
+	Statistics       *model.Statistics        `json:"statistics,omitempty"`
+}
+
+// NewUserUpdateResponseDTO converts an entity.User to UserUpdateResponseDTO
+func NewUserUpdateResponseDTO(u *entity.User) *UserUpdateResponseDTO {
+	resp := &UserUpdateResponseDTO{
+		ID:        u.ID,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+		Username:  u.Username,
+		Email:     u.Email,
+	}
+	if u.TopicsOfInterest != nil {
+		resp.TopicsOfInterest = u.TopicsOfInterest
+	} else {
+		empty := []model.TopicOfInterest{}
+		resp.TopicsOfInterest = &empty
+	}
+	if u.TeamsIds != nil {
+		resp.TeamsIds = u.TeamsIds
+	}
+	if u.Statistics != nil {
+		resp.Statistics = u.Statistics
+	}
+	return resp
+}
+
+// UserPasswordRequestDTO is used for password updates (requires old password verification)
+type UserPasswordRequestDTO struct {
+	ID          string `json:"id"`
+	OldPassword string `json:"oldPassword"`
+	NewPassword string `json:"newPassword"`
+}
