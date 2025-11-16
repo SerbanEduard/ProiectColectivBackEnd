@@ -46,53 +46,6 @@ definitions:
       username:
         type: string
     type: object
-  dto.UserUpdateRequestDTO:
-    properties:
-      email:
-        type: string
-      firstname:
-        type: string
-      lastname:
-        type: string
-      topicsOfInterest:
-        items:
-          $ref: '#/definitions/model.TopicOfInterest'
-        type: array
-      username:
-        type: string
-    type: object
-  dto.UserUpdateResponseDTO:
-    properties:
-      email:
-        type: string
-      firstname:
-        type: string
-      id:
-        type: string
-      lastname:
-        type: string
-      statistics:
-        $ref: '#/definitions/model.Statistics'
-      teams:
-        items:
-          type: string
-        type: array
-      topicsOfInterest:
-        items:
-          $ref: '#/definitions/model.TopicOfInterest'
-        type: array
-      username:
-        type: string
-    type: object
-  dto.UserPasswordRequestDTO:
-    properties:
-      id:
-        type: string
-      oldPassword:
-        type: string
-      newPassword:
-        type: string
-    type: object
   dto.TeamRequest:
     properties:
       description:
@@ -130,6 +83,15 @@ definitions:
       userId:
         type: string
     type: object
+  dto.UserPasswordRequestDTO:
+    properties:
+      id:
+        type: string
+      newPassword:
+        type: string
+      oldPassword:
+        type: string
+    type: object
   dto.UserResponse:
     properties:
       email:
@@ -162,6 +124,44 @@ definitions:
     required:
     - teamId
     - userId
+    type: object
+  dto.UserUpdateRequestDTO:
+    properties:
+      email:
+        type: string
+      firstname:
+        type: string
+      lastname:
+        type: string
+      topicsOfInterest:
+        items:
+          $ref: '#/definitions/model.TopicOfInterest'
+        type: array
+      username:
+        type: string
+    type: object
+  dto.UserUpdateResponseDTO:
+    properties:
+      email:
+        type: string
+      firstname:
+        type: string
+      id:
+        type: string
+      lastname:
+        type: string
+      statistics:
+        $ref: '#/definitions/model.Statistics'
+      teams:
+        items:
+          type: string
+        type: array
+      topicsOfInterest:
+        items:
+          $ref: '#/definitions/model.TopicOfInterest'
+        type: array
+      username:
+        type: string
     type: object
   entity.Team:
     properties:
@@ -563,7 +563,7 @@ paths:
               type: string
             type: object
         "404":
-          description: User not found
+          description: Not Found
           schema:
             additionalProperties:
               type: string
