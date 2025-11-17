@@ -15,6 +15,153 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/friend-requests/{fromUserId}/{toUserId}": {
+            "put": {
+                "description": "Accept or deny a friend request",
+                "tags": [
+                    "default"
+                ],
+                "summary": "Respond to a friend request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sender User ID",
+                        "name": "fromUserId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Recipient User ID",
+                        "name": "toUserId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Accept or deny",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RespondFriendRequestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Send a friend request from one user to another",
+                "tags": [
+                    "default"
+                ],
+                "summary": "Send a friend request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sender User ID",
+                        "name": "fromUserId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Recipient User ID",
+                        "name": "toUserId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/friend-requests/{userId}": {
+            "get": {
+                "description": "Get pending friend requests for a user",
+                "tags": [
+                    "default"
+                ],
+                "summary": "Get pending friend requests",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FriendRequestListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/quizzes": {
             "post": {
                 "consumes": [
@@ -711,6 +858,107 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/{id}/friends": {
+            "get": {
+                "description": "Get list of friends for a user (accepted requests)",
+                "tags": [
+                    "default"
+                ],
+                "summary": "Get friends for a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.User"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/mutual/{otherId}": {
+            "get": {
+                "description": "Get list of mutual friends between userA and userB",
+                "tags": [
+                    "default"
+                ],
+                "summary": "Get mutual friends between two users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User A ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User B ID",
+                        "name": "otherId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.User"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}/password": {
             "put": {
                 "security": [
@@ -969,6 +1217,34 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.FriendRequestListResponse": {
+            "type": "object",
+            "properties": {
+                "requests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.FriendRequestResponse"
+                    }
+                }
+            }
+        },
+        "dto.FriendRequestResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "fromUserId": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "toUserId": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.LoginRequest": {
             "type": "object",
             "properties": {
@@ -997,6 +1273,14 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/dto.UserResponse"
+                }
+            }
+        },
+        "dto.RespondFriendRequestRequest": {
+            "type": "object",
+            "properties": {
+                "accept": {
+                    "type": "boolean"
                 }
             }
         },

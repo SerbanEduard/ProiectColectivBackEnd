@@ -16,4 +16,7 @@ func SetupUserRoutes(r *gin.Engine) {
 	r.PUT("/users/:id/password", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.UpdateUserPassword)
 	r.PUT("/users/:id/statistics", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.UpdateUserStatistics)
 	r.DELETE("/users/:id", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.DeleteUser)
+
+	r.GET("/users/:id/friends", controller.JWTAuthMiddleware(), userController.GetFriends)
+	r.GET("/users/:id/mutual/:otherId", controller.JWTAuthMiddleware(), userController.GetMutualFriends)
 }

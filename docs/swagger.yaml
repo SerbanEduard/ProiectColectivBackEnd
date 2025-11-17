@@ -5,6 +5,24 @@ definitions:
       quiz_id:
         type: string
     type: object
+  dto.FriendRequestListResponse:
+    properties:
+      requests:
+        items:
+          $ref: '#/definitions/dto.FriendRequestResponse'
+        type: array
+    type: object
+  dto.FriendRequestResponse:
+    properties:
+      createdAt:
+        type: string
+      fromUserId:
+        type: string
+      status:
+        type: string
+      toUserId:
+        type: string
+    type: object
   dto.LoginRequest:
     properties:
       email:
@@ -24,6 +42,11 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.RespondFriendRequestRequest:
+    properties:
+      accept:
+        type: boolean
     type: object
   dto.SignUpUserRequest:
     properties:
@@ -291,6 +314,104 @@ info:
   title: StudyWithMe API
   version: "1.0"
 paths:
+  /friend-requests/{fromUserId}/{toUserId}:
+    post:
+      description: Send a friend request from one user to another
+      parameters:
+      - description: Sender User ID
+        in: path
+        name: fromUserId
+        required: true
+        type: string
+      - description: Recipient User ID
+        in: path
+        name: toUserId
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Send a friend request
+      tags:
+      - default
+    put:
+      description: Accept or deny a friend request
+      parameters:
+      - description: Sender User ID
+        in: path
+        name: fromUserId
+        required: true
+        type: string
+      - description: Recipient User ID
+        in: path
+        name: toUserId
+        required: true
+        type: string
+      - description: Accept or deny
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RespondFriendRequestRequest'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Respond to a friend request
+      tags:
+      - default
+  /friend-requests/{userId}:
+    get:
+      description: Get pending friend requests for a user
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FriendRequestListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get pending friend requests
+      tags:
+      - default
   /quizzes:
     post:
       consumes:
@@ -663,6 +784,73 @@ paths:
       security:
       - Bearer: []
       summary: Update user profile (selective fields)
+  /users/{id}/friends:
+    get:
+      description: Get list of friends for a user (accepted requests)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get friends for a user
+      tags:
+      - default
+  /users/{id}/mutual/{otherId}:
+    get:
+      description: Get list of mutual friends between userA and userB
+      parameters:
+      - description: User A ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User B ID
+        in: path
+        name: otherId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get mutual friends between two users
+      tags:
+      - default
   /users/{id}/password:
     put:
       consumes:
