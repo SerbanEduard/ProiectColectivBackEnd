@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"errors"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/config"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
@@ -10,12 +11,14 @@ import (
 const (
 	messagesCollection = "messages"
 	convKeyField       = "convKey"
+	MessageNotFound    = "message not found"
 )
 
 type MessageRepositoryInterface interface {
 	Create(message *entity.Message) error
+	GetByID(id string) (*entity.Message, error)
 	GetByConversation(user1Id, user2Id string) ([]*entity.Message, error)
-	GetByTeam(teamId string) ([]*entity.Message, error)
+	GetByTeamID(teamId string) ([]*entity.Message, error)
 	Update(id string, updates map[string]interface{}) error
 	Delete(id string) error
 }
@@ -30,6 +33,20 @@ func (mr *MessageRepository) Create(message *entity.Message) error {
 	ctx := context.Background()
 	ref := config.FirebaseDB.NewRef(messagesCollection + "/" + message.ID)
 	return ref.Set(ctx, message)
+}
+
+func (mr *MessageRepository) GetByID(id string) (*entity.Message, error) {
+	ctx := context.Background()
+	ref := config.FirebaseDB.NewRef(messagesCollection + "/" + id)
+
+	var message entity.Message
+	if err := ref.Get(ctx, &message); err != nil {
+		return nil, err
+	}
+	if message.ID == "" {
+		return nil, errors.New(MessageNotFound)
+	}
+	return &message, nil
 }
 
 func (mr *MessageRepository) GetByConversation(user1Id, user2Id string) ([]*entity.Message, error) {
@@ -54,7 +71,7 @@ func (mr *MessageRepository) GetByConversation(user1Id, user2Id string) ([]*enti
 	return messages, nil
 }
 
-func (mr *MessageRepository) GetByTeam(teamId string) ([]*entity.Message, error) {
+func (mr *MessageRepository) GetByTeamID(teamId string) ([]*entity.Message, error) {
 	ctx := context.Background()
 	ref := config.FirebaseDB.NewRef(messagesCollection)
 

@@ -32,20 +32,23 @@ func NewMessageServiceWithRepo(userRepo UserRepositoryInterface, teamRepo TeamRe
 }
 
 type MessageServiceInterface interface {
-	CreateDirectMessage(request *dto.DirectMessagesRequest) (*entity.Message, error)
-	CreateTeamMessage(request *dto.TeamMessagesRequest) (*entity.Message, error)
+	CreateDirectMessage(request *dto.DirectMessageRequest) (*dto.MessageDTO, error)
+	CreateTeamMessage(request *dto.TeamMessageRequest) (*dto.MessageDTO, error)
+	GetMessageByID(id string) (*dto.MessageDTO, error)
+	GetDirectMessages(user1Id, user2Id string) ([]*dto.MessageDTO, error)
+	GetTeamMessages(teamId string) ([]*dto.MessageDTO, error)
 }
 
-func (ms *MessageService) CreateDirectMessage(request *dto.DirectMessagesRequest) (*entity.Message, error) {
+func (ms *MessageService) CreateDirectMessage(request *dto.DirectMessageRequest) (*dto.MessageDTO, error) {
 	if err := validator.ValidateDirectMessageRequest(request); err != nil {
 		return nil, err
 	}
 
-	if _, err := ms.userRepo.GetByID(request.SenderId); err != nil {
+	if _, err := ms.userRepo.GetByID(request.SenderID); err != nil {
 		return nil, fmt.Errorf("sender not found")
 	}
 
-	if _, err := ms.userRepo.GetByID(request.ReceiverId); err != nil {
+	if _, err := ms.userRepo.GetByID(request.ReceiverID); err != nil {
 		return nil, fmt.Errorf("receiver not found")
 	}
 
@@ -56,23 +59,25 @@ func (ms *MessageService) CreateDirectMessage(request *dto.DirectMessagesRequest
 
 	message := *entity.NewMessage(
 		id,
-		request.SenderId,
-		entity.GetConversationKey(request.SenderId, request.ReceiverId),
+		request.SenderID,
+		entity.GetConversationKey(request.SenderID, request.ReceiverID),
 		"",
 		request.TextContent,
 	)
 	if err := ms.messageRepo.Create(&message); err != nil {
 		return nil, err
 	}
-	return &message, nil
+
+	dtoMessage := dto.NewMessageDTO(message.ID, message.SenderID, request.ReceiverID, "", message.TextContent, message.SentAt)
+	return dtoMessage, nil
 }
 
-func (ms *MessageService) CreateTeamMessage(request *dto.TeamMessagesRequest) (*entity.Message, error) {
+func (ms *MessageService) CreateTeamMessage(request *dto.TeamMessageRequest) (*dto.MessageDTO, error) {
 	if err := validator.ValidateTeamMessageRequest(request); err != nil {
 		return nil, err
 	}
 
-	if _, err := ms.userRepo.GetByID(request.SenderId); err != nil {
+	if _, err := ms.userRepo.GetByID(request.SenderID); err != nil {
 		return nil, fmt.Errorf("sender not found")
 	}
 
@@ -87,7 +92,7 @@ func (ms *MessageService) CreateTeamMessage(request *dto.TeamMessagesRequest) (*
 
 	message := *entity.NewMessage(
 		id,
-		request.SenderId,
+		request.SenderID,
 		"",
 		request.TeamId,
 		request.TextContent,
@@ -95,5 +100,52 @@ func (ms *MessageService) CreateTeamMessage(request *dto.TeamMessagesRequest) (*
 	if err := ms.messageRepo.Create(&message); err != nil {
 		return nil, err
 	}
-	return &message, nil
+
+	dtoMessage := dto.NewMessageDTO(message.ID, message.SenderID, "", request.TeamId, message.TextContent, message.SentAt)
+	return dtoMessage, nil
+}
+
+func (ms *MessageService) GetMessageByID(id string) (*dto.MessageDTO, error) {
+	message, err := ms.messageRepo.GetByID(id)
+	receiverId, key_err := entity.GetReceiverIdFromKey(message.SenderID, message.ConversationKey)
+	if message.ConversationKey != "" && key_err != nil {
+		return nil, err
+	}
+	dtoMessage := dto.NewMessageDTO(message.ID, message.SenderID, receiverId, message.TeamID, message.TextContent, message.SentAt)
+	return dtoMessage, err
+}
+
+func (ms *MessageService) GetDirectMessages(user1Id, user2Id string) ([]*dto.MessageDTO, error) {
+	if _, err := ms.userRepo.GetByID(user1Id); err != nil {
+		return nil, fmt.Errorf("user1 not found")
+	}
+	if _, err := ms.userRepo.GetByID(user2Id); err != nil {
+		return nil, fmt.Errorf("user2 not found")
+	}
+
+	messages, err := ms.messageRepo.GetByConversation(user1Id, user2Id)
+	dtoMessages := []*dto.MessageDTO{}
+	for _, message := range messages {
+		receiverId, key_err := entity.GetReceiverIdFromKey(message.SenderID, message.ConversationKey)
+		if message.ConversationKey != "" && key_err != nil {
+			return nil, err
+		}
+		dtoMessage := dto.NewMessageDTO(message.ID, message.SenderID, receiverId, message.TeamID, message.TextContent, message.SentAt)
+		dtoMessages = append(dtoMessages, dtoMessage)
+	}
+	return dtoMessages, err
+}
+
+func (ms *MessageService) GetTeamMessages(teamId string) ([]*dto.MessageDTO, error) {
+	if _, err := ms.teamRepo.GetTeamById(teamId); err != nil {
+		return nil, fmt.Errorf("team not found")
+	}
+
+	messages, err := ms.messageRepo.GetByTeamID(teamId)
+	dtoMessages := []*dto.MessageDTO{}
+	for _, message := range messages {
+		dtoMessage := dto.NewMessageDTO(message.ID, message.SenderID, "", message.TeamID, message.TextContent, message.SentAt)
+		dtoMessages = append(dtoMessages, dtoMessage)
+	}
+	return dtoMessages, err
 }

@@ -6,10 +6,22 @@ import (
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/hub"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/service"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/utils"
 	"github.com/gin-gonic/gin"
 )
+
+const (
+	BadMessageTypeError  = "message type must be direct or team"
+	MessageNotFoundError = "message not found"
+	MissingParameter     = "missing parameter(s)"
+)
+
+type MessageRequestUnion struct {
+	Direct *dto.DirectMessageRequest `json:"direct,omitempty"`
+	Team   *dto.TeamMessageRequest   `json:"team,omitempty"`
+}
 
 type MessageController struct {
 	messageService service.MessageServiceInterface
@@ -58,70 +70,145 @@ func (mc *MessageController) Connect(c *gin.Context) {
 	mc.hub.Register(client)
 }
 
-// NewDirectMessage
+// NewMessage
 //
-//	@Summary	Create and send a direct message
-//	@Security	Bearer
-//	@Accept		json
-//	@Produce	json
-//	@Param		request	body		dto.DirectMessagesRequest	true	"The direct message request"
-//	@Success	201		{object}	entity.Message
-//	@Failure	400		{object}	map[string]interface{}	"Bad Request"
-//	@Failure	500		{object}	map[string]interface{}	"Internal Server Error"
-//	@Router		/messages/direct [post]
-func (mc *MessageController) NewDirectMessage(c *gin.Context) {
-	var request dto.DirectMessagesRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+//	@Summary		Create and send a message
+//	@Description	Create and send a message either to another user or to a team
+//	@Security		Bearer
+//	@Accept			json
+//	@Produce		json
+//	@Param			type	query		string				true	"Message type (direct/team)"
+//	@Param			request	body		MessageRequestUnion	true	"The message request (this is only for documentation purposes, the actual request should be either DirectMessageRequest or TeamMessageRequest)"
+//	@Success		201		{object}	dto.MessageDTO
+//	@Failure		400		{object}	map[string]interface{}	"Bad Request"
+//	@Failure		500		{object}	map[string]interface{}	"Internal Server Error"
+//	@Router			/messages [post]
+func (mc *MessageController) NewMessage(c *gin.Context) {
+	message_type := c.Query("type")
+
+	switch message_type {
+	case "direct":
+		var request dto.DirectMessageRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		resp, err := mc.messageService.CreateDirectMessage(&request)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, resp)
+
+		mc.hub.Send(request.ReceiverID, *hub.NewMessage(hub.DirectMessage, request))
+
+	case "team":
+		var request dto.TeamMessageRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		resp, err := mc.messageService.CreateTeamMessage(&request)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, resp)
+
+		// Send to team members via WebSocket
+		team, _ := mc.teamService.GetTeamById(request.TeamId)
+		userIDs := slices.DeleteFunc(team.UsersIds, func(uid string) bool {
+			return uid != request.SenderID // Don't send to sender
+		})
+		mc.hub.SendMany(userIDs, *hub.NewMessage(hub.TeamBroadcast, request))
+
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": BadMessageTypeError})
 	}
-
-	resp, err := mc.messageService.CreateDirectMessage(&request)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, resp)
-
-	// Send to receiver via WebSocket
-	mc.hub.Send(request.ReceiverId, *hub.NewMessage(hub.DirectMessage, request))
 }
 
-// NewTeamMessage
+// GetMessage
 //
-//	@Summary	Create and send a team message
+//	@Summary	Get a message by ID
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
-//	@Param		request	body		dto.TeamMessagesRequest	true	"The team message request"
-//	@Success	201		{object}	entity.Message
-//	@Failure	400		{object}	map[string]interface{}	"Bad Request"
-//	@Failure	500		{object}	map[string]interface{}	"Internal Server Error"
-//	@Router		/messages/team [post]
-func (mc *MessageController) NewTeamMessage(c *gin.Context) {
-	var request dto.TeamMessagesRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+//	@Param		id	path		string	true	"The message ID"
+//	@Success	200	{object}	dto.MessageDTO
+//	@Failure	404	{object}	map[string]interface{}
+//	@Failure	500	{object}	map[string]interface{}
+//	@Router		/messages/{id} [get]
+func (mc *MessageController) GetMessage(c *gin.Context) {
+	id := c.Param("id")
+	message, err := mc.messageService.GetMessageByID(id)
+	if err.Error() == entity.BadConversationKey {
+		c.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+		return
 	}
-
-	resp, err := mc.messageService.CreateTeamMessage(&request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": MessageNotFoundError})
 		return
 	}
 
-	c.JSON(http.StatusCreated, resp)
+	c.JSON(http.StatusOK, message)
+}
 
-	// Send to team members via WebSocket
-	team, err := mc.teamService.GetTeamById(request.TeamId)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
+// GetMessages
+//
+//	@Summary		Get all messages
+//	@Description	Get messages between 2 users or within a team
+//	@Security		Bearer
+//	@Accept			json
+//	@Produce		json
+//	@Param			type	query		string	true	"Messages type (direct/team)"
+//	@Param			user1Id	query		string	false	"User1 ID (direct message)"
+//	@Param			user2Id	query		string	false	"User2 ID (direct message)"
+//	@Param			teamId	query		string	false	"Team ID (team message)"
+//	@Success		200		{array}		dto.MessageDTO
+//	@Failure		400		{object}	map[string]interface{}	"Bad Request"
+//	@Failure		500		{object}	map[string]interface{}	"Internal Server Error"
+//	@Router			/messages [get]
+func (mc *MessageController) GetMessages(c *gin.Context) {
+	message_type := c.Query("type")
+
+	switch message_type {
+	case "direct":
+		user1Id := c.Query("user1Id")
+		user2Id := c.Query("user2Id")
+
+		if user1Id == "" || user2Id == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": MissingParameter})
+			return
+		}
+
+		resp, err := mc.messageService.GetDirectMessages(user1Id, user2Id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp)
+	case "team":
+		teamId := c.Query("teamId")
+		if err := c.ShouldBindJSON(teamId); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		resp, err := mc.messageService.GetTeamMessages(teamId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp)
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": BadMessageTypeError})
 	}
-	userIDs := slices.DeleteFunc(team.UsersIds, func(uid string) bool {
-		return uid != request.SenderId // Don't send to sender
-	})
-	mc.hub.SendMany(userIDs, *hub.NewMessage(hub.TeamBroadcast, request))
 }
 
 func (mc *MessageController) EditMessage(c *gin.Context) {

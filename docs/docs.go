@@ -15,6 +15,130 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/messages": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get messages between 2 users or within a team",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get all messages",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Messages type (direct/team)",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User1 ID (direct message)",
+                        "name": "user1Id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "User2 ID (direct message)",
+                        "name": "user2Id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Team ID (team message)",
+                        "name": "teamId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.MessageDTO"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Create and send a message either to another user or to a team",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create and send a message",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Message type (direct/team)",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "The message request (this is only for documentation purposes, the actual request should be either DirectMessageRequest or TeamMessageRequest)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.MessageRequestUnion"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/messages/connect": {
             "get": {
                 "security": [
@@ -56,8 +180,8 @@ const docTemplate = `{
                 }
             }
         },
-        "/messages/direct": {
-            "post": {
+        "/messages/{id}": {
+            "get": {
                 "security": [
                     {
                         "Bearer": []
@@ -69,76 +193,25 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Create and send a direct message",
+                "summary": "Get a message by ID",
                 "parameters": [
                     {
-                        "description": "The direct message request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.DirectMessagesRequest"
-                        }
+                        "type": "string",
+                        "description": "The message ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.Message"
+                            "$ref": "#/definitions/dto.MessageDTO"
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/messages/team": {
-            "post": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Create and send a team message",
-                "parameters": [
-                    {
-                        "description": "The team message request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.TeamMessagesRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Message"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1016,7 +1089,18 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.DirectMessagesRequest": {
+        "controller.MessageRequestUnion": {
+            "type": "object",
+            "properties": {
+                "direct": {
+                    "$ref": "#/definitions/dto.DirectMessageRequest"
+                },
+                "team": {
+                    "$ref": "#/definitions/dto.TeamMessageRequest"
+                }
+            }
+        },
+        "dto.DirectMessageRequest": {
             "type": "object",
             "properties": {
                 "receiverId": {
@@ -1061,6 +1145,29 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MessageDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "receiverId": {
+                    "type": "string"
+                },
+                "senderId": {
+                    "type": "string"
+                },
+                "sentAt": {
+                    "type": "string"
+                },
+                "teamId": {
+                    "type": "string"
+                },
+                "textContent": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.SignUpUserRequest": {
             "type": "object",
             "properties": {
@@ -1101,7 +1208,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.TeamMessagesRequest": {
+        "dto.TeamMessageRequest": {
             "type": "object",
             "properties": {
                 "senderId": {
@@ -1288,29 +1395,6 @@ const docTemplate = `{
                     }
                 },
                 "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Message": {
-            "type": "object",
-            "properties": {
-                "convKey": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "senderId": {
-                    "type": "string"
-                },
-                "teamId": {
-                    "type": "string"
-                },
-                "textContent": {
-                    "type": "string"
-                },
-                "timestamp": {
                     "type": "string"
                 }
             }
