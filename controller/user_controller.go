@@ -19,12 +19,14 @@ const (
 )
 
 type UserController struct {
-	userService UserServiceInterface
+	userService          UserServiceInterface
+	friendRequestService service.FriendRequestServiceInterface
 }
 
 func NewUserController() *UserController {
 	return &UserController{
-		userService: service.NewUserService(),
+		userService:          service.NewUserService(),
+		friendRequestService: service.NewFriendRequestService(),
 	}
 }
 
@@ -32,6 +34,10 @@ func NewUserControllerWithService(userService UserServiceInterface) *UserControl
 	return &UserController{
 		userService: userService,
 	}
+}
+
+func (uc *UserController) SetFriendRequestService(svc service.FriendRequestServiceInterface) {
+	uc.friendRequestService = svc
 }
 
 type UserServiceInterface interface {
@@ -289,4 +295,69 @@ func (uc *UserController) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// GetFriends
+//
+//	@Summary		Get friends for a user
+//	@Description	Get list of friends for a user (accepted requests)
+//	@Tags			default
+//	@Param			id	path		string	true	"User ID"
+//	@Success		200	{array}		entity.User
+//	@Failure		400	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/users/{id}/friends [get]
+func (uc *UserController) GetFriends(c *gin.Context) {
+	// { changed code } read standardized param name ":id"
+	userID := c.Param("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	if uc.friendRequestService == nil {
+		uc.friendRequestService = service.NewFriendRequestService()
+	}
+
+	friends, err := uc.friendRequestService.GetFriends(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, friends)
+}
+
+// GetMutualFriends
+//
+//	@Summary		Get mutual friends between two users
+//	@Description	Get list of mutual friends between userA and userB
+//	@Tags			default
+//	@Param			id		path		string	true	"User A ID"
+//	@Param			otherId	path		string	true	"User B ID"
+//	@Success		200		{array}		entity.User
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/users/{id}/mutual/{otherId} [get]
+func (uc *UserController) GetMutualFriends(c *gin.Context) {
+	// { changed code } read standardized params ":id" and ":otherId"
+	userA := c.Param("id")
+	userB := c.Param("otherId")
+
+	if userA == "" || userB == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user IDs"})
+		return
+	}
+
+	if uc.friendRequestService == nil {
+		uc.friendRequestService = service.NewFriendRequestService()
+	}
+
+	mutual, err := uc.friendRequestService.GetMutualFriends(userA, userB)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, mutual)
 }

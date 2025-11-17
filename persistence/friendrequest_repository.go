@@ -77,3 +77,37 @@ func (fr *FriendRequestRepository) GetPendingRequestsForUser(userID string) ([]*
 
 	return pendingRequests, nil
 }
+
+func (fr *FriendRequestRepository) GetFriendsForUser(userID string) ([]string, error) {
+	ctx := context.Background()
+	ref := config.FirebaseDB.NewRef(friendRequestsPath)
+
+	var requestsMap map[string]*entity.FriendRequest
+	if err := ref.Get(ctx, &requestsMap); err != nil {
+		if errorutils.IsNotFound(err) {
+			return []string{}, nil
+		}
+		return nil, fmt.Errorf("get friend requests map: %w", err)
+	}
+
+	friendSet := make(map[string]struct{})
+	for _, req := range requestsMap {
+		if req == nil {
+			continue
+		}
+		if req.Status != entity.ACCEPTED {
+			continue
+		}
+		if req.FromUserID == userID {
+			friendSet[req.ToUserID] = struct{}{}
+		} else if req.ToUserID == userID {
+			friendSet[req.FromUserID] = struct{}{}
+		}
+	}
+
+	friends := make([]string, 0, len(friendSet))
+	for id := range friendSet {
+		friends = append(friends, id)
+	}
+	return friends, nil
+}
