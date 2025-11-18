@@ -13,22 +13,20 @@ import (
 )
 
 const (
-	userNotFoundError             = "User not found"
-	userDeletedSuccessfully       = "User deleted successfully"
-	statisticsUpdatedSuccessfully = "Statistics updated successfully"
-	invalidTimeSpentOnAppFormat   = "Invalid timeSpentOnApp format"
-	invalidTimeSpentOnTeamFormat  = "Invalid timeSpentOnTeam format"
-	invalidCredentials            = "invalid email or password"
-	jwtExpiresHours               = 24
+	userNotFoundError       = "User not found"
+	userDeletedSuccessfully = "User deleted successfully"
+	invalidCredentials      = "invalid email or password"
 )
 
 type UserController struct {
-	userService UserServiceInterface
+	userService          UserServiceInterface
+	friendRequestService service.FriendRequestServiceInterface
 }
 
 func NewUserController() *UserController {
 	return &UserController{
-		userService: service.NewUserService(),
+		userService:          service.NewUserService(),
+		friendRequestService: service.NewFriendRequestService(),
 	}
 }
 
@@ -38,6 +36,10 @@ func NewUserControllerWithService(userService UserServiceInterface) *UserControl
 	}
 }
 
+func (uc *UserController) SetFriendRequestService(svc service.FriendRequestServiceInterface) {
+	uc.friendRequestService = svc
+}
+
 type UserServiceInterface interface {
 	SignUp(request *dto.SignUpUserRequest) (*dto.SignUpUserResponse, error)
 	GetUserByID(id string) (*entity.User, error)
@@ -45,6 +47,8 @@ type UserServiceInterface interface {
 	GetUserByUsername(username string) (*entity.User, error)
 	Login(request *dto.LoginRequest) (*dto.LoginResponse, error)
 	UpdateUser(user *entity.User) error
+	UpdateUserProfile(userID string, req *dto.UserUpdateRequestDTO) (*dto.UserUpdateResponseDTO, error)
+	UpdateUserPassword(userID string, req *dto.UserPasswordRequestDTO) error
 	DeleteUser(id string) error
 	GetAllUsers() ([]*entity.User, error)
 	UpdateUserStatistics(id string, timeSpentOnApp int64, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error)
@@ -58,6 +62,7 @@ type UserServiceInterface interface {
 //	@Param		request	body		dto.SignUpUserRequest	true	"The sign-up request"
 //	@Success	201		{object}	dto.SignUpUserResponse
 //	@Failure	400		{object}	map[string]string
+//	@Failure	409		{object}	map[string]string
 //	@Failure	500		{object}	map[string]string
 //	@Router		/users/signup [post]
 func (uc *UserController) SignUp(c *gin.Context) {
@@ -69,6 +74,18 @@ func (uc *UserController) SignUp(c *gin.Context) {
 
 	response, err := uc.userService.SignUp(&request)
 	if err != nil {
+		if strings.Contains(err.Error(), "already exists") ||
+			strings.Contains(err.Error(), "invalid") ||
+			strings.Contains(err.Error(), "required") ||
+			strings.Contains(err.Error(), "must") {
+			if strings.Contains(err.Error(), "already exists") {
+				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			return
+		}
+		// All other errors are server errors
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -79,6 +96,7 @@ func (uc *UserController) SignUp(c *gin.Context) {
 // GetUser
 //
 //	@Summary	Get a user by ID
+//	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path		string	true	"The user's ID"
@@ -99,6 +117,7 @@ func (uc *UserController) GetUser(c *gin.Context) {
 // GetAllUsers
 //
 //	@Summary	Get all users
+//	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	[]entity.User
@@ -116,51 +135,84 @@ func (uc *UserController) GetAllUsers(c *gin.Context) {
 
 // UpdateUser
 //
-//	@Summary		Update	a user
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		string		true	"The user's ID"
-//	@Param			user	body		entity.User	true	"The updated user"
-//	@Success		200		{object}	entity.User
-//	@Failure		400		{object}	map[string]string	"Bad Request"
-//	@Failure		404		{object}	map[string]string	"User not found"
-//	@Failure		500		{object}	map[string]string	"Internal Server Error"
-//	@Router			/users/{id} [put]
+//	@Summary	Update user profile (selective fields)
+//	@Security	Bearer
+//	@Accept		json
+//	@Produce	json
+//	@Param		id		path		string						true	"The user's ID"
+//	@Param		request	body		dto.UserUpdateRequestDTO	true	"The user profile update (all fields optional)"
+//	@Success	200		{object}	dto.UserUpdateResponseDTO
+//	@Failure	400		{object}	map[string]string
+//	@Failure	404		{object}	map[string]string
+//	@Failure	500		{object}	map[string]string
+//	@Router		/users/{id} [patch]
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 
-	user, err := uc.userService.GetUserByID(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": userNotFoundError})
-		return
-	}
-
-	if err := c.ShouldBindJSON(user); err != nil {
+	var req dto.UserUpdateRequestDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := uc.userService.UpdateUser(user); err != nil {
+	resp, err := uc.userService.UpdateUserProfile(id, &req)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, resp)
+}
+
+// UpdateUserPassword
+//
+//	@Summary	Update user password
+//	@Security	Bearer
+//	@Accept		json
+//	@Produce	json
+//	@Param		id		path		string						true	"The user's ID"
+//	@Param		request	body		dto.UserPasswordRequestDTO	true	"The password update request"
+//	@Success	200		{object}	map[string]string
+//	@Failure	400		{object}	map[string]string
+//	@Failure	500		{object}	map[string]string
+//	@Router		/users/{id}/password [put]
+func (uc *UserController) UpdateUserPassword(c *gin.Context) {
+	id := c.Param("id")
+
+	var req dto.UserPasswordRequestDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	req.ID = id
+	if err := uc.userService.UpdateUserPassword(id, &req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password updated successfully"})
 }
 
 // DeleteUser
 //
 //	@Summary	Delete a user
+//	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
-//	@Param		id	path	string	true	"The user's ID"
+//	@Param		id	path		string	true	"The user's ID"
 //	@Success	200	{object}	map[string]string
+//	@Failure	404	{object}	map[string]string
 //	@Failure	500	{object}	map[string]string
 //	@Router		/users/{id} [delete]
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := uc.userService.DeleteUser(id); err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -171,13 +223,14 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 // UpdateUserStatistics
 //
 //	@Summary	Update user statistics
+//	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
 //	@Param		id		path		string						true	"The user's ID"
 //	@Param		request	body		dto.UpdateStatisticsRequest	true	"The statistics update request"
 //	@Success	200		{object}	dto.UpdateStatisticsResponse
-//	@Failure	401		{object}	map[string]string
 //	@Failure	400		{object}	map[string]string
+//	@Failure	404		{object}	map[string]string
 //	@Failure	500		{object}	map[string]string
 //	@Router		/users/{id}/statistics [put]
 func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
@@ -196,6 +249,10 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 
 	updatedUser, err := uc.userService.UpdateUserStatistics(id, request.TimeSpentOnApp, teamTimeSpent)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -206,17 +263,16 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 
 // Login
 //
-//	@Summary    Login user and return JWT
-//
-// @Summary Login user by email or username and return JWT
-// @Description Accepts either `email` or `username` along with `password`. Returns an access token and the full user (without password).
-// @Accept  json
-// @Produce json
-// @Param   request body        dto.LoginRequest true "The login request (email or username + password)"
-// @Success 200     {object}    dto.LoginResponse
-// @Failure 400     {object}    map[string]string
-// @Failure 401     {object}    map[string]string
-// @Router  /users/login [post]
+//	@Summary		Login user by email or username and return JWT
+//	@Description	Accepts either `email` or `username` along with `password`. Returns an access token and the full user (without password).
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		dto.LoginRequest	true	"The login request (email or username + password)"
+//	@Success		200		{object}	dto.LoginResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/users/login [post]
 func (uc *UserController) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -239,4 +295,69 @@ func (uc *UserController) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// GetFriends
+//
+//	@Summary		Get friends for a user
+//	@Description	Get list of friends for a user (accepted requests)
+//	@Tags			default
+//	@Param			id	path		string	true	"User ID"
+//	@Success		200	{array}		entity.User
+//	@Failure		400	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/users/{id}/friends [get]
+func (uc *UserController) GetFriends(c *gin.Context) {
+	// { changed code } read standardized param name ":id"
+	userID := c.Param("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	if uc.friendRequestService == nil {
+		uc.friendRequestService = service.NewFriendRequestService()
+	}
+
+	friends, err := uc.friendRequestService.GetFriends(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, friends)
+}
+
+// GetMutualFriends
+//
+//	@Summary		Get mutual friends between two users
+//	@Description	Get list of mutual friends between userA and userB
+//	@Tags			default
+//	@Param			id		path		string	true	"User A ID"
+//	@Param			otherId	path		string	true	"User B ID"
+//	@Success		200		{array}		entity.User
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/users/{id}/mutual/{otherId} [get]
+func (uc *UserController) GetMutualFriends(c *gin.Context) {
+	// { changed code } read standardized params ":id" and ":otherId"
+	userA := c.Param("id")
+	userB := c.Param("otherId")
+
+	if userA == "" || userB == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user IDs"})
+		return
+	}
+
+	if uc.friendRequestService == nil {
+		uc.friendRequestService = service.NewFriendRequestService()
+	}
+
+	mutual, err := uc.friendRequestService.GetMutualFriends(userA, userB)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, mutual)
 }

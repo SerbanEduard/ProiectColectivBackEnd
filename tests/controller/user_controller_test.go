@@ -66,7 +66,7 @@ func TestUserController_SignUp_UsernameExists(t *testing.T) {
 
 	userController.SignUp(c)
 
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusConflict, w.Code)
 
 	var responseBody map[string]string
 	json.Unmarshal(w.Body.Bytes(), &responseBody)
@@ -94,7 +94,7 @@ func TestUserController_SignUp_EmailExists(t *testing.T) {
 
 	userController.SignUp(c)
 
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusConflict, w.Code)
 
 	var responseBody map[string]string
 	json.Unmarshal(w.Body.Bytes(), &responseBody)
@@ -105,7 +105,7 @@ func TestUserController_SignUp_EmailExists(t *testing.T) {
 
 func TestUserController_UpdateUserStatistics_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	mockService := new(tests.MockUserService)
 	userController := controller.NewUserControllerWithService(mockService)
 
@@ -124,12 +124,10 @@ func TestUserController_UpdateUserStatistics_Success(t *testing.T) {
 	userController.UpdateUserStatistics(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var responseBody dto.UpdateStatisticsResponse
 	json.Unmarshal(w.Body.Bytes(), &responseBody)
 	assert.Equal(t, TestUserID, responseBody.UserId)
-	
+
 	mockService.AssertExpectations(t)
 }
-
-

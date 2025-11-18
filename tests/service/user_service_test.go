@@ -129,7 +129,7 @@ func TestUserService_UpdateUserStatistics_NewTeam(t *testing.T) {
 	userService := service.NewUserServiceWithRepo(mockRepo, mockTeamRepo)
 
 	user := &entity.User{
-		ID: TestUserID,
+		ID:         TestUserID,
 		Statistics: nil,
 	}
 

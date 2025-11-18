@@ -1,5 +1,28 @@
 basePath: /
 definitions:
+  dto.CreateQuizResponse:
+    properties:
+      quiz_id:
+        type: string
+    type: object
+  dto.FriendRequestListResponse:
+    properties:
+      requests:
+        items:
+          $ref: '#/definitions/dto.FriendRequestResponse'
+        type: array
+    type: object
+  dto.FriendRequestResponse:
+    properties:
+      createdAt:
+        type: string
+      fromUserId:
+        type: string
+      status:
+        type: string
+      toUserId:
+        type: string
+    type: object
   dto.LoginRequest:
     properties:
       email:
@@ -19,6 +42,11 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.RespondFriendRequestRequest:
+    properties:
+      accept:
+        type: boolean
     type: object
   dto.SignUpUserRequest:
     properties:
@@ -83,6 +111,15 @@ definitions:
       userId:
         type: string
     type: object
+  dto.UserPasswordRequestDTO:
+    properties:
+      id:
+        type: string
+      newPassword:
+        type: string
+      oldPassword:
+        type: string
+    type: object
   dto.UserResponse:
     properties:
       email:
@@ -125,6 +162,74 @@ definitions:
       required:
         -user
         -team
+  dto.UserUpdateRequestDTO:
+    properties:
+      email:
+        type: string
+      firstname:
+        type: string
+      lastname:
+        type: string
+      topicsOfInterest:
+        items:
+          $ref: '#/definitions/model.TopicOfInterest'
+        type: array
+      username:
+        type: string
+    type: object
+  dto.UserUpdateResponseDTO:
+    properties:
+      email:
+        type: string
+      firstname:
+        type: string
+      id:
+        type: string
+      lastname:
+        type: string
+      statistics:
+        $ref: '#/definitions/model.Statistics'
+      teams:
+        items:
+          type: string
+        type: array
+      topicsOfInterest:
+        items:
+          $ref: '#/definitions/model.TopicOfInterest'
+        type: array
+      username:
+        type: string
+    type: object
+  entity.Question:
+    properties:
+      answers:
+        items:
+          type: string
+        type: array
+      options:
+        items:
+          type: string
+        type: array
+      question:
+        type: string
+      type:
+        $ref: '#/definitions/model.QuizType'
+    type: object
+  entity.Quiz:
+    properties:
+      id:
+        type: string
+      questions:
+        items:
+          $ref: '#/definitions/entity.Question'
+        type: array
+      quiz_name:
+        type: string
+      team_id:
+        type: string
+      user_id:
+        type: string
+    type: object
   entity.Team:
     properties:
       description:
@@ -167,6 +272,14 @@ definitions:
       username:
         type: string
     type: object
+  model.QuizType:
+    enum:
+    - multiple_choice
+    - true_false
+    type: string
+    x-enum-varnames:
+    - MultipleChoice
+    - TrueFalse
   model.Statistics:
     properties:
       timeSpentOnTeams:
@@ -210,9 +323,157 @@ info:
   title: StudyWithMe API
   version: "1.0"
 paths:
+  /friend-requests/{fromUserId}/{toUserId}:
+    post:
+      description: Send a friend request from one user to another
+      parameters:
+      - description: Sender User ID
+        in: path
+        name: fromUserId
+        required: true
+        type: string
+      - description: Recipient User ID
+        in: path
+        name: toUserId
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Send a friend request
+      tags:
+      - default
+    put:
+      description: Accept or deny a friend request
+      parameters:
+      - description: Sender User ID
+        in: path
+        name: fromUserId
+        required: true
+        type: string
+      - description: Recipient User ID
+        in: path
+        name: toUserId
+        required: true
+        type: string
+      - description: Accept or deny
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RespondFriendRequestRequest'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Respond to a friend request
+      tags:
+      - default
+  /friend-requests/{userId}:
+    get:
+      description: Get pending friend requests for a user
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FriendRequestListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get pending friend requests
+      tags:
+      - default
+  /quizzes:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: The create quiz request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Quiz'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CreateQuizResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new quiz
   /teams:
     get:
-      description: Get a list of all teams
+      description: Get teams - all teams, by name, or by prefix with limit
+      parameters:
+      - description: Filter by exact name
+        in: query
+        name: name
+        type: string
+      - description: Filter by name prefix
+        in: query
+        name: prefix
+        type: string
+      - description: Limit results (required with prefix)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -222,12 +483,19 @@ paths:
             items:
               $ref: '#/definitions/entity.Team'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
         "500":
           description: Internal Server Error
           schema:
             additionalProperties: true
             type: object
-      summary: Get all teams
+      security:
+      - Bearer: []
+      summary: Get teams with optional filtering
     post:
       consumes:
       - application/json
@@ -256,6 +524,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Create a new team
   /teams/{id}:
     delete:
@@ -284,6 +554,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Delete a team
     get:
       description: Get team details by ID
@@ -305,6 +577,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Get a team by ID
     put:
       consumes:
@@ -339,8 +613,35 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Update a team
-  /teams/addUserToTeam:
+  /teams/users:
+    delete:
+      description: Delete a user from a team by providing team ID
+      parameters:
+      - description: User ID and Team ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserToTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted from team
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'Bad Request: Invalid request body or missing userId or teamId'
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete a user from a team
     put:
       consumes:
       - application/json
@@ -365,95 +666,9 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - Bearer: []
       summary: Add a user to a team
-  /teams/by-name:
-    get:
-      description: Get a list of teams that match the specified name
-      parameters:
-      - description: Name to search for
-        in: query
-        name: name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entity.Team'
-            type: array
-        "400":
-          description: 'Bad Request: Missing ''name'' query parameter'
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get teams by name
-  /teams/deleteUserFromTeam:
-    delete:
-      description: Delete a user from a team by providing the user ID and team ID
-      parameters:
-      - description: User ID and Team ID
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UserToTeamRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User deleted from team
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: 'Bad Request: Invalid request body or missing userId or teamId'
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Delete a user from a team
-  /teams/search:
-    get:
-      description: Get a list of X teams that start with the specified prefix
-      parameters:
-      - description: Prefix to search for
-        in: query
-        name: prefix
-        required: true
-        type: string
-      - description: Number of teams to retrieve
-        in: query
-        name: limit
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entity.Team'
-            type: array
-        "400":
-          description: 'Bad Request: Missing prefix or limit query parameters, or
-            limit is NaN'
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get X teams by prefix
   /users:
     get:
       consumes:
@@ -473,6 +688,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Get all users
   /users/{id}:
     delete:
@@ -493,12 +710,20 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
           description: Internal Server Error
           schema:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Delete a user
     get:
       consumes:
@@ -522,8 +747,10 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Get a user by ID
-    put:
+    patch:
       consumes:
       - application/json
       parameters:
@@ -532,19 +759,19 @@ paths:
         name: id
         required: true
         type: string
-      - description: The updated user
+      - description: The user profile update (all fields optional)
         in: body
-        name: user
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/entity.User'
+          $ref: '#/definitions/dto.UserUpdateRequestDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.User'
+            $ref: '#/definitions/dto.UserUpdateResponseDTO'
         "400":
           description: Bad Request
           schema:
@@ -552,7 +779,7 @@ paths:
               type: string
             type: object
         "404":
-          description: User not found
+          description: Not Found
           schema:
             additionalProperties:
               type: string
@@ -563,7 +790,116 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: "Update\ta user"
+      security:
+      - Bearer: []
+      summary: Update user profile (selective fields)
+  /users/{id}/friends:
+    get:
+      description: Get list of friends for a user (accepted requests)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get friends for a user
+      tags:
+      - default
+  /users/{id}/mutual/{otherId}:
+    get:
+      description: Get list of mutual friends between userA and userB
+      parameters:
+      - description: User A ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User B ID
+        in: path
+        name: otherId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get mutual friends between two users
+      tags:
+      - default
+  /users/{id}/password:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: The user's ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: The password update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserPasswordRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update user password
   /users/{id}/statistics:
     put:
       consumes:
@@ -593,8 +929,8 @@ paths:
             additionalProperties:
               type: string
             type: object
-        "401":
-          description: Unauthorized
+        "404":
+          description: Not Found
           schema:
             additionalProperties:
               type: string
@@ -605,6 +941,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Update user statistics
   /users/login:
     post:
@@ -638,6 +976,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Login user by email or username and return JWT
   /users/signup:
     post:
@@ -659,6 +1003,12 @@ paths:
             $ref: '#/definitions/dto.SignUpUserResponse'
         "400":
           description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
           schema:
             additionalProperties:
               type: string
@@ -706,6 +1056,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Join voice chat room
   /voice/{teamId}/leave:
     delete:
@@ -739,5 +1091,13 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Leave voice chat room
+securityDefinitions:
+  Bearer:
+    description: 'Bearer JWT token. Example: "Bearer YOUR_TOKEN"'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

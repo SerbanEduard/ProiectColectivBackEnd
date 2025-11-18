@@ -128,6 +128,19 @@ func (m *MockUserService) UpdateUserStatistics(id string, timeSpentOnApp int64, 
 	return args.Get(0).(*entity.User), args.Error(1)
 }
 
+func (m *MockUserService) UpdateUserProfile(userID string, req *dto.UserUpdateRequestDTO) (*dto.UserUpdateResponseDTO, error) {
+	args := m.Called(userID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.UserUpdateResponseDTO), args.Error(1)
+}
+
+func (m *MockUserService) UpdateUserPassword(userID string, req *dto.UserPasswordRequestDTO) error {
+	args := m.Called(userID, req)
+	return args.Error(0)
+}
+
 type MockFriendRequestRepository struct {
 	mock.Mock
 }
@@ -155,6 +168,14 @@ func (m *MockFriendRequestRepository) GetPendingRequestsForUser(userID string) (
 	return args.Get(0).([]*entity.FriendRequest), args.Error(1)
 }
 
+func (m *MockFriendRequestRepository) GetFriendsForUser(userID string) ([]string, error) {
+	args := m.Called(userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
 type MockFriendRequestService struct {
 	mock.Mock
 }
@@ -175,6 +196,22 @@ func (m *MockFriendRequestService) GetPendingRequests(userID string) ([]*entity.
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*entity.FriendRequest), args.Error(1)
+}
+
+func (m *MockFriendRequestService) GetFriends(userID string) ([]*entity.User, error) {
+	args := m.Called(userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.User), args.Error(1)
+}
+
+func (m *MockFriendRequestService) GetMutualFriends(userA, userB string) ([]*entity.User, error) {
+	args := m.Called(userA, userB)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.User), args.Error(1)
 }
 
 type MockTeamRepository struct {
