@@ -14,6 +14,6 @@ func SetupFriendRequestRoutes(r *gin.Engine) {
 	{
 		protected.POST("/friend-requests/:fromUserId/:toUserId", friendRequestController.SendFriendRequest)
 		protected.PUT("/friend-requests/:fromUserId/:toUserId", friendRequestController.RespondToFriendRequest)
-		protected.GET("/friend-requests/pending/:userId", friendRequestController.GetPendingRequests)
+		protected.GET("/friend-requests/:userId", friendRequestController.GetPendingRequests)
 	}
 }
