@@ -1,8 +1,18 @@
 package hub
 
 import (
-	"log"
 	"sync"
+	"time"
+
+	"github.com/gorilla/websocket"
+)
+
+const (
+	readWait  = 30 * time.Second
+	writeWait = 10 * time.Second
+
+	// MUST be LESS than readWait
+	pingFrequency = (readWait * 9) / 10 // pingFrequency = 90% * readWait
 )
 
 type Hub[T any] struct {
@@ -39,7 +49,6 @@ func (h *Hub[T]) Unregister(client *Client[T]) {
 		close(client.outbound)
 		err := client.Conn.Close()
 		if err != nil {
-			log.Printf("Failed to close the connection for client with ID = %s", client.ClientID)
 			return
 		}
 	}
@@ -71,15 +80,38 @@ func (h *Hub[T]) SendMany(clientIDs []string, msg T) {
 
 // writePump continuously reads from the outbound channel and writes to the WebSocket
 func (h *Hub[T]) writePump(client *Client[T]) {
+	ticker := time.NewTicker(pingFrequency)
 	defer func() {
 		// Unregister the client on exit
 		h.Unregister(client)
 	}()
 
-	for msg := range client.outbound {
-		if err := client.Conn.WriteJSON(msg); err != nil {
-			// Client disconnected
-			return
+	for {
+		select {
+		case msg, ok := <-client.outbound:
+			if !ok {
+				// The hub closed the channel
+				err := client.Conn.WriteControl(websocket.CloseMessage, []byte{}, time.Now().Add(writeWait))
+				if err != nil {
+					return
+				}
+			}
+
+			// Send the message as JSON
+			err := client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				return
+			}
+			err = client.Conn.WriteJSON(msg)
+			if err != nil {
+				return
+			}
+		case <-ticker.C:
+			// Send a ping message
+			if err := client.Conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(writeWait)); err != nil {
+				// Client disconnected
+				return
+			}
 		}
 	}
 }
@@ -89,6 +121,16 @@ func (h *Hub[T]) readPump(client *Client[T]) {
 	defer func() {
 		h.Unregister(client)
 	}()
+
+	// Check for timeouts
+	err := client.Conn.SetReadDeadline(time.Now().Add(readWait))
+	if err != nil {
+		return
+	}
+	client.Conn.SetPongHandler(func(string) error {
+		// Reset the deadline when a pong message is received
+		return client.Conn.SetReadDeadline(time.Now().Add(readWait))
+	})
 
 	for {
 		_, _, err := client.Conn.ReadMessage()
