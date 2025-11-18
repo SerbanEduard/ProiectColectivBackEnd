@@ -31,6 +31,7 @@ func SetupRoutes() *gin.Engine {
 	SetupMessageRoutes(r)
 	SetupFriendRequestRoutes(r)
 	VoiceRoutes(r)
+	SetupQuizRoutes(r)
 
 	return r
 }

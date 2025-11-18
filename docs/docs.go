@@ -15,154 +15,53 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/messages": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
+        "/friend-requests/{fromUserId}/{toUserId}": {
+            "put": {
+                "description": "Accept or deny a friend request",
+                "tags": [
+                    "default"
                 ],
-                "description": "Get messages between 2 users or within a team",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Get all messages",
+                "summary": "Respond to a friend request",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Messages type (direct/team)",
-                        "name": "type",
-                        "in": "query",
+                        "description": "Sender User ID",
+                        "name": "fromUserId",
+                        "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "User1 ID (direct message)",
-                        "name": "user1Id",
-                        "in": "query"
+                        "description": "Recipient User ID",
+                        "name": "toUserId",
+                        "in": "path",
+                        "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "User2 ID (direct message)",
-                        "name": "user2Id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Team ID (team message)",
-                        "name": "teamId",
-                        "in": "query"
+                        "description": "Accept or deny",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RespondFriendRequestRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.MessageDTO"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Create and send a message either to another user or to a team",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Create and send a message",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Message type (direct/team)",
-                        "name": "type",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "description": "The message request (this is only for documentation purposes, the actual request should be either DirectMessageRequest or TeamMessageRequest)",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controller.MessageRequestUnion"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.MessageDTO"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/messages/connect": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "summary": "Connect the user to the message WebSocket",
-                "responses": {
-                    "101": {
-                        "description": "Switching Protocols - WebSocket connection established",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -174,31 +73,72 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Send a friend request from one user to another",
+                "tags": [
+                    "default"
+                ],
+                "summary": "Send a friend request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sender User ID",
+                        "name": "fromUserId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Recipient User ID",
+                        "name": "toUserId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
             }
         },
-        "/messages/{id}": {
+        "/friend-requests/{userId}": {
             "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
+                "description": "Get pending friend requests for a user",
+                "tags": [
+                    "default"
                 ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Get a message by ID",
+                "summary": "Get pending friend requests",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The message ID",
-                        "name": "id",
+                        "description": "User ID",
+                        "name": "userId",
                         "in": "path",
                         "required": true
                     }
@@ -207,21 +147,73 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageDTO"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/dto.FriendRequestListResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create a new quiz",
+                "parameters": [
+                    {
+                        "description": "The create quiz request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.Quiz"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateQuizResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -635,6 +627,15 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             }
@@ -668,6 +669,15 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -760,6 +770,15 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -820,6 +839,107 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/friends": {
+            "get": {
+                "description": "Get list of friends for a user (accepted requests)",
+                "tags": [
+                    "default"
+                ],
+                "summary": "Get friends for a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.User"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/mutual/{otherId}": {
+            "get": {
+                "description": "Get list of mutual friends between userA and userB",
+                "tags": [
+                    "default"
+                ],
+                "summary": "Get mutual friends between two users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User A ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User B ID",
+                        "name": "otherId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.User"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -950,8 +1070,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1089,27 +1209,38 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controller.MessageRequestUnion": {
+        "dto.CreateQuizResponse": {
             "type": "object",
             "properties": {
-                "direct": {
-                    "$ref": "#/definitions/dto.DirectMessageRequest"
-                },
-                "team": {
-                    "$ref": "#/definitions/dto.TeamMessageRequest"
+                "quiz_id": {
+                    "type": "string"
                 }
             }
         },
-        "dto.DirectMessageRequest": {
+        "dto.FriendRequestListResponse": {
             "type": "object",
             "properties": {
-                "receiverId": {
+                "requests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.FriendRequestResponse"
+                    }
+                }
+            }
+        },
+        "dto.FriendRequestResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
                     "type": "string"
                 },
-                "senderId": {
+                "fromUserId": {
                     "type": "string"
                 },
-                "textContent": {
+                "status": {
+                    "type": "string"
+                },
+                "toUserId": {
                     "type": "string"
                 }
             }
@@ -1145,26 +1276,11 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.MessageDTO": {
+        "dto.RespondFriendRequestRequest": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "receiverId": {
-                    "type": "string"
-                },
-                "senderId": {
-                    "type": "string"
-                },
-                "sentAt": {
-                    "type": "string"
-                },
-                "teamId": {
-                    "type": "string"
-                },
-                "textContent": {
-                    "type": "string"
+                "accept": {
+                    "type": "boolean"
                 }
             }
         },
@@ -1204,20 +1320,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.TeamMessageRequest": {
-            "type": "object",
-            "properties": {
-                "senderId": {
-                    "type": "string"
-                },
-                "teamId": {
-                    "type": "string"
-                },
-                "textContent": {
                     "type": "string"
                 }
             }
@@ -1399,6 +1501,52 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.Question": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "question": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/model.QuizType"
+                }
+            }
+        },
+        "entity.Quiz": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "questions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Question"
+                    }
+                },
+                "quiz_name": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Team": {
             "type": "object",
             "properties": {
@@ -1462,6 +1610,17 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "model.QuizType": {
+            "type": "string",
+            "enum": [
+                "multiple_choice",
+                "true_false"
+            ],
+            "x-enum-varnames": [
+                "MultipleChoice",
+                "TrueFalse"
+            ]
         },
         "model.Statistics": {
             "type": "object",

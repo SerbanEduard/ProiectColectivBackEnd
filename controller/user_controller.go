@@ -19,12 +19,14 @@ const (
 )
 
 type UserController struct {
-	userService UserServiceInterface
+	userService          UserServiceInterface
+	friendRequestService service.FriendRequestServiceInterface
 }
 
 func NewUserController() *UserController {
 	return &UserController{
-		userService: service.NewUserService(),
+		userService:          service.NewUserService(),
+		friendRequestService: service.NewFriendRequestService(),
 	}
 }
 
@@ -32,6 +34,10 @@ func NewUserControllerWithService(userService UserServiceInterface) *UserControl
 	return &UserController{
 		userService: userService,
 	}
+}
+
+func (uc *UserController) SetFriendRequestService(svc service.FriendRequestServiceInterface) {
+	uc.friendRequestService = svc
 }
 
 type UserServiceInterface interface {
@@ -56,6 +62,7 @@ type UserServiceInterface interface {
 //	@Param		request	body		dto.SignUpUserRequest	true	"The sign-up request"
 //	@Success	201		{object}	dto.SignUpUserResponse
 //	@Failure	400		{object}	map[string]string
+//	@Failure	409		{object}	map[string]string
 //	@Failure	500		{object}	map[string]string
 //	@Router		/users/signup [post]
 func (uc *UserController) SignUp(c *gin.Context) {
@@ -67,6 +74,18 @@ func (uc *UserController) SignUp(c *gin.Context) {
 
 	response, err := uc.userService.SignUp(&request)
 	if err != nil {
+		if strings.Contains(err.Error(), "already exists") ||
+			strings.Contains(err.Error(), "invalid") ||
+			strings.Contains(err.Error(), "required") ||
+			strings.Contains(err.Error(), "must") {
+			if strings.Contains(err.Error(), "already exists") {
+				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			return
+		}
+		// All other errors are server errors
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -183,12 +202,17 @@ func (uc *UserController) UpdateUserPassword(c *gin.Context) {
 //	@Produce	json
 //	@Param		id	path		string	true	"The user's ID"
 //	@Success	200	{object}	map[string]string
+//	@Failure	404	{object}	map[string]string
 //	@Failure	500	{object}	map[string]string
 //	@Router		/users/{id} [delete]
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := uc.userService.DeleteUser(id); err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -205,8 +229,8 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 //	@Param		id		path		string						true	"The user's ID"
 //	@Param		request	body		dto.UpdateStatisticsRequest	true	"The statistics update request"
 //	@Success	200		{object}	dto.UpdateStatisticsResponse
-//	@Failure	401		{object}	map[string]string
 //	@Failure	400		{object}	map[string]string
+//	@Failure	404		{object}	map[string]string
 //	@Failure	500		{object}	map[string]string
 //	@Router		/users/{id}/statistics [put]
 func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
@@ -225,6 +249,10 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 
 	updatedUser, err := uc.userService.UpdateUserStatistics(id, request.TimeSpentOnApp, teamTimeSpent)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -243,6 +271,7 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 //	@Success		200		{object}	dto.LoginResponse
 //	@Failure		400		{object}	map[string]string
 //	@Failure		401		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
 //	@Router			/users/login [post]
 func (uc *UserController) Login(c *gin.Context) {
 	var req dto.LoginRequest
@@ -266,4 +295,69 @@ func (uc *UserController) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// GetFriends
+//
+//	@Summary		Get friends for a user
+//	@Description	Get list of friends for a user (accepted requests)
+//	@Tags			default
+//	@Param			id	path		string	true	"User ID"
+//	@Success		200	{array}		entity.User
+//	@Failure		400	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/users/{id}/friends [get]
+func (uc *UserController) GetFriends(c *gin.Context) {
+	// { changed code } read standardized param name ":id"
+	userID := c.Param("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	if uc.friendRequestService == nil {
+		uc.friendRequestService = service.NewFriendRequestService()
+	}
+
+	friends, err := uc.friendRequestService.GetFriends(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, friends)
+}
+
+// GetMutualFriends
+//
+//	@Summary		Get mutual friends between two users
+//	@Description	Get list of mutual friends between userA and userB
+//	@Tags			default
+//	@Param			id		path		string	true	"User A ID"
+//	@Param			otherId	path		string	true	"User B ID"
+//	@Success		200		{array}		entity.User
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/users/{id}/mutual/{otherId} [get]
+func (uc *UserController) GetMutualFriends(c *gin.Context) {
+	// { changed code } read standardized params ":id" and ":otherId"
+	userA := c.Param("id")
+	userB := c.Param("otherId")
+
+	if userA == "" || userB == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user IDs"})
+		return
+	}
+
+	if uc.friendRequestService == nil {
+		uc.friendRequestService = service.NewFriendRequestService()
+	}
+
+	mutual, err := uc.friendRequestService.GetMutualFriends(userA, userB)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, mutual)
 }
