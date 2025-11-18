@@ -159,18 +159,18 @@ func (tc *TeamController) GetAllTeams(c *gin.Context) {
 
 // AddUserToTeam
 //
-// @Summary      Add a user to a team
-// @Description  Adds a user to a team by providing user ID and team ID
+//	@Summary		Add a user to a team
+//	@Description	Adds a user to a team by providing user ID and team ID
 //
 //	@Security		Bearer
 //
-// @Tags         Teams
-// @Accept       json
-// @Produce      json
-// @Param        request  body      dto.UserToTeamRequest  true  "User ID and Team ID"
-// @Success      200      {object}  dto.AddUserToTeamResponse
-// @Failure      400      {object}  map[string]string          "Invalid request body or error"
-// @Router       /teams/users [put]
+//	@Tags			Teams
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
+//	@Success		200		{object}	dto.AddUserToTeamResponse
+//	@Failure		400		{object}	map[string]string	"Invalid request body or error"
+//	@Router			/teams/users [put]
 func (tc *TeamController) AddUserToTeam(c *gin.Context) {
 	var req dto.UserToTeamRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -188,18 +188,18 @@ func (tc *TeamController) AddUserToTeam(c *gin.Context) {
 
 // DeleteUserFromTeam
 //
-// @Summary      Delete a user from a team
-// @Description  Deletes a user from a team by providing team ID
+//	@Summary		Delete a user from a team
+//	@Description	Deletes a user from a team by providing team ID
 //
 //	@Security		Bearer
 //
-// @Tags         Teams
-// @Accept       json
-// @Produce      json
-// @Param        request  body      dto.UserToTeamRequest  true  "User ID and Team ID"
-// @Success      200      {object}  dto.AddUserToTeamResponse  "User removed from team"
-// @Failure      400      {object}  map[string]string          "Invalid request body or error"
-// @Router       /teams/users [delete]
+//	@Tags			Teams
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		dto.UserToTeamRequest		true	"User ID and Team ID"
+//	@Success		200		{object}	dto.AddUserToTeamResponse	"User removed from team"
+//	@Failure		400		{object}	map[string]string			"Invalid request body or error"
+//	@Router			/teams/users [delete]
 func (tc *TeamController) DeleteUserFromTeam(c *gin.Context) {
 	var req dto.UserToTeamRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

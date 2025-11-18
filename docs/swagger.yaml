@@ -1,5 +1,12 @@
 basePath: /
 definitions:
+  dto.AddUserToTeamResponse:
+    properties:
+      team:
+        $ref: '#/definitions/entity.Team'
+      user:
+        $ref: '#/definitions/entity.User'
+    type: object
   dto.CreateQuizResponse:
     properties:
       quiz_id:
@@ -153,15 +160,6 @@ definitions:
     - teamId
     - userId
     type: object
-  dto.addUserToTeam:
-    properties:
-      user:
-        type:entity.User
-      team:
-        type:entity.Team
-      required:
-        -user
-        -team
   dto.UserUpdateRequestDTO:
     properties:
       email:
@@ -616,9 +614,75 @@ paths:
       security:
       - Bearer: []
       summary: Update a team
+  /teams/by-name:
+    get:
+      description: Get a list of teams that match the specified name
+      parameters:
+      - description: Name to search for
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Team'
+            type: array
+        "400":
+          description: 'Bad Request: Missing ''name'' query parameter'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get teams by name
+  /teams/search:
+    get:
+      description: Get a list of X teams that start with the specified prefix
+      parameters:
+      - description: Prefix to search for
+        in: query
+        name: prefix
+        required: true
+        type: string
+      - description: Number of teams to retrieve
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Team'
+            type: array
+        "400":
+          description: 'Bad Request: Missing prefix or limit query parameters, or
+            limit is NaN'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get X teams by prefix
   /teams/users:
     delete:
-      description: Delete a user from a team by providing team ID
+      consumes:
+      - application/json
+      description: Deletes a user from a team by providing team ID
       parameters:
       - description: User ID and Team ID
         in: body
@@ -630,22 +694,24 @@ paths:
       - application/json
       responses:
         "200":
-          description: User deleted from team
+          description: User removed from team
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.AddUserToTeamResponse'
         "400":
-          description: 'Bad Request: Invalid request body or missing userId or teamId'
+          description: Invalid request body or error
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
       security:
       - Bearer: []
       summary: Delete a user from a team
+      tags:
+      - Teams
     put:
       consumes:
       - application/json
-      description: Add a user to a team by providing user ID and team ID
+      description: Adds a user to a team by providing user ID and team ID
       parameters:
       - description: User ID and Team ID
         in: body
@@ -657,18 +723,20 @@ paths:
       - application/json
       responses:
         "200":
-          description: User added to team
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.AddUserToTeamResponse'
         "400":
-          description: 'Bad Request: Invalid request body or missing userId or teamId'
+          description: Invalid request body or error
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
       security:
       - Bearer: []
       summary: Add a user to a team
+      tags:
+      - Teams
   /users:
     get:
       consumes:

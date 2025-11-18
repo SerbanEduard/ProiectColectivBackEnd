@@ -318,6 +318,99 @@
                 }
             }
         },
+        "/teams/by-name": {
+            "get": {
+                "description": "Get a list of teams that match the specified name",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get teams by name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name to search for",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Team"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Missing 'name' query parameter",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/teams/search": {
+            "get": {
+                "description": "Get a list of X teams that start with the specified prefix",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get X teams by prefix",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prefix to search for",
+                        "name": "prefix",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of teams to retrieve",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Team"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Missing prefix or limit query parameters, or limit is NaN",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/teams/users": {
             "put": {
                 "security": [
@@ -325,12 +418,15 @@
                         "Bearer": []
                     }
                 ],
-                "description": "Add a user to a team by providing user ID and team ID",
+                "description": "Adds a user to a team by providing user ID and team ID",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Teams"
                 ],
                 "summary": "Add a user to a team",
                 "parameters": [
@@ -346,17 +442,18 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "User added to team",
+                        "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/dto.AddUserToTeamResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Invalid request body or missing userId or teamId",
+                        "description": "Invalid request body or error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -367,9 +464,15 @@
                         "Bearer": []
                     }
                 ],
-                "description": "Delete a user from a team by providing team ID",
+                "description": "Deletes a user from a team by providing team ID",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Teams"
                 ],
                 "summary": "Delete a user from a team",
                 "parameters": [
@@ -385,17 +488,18 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "User deleted from team",
+                        "description": "User removed from team",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/dto.AddUserToTeamResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Invalid request body or missing userId or teamId",
+                        "description": "Invalid request body or error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -1201,6 +1305,17 @@
         }
     },
     "definitions": {
+        "dto.AddUserToTeamResponse": {
+            "type": "object",
+            "properties": {
+                "team": {
+                    "$ref": "#/definitions/entity.Team"
+                },
+                "user": {
+                    "$ref": "#/definitions/entity.User"
+                }
+            }
+        },
         "dto.CreateQuizResponse": {
             "type": "object",
             "properties": {
