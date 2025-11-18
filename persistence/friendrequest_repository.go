@@ -44,6 +44,11 @@ func (fr *FriendRequestRepository) GetByUsers(fromUserID, toUserID string) (*ent
 		return nil, fmt.Errorf("get friend request %s: %w", key, err)
 	}
 
+	// dacă path-ul nu există, Firebase îți dă zero-value struct
+	if request.FromUserID == "" && request.ToUserID == "" && request.CreatedAt.IsZero() {
+		return nil, fmt.Errorf("%w", ErrFriendRequestNotFound)
+	}
+
 	return &request, nil
 }
 
