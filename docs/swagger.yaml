@@ -148,6 +148,18 @@ definitions:
           $ref: '#/definitions/dto.SolveQuestionResponse'
         type: array
     type: object
+  dto.StatisticsResponse:
+    properties:
+      timeSpentOnTeams:
+        items:
+          $ref: '#/definitions/model.TimeSpentOnTeam'
+        type: array
+      totalTimeSpentOnApp:
+        example: 7200000
+        type: integer
+      userId:
+        type: string
+    type: object
   dto.TeamMessageRequest:
     properties:
       senderId:
@@ -181,18 +193,6 @@ definitions:
       timeSpentOnTeam:
         example: 900000
         type: integer
-    type: object
-  dto.UpdateStatisticsResponse:
-    properties:
-      timeSpentOnTeams:
-        items:
-          $ref: '#/definitions/model.TimeSpentOnTeam'
-        type: array
-      totalTimeSpentOnApp:
-        example: 7200000
-        type: integer
-      userId:
-        type: string
     type: object
   dto.UserPasswordRequestDTO:
     properties:
@@ -1219,6 +1219,41 @@ paths:
       - Bearer: []
       summary: Update user password
   /users/{id}/statistics:
+    get:
+      parameters:
+      - description: The user's ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.StatisticsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get a user's statistics
     put:
       consumes:
       - application/json
@@ -1240,7 +1275,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.UpdateStatisticsResponse'
+            $ref: '#/definitions/dto.StatisticsResponse'
         "400":
           description: Bad Request
           schema:

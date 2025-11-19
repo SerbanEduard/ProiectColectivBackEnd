@@ -193,6 +193,19 @@ func (us *UserService) GetAllUsers() ([]*entity.User, error) {
 	return us.userRepo.GetAll()
 }
 
+func (us *UserService) GetUserStatistics(id string) (*dto.StatisticsResponse, error) {
+	user, err := us.userRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil || user.Statistics == nil {
+		return nil, nil
+	}
+
+	return dto.NewStatisticsResponse(user.ID, user.Statistics), nil
+}
+
 func (us *UserService) UpdateUserStatistics(id string, timeSpentOnApp int64, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error) {
 	user, err := us.userRepo.GetByID(id)
 	if err != nil {
