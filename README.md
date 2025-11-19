@@ -51,6 +51,27 @@ Server runs on `http://localhost:8080`
 - `PUT/teams/:id` - Update team
 - `DELETE/teams/:id`  - Delete team
 
+- `POST /quizzes` - Create a quiz (protected - requires Bearer token)
+  + JSON example:
+  {
+    "quiz_name": "Sample Quiz",
+    "user_id": "123",
+    "team_id": "team123",
+    "questions": [
+      {"type": "multiple_choice", "question": "What is 2+2?", "options": ["1", "2", "4"], "answers": ["4"]}
+    ]
+  }
+- `GET /quizzes/:id` - Get a quiz with answers (protected - requires Bearer token)
+- `GET /quizzes/:id/test` - Get a quiz without answers for taking the test (protected - requires Bearer token)
+- `POST /quizzes/:id/test` - Submit quiz answers and get results (protected - requires Bearer token)
+  + JSON example:
+  {
+    "quiz_id": "quiz123",
+    "attempts": [
+      {"quiz_question_id": "q1", "answer": ["4"]}
+    ]
+  }
+
 ## WebSockets
 
 ### Real-time messaging

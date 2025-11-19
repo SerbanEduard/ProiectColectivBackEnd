@@ -7,6 +7,13 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+type QuizRepositoryInterface interface {
+	Create(quiz entity.Quiz) error
+	Update(quiz entity.Quiz) error
+	GetById(id string) (entity.Quiz, error)
+	GetByUser(id string) ([]entity.Quiz, error)
+	GetByTeam(id string) ([]entity.Quiz, error)
+}
 type MockUserRepository struct {
 	mock.Mock
 }
@@ -263,4 +270,81 @@ func (m *MockTeamRepository) Update(team *entity.Team) error {
 func (m *MockTeamRepository) Delete(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
+}
+
+type MockQuizRepository struct {
+	mock.Mock
+}
+
+func (m *MockQuizRepository) Create(quiz entity.Quiz) error {
+	args := m.Called(quiz)
+	return args.Error(0)
+}
+
+func (m *MockQuizRepository) Update(quiz entity.Quiz) error {
+	args := m.Called(quiz)
+	return args.Error(0)
+}
+
+func (m *MockQuizRepository) GetById(id string) (entity.Quiz, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		// Asigură-te că primul argument este o valoare zero (entity.Quiz{}) dacă este nil, și returnează eroarea.
+		return entity.Quiz{}, args.Error(1)
+	}
+	return args.Get(0).(entity.Quiz), args.Error(1)
+}
+
+func (m *MockQuizRepository) GetByUser(id string) ([]entity.Quiz, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]entity.Quiz), args.Error(1)
+}
+
+func (m *MockQuizRepository) GetByTeam(id string) ([]entity.Quiz, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]entity.Quiz), args.Error(1)
+}
+
+// MockQuizService is used by controller tests to mock service layer behavior.
+type MockQuizService struct {
+	mock.Mock
+}
+
+func (m *MockQuizService) CreateQuiz(request entity.Quiz) (dto.CreateQuizResponse, error) {
+	args := m.Called(request)
+	var resp dto.CreateQuizResponse
+	if args.Get(0) != nil {
+		resp = args.Get(0).(dto.CreateQuizResponse)
+	}
+	return resp, args.Error(1)
+}
+
+func (m *MockQuizService) GetQuizWithAnswersById(id string) (entity.Quiz, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return entity.Quiz{}, args.Error(1)
+	}
+	return args.Get(0).(entity.Quiz), args.Error(1)
+}
+
+func (m *MockQuizService) GetQuizWithoutAnswersById(id string) (dto.ReadQuizResponse, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return dto.ReadQuizResponse{}, args.Error(1)
+	}
+	return args.Get(0).(dto.ReadQuizResponse), args.Error(1)
+}
+
+func (m *MockQuizService) SolveQuiz(request dto.SolveQuizRequest, userId string) (dto.SolveQuizResponse, error) {
+	args := m.Called(request, userId)
+	if args.Get(0) == nil {
+		return dto.SolveQuizResponse{}, args.Error(1)
+	}
+	return args.Get(0).(dto.SolveQuizResponse), args.Error(1)
 }

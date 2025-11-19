@@ -3,6 +3,7 @@ package entity
 import "github.com/SerbanEduard/ProiectColectivBackEnd/model"
 
 type Question struct {
+	ID       string         `json:"id,omitempty"`
 	Type     model.QuizType `json:"type"`
 	Question string         `json:"question"`
 	Answers  []string       `json:"answers"`
@@ -17,7 +18,7 @@ type Quiz struct {
 	Questions []Question `json:"questions"`
 }
 
-func newQuestion(ID string, quizType model.QuizType, question string, answers []string, options []string) *Question {
+func NewQuestion(ID string, quizType model.QuizType, question string, answers []string, options []string) *Question {
 	return &Question{
 		Type:     quizType,
 		Question: question,
@@ -26,7 +27,7 @@ func newQuestion(ID string, quizType model.QuizType, question string, answers []
 	}
 }
 
-func newQuiz(ID string, quizName string, userID string, teamID string, questions []Question) *Quiz {
+func NewQuiz(ID string, quizName string, userID string, teamID string, questions []Question) *Quiz {
 	return &Quiz{
 		ID:        ID,
 		QuizName:  quizName,
