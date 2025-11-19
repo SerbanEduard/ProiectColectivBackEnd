@@ -74,6 +74,11 @@ definitions:
       textContent:
         type: string
     type: object
+  dto.ReadQuizRequest:
+    properties:
+      quiz_id:
+        type: string
+    type: object
   dto.RespondFriendRequestRequest:
     properties:
       accept:
@@ -104,6 +109,44 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  dto.SolveQuestionRequest:
+    properties:
+      answer:
+        items:
+          type: string
+        type: array
+      quiz_question_id:
+        type: string
+    type: object
+  dto.SolveQuestionResponse:
+    properties:
+      correct_fields:
+        items:
+          type: string
+        type: array
+      is_correct:
+        type: boolean
+      quiz_question_id:
+        type: string
+    type: object
+  dto.SolveQuizRequest:
+    properties:
+      attempts:
+        items:
+          $ref: '#/definitions/dto.SolveQuestionRequest'
+        type: array
+      quiz_id:
+        type: string
+    type: object
+  dto.SolveQuizResponse:
+    properties:
+      is_correct:
+        type: boolean
+      questions_answers:
+        items:
+          $ref: '#/definitions/dto.SolveQuestionResponse'
+        type: array
     type: object
   dto.TeamMessageRequest:
     properties:
@@ -237,6 +280,8 @@ definitions:
         items:
           type: string
         type: array
+      id:
+        type: string
       options:
         items:
           type: string
@@ -626,7 +671,111 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Create a new quiz
+  /quizzes/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: The id for quiz
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Quiz'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get a quiz with answers
+  /quizzes/{id}/test:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: The id for quiz
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ReadQuizRequest'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get a quiz without answers
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: The solve quiz request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SolveQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SolveQuizResponse'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Solve a quiz
   /teams:
     get:
       description: Get teams - all teams, by name, or by prefix with limit

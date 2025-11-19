@@ -376,6 +376,11 @@ const docTemplate = `{
         },
         "/quizzes": {
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -412,6 +417,168 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get a quiz with answers",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The id for quiz",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.Quiz"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}/test": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get a quiz without answers",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The id for quiz",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ReadQuizRequest"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Solve a quiz",
+                "parameters": [
+                    {
+                        "description": "The solve quiz request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SolveQuizRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SolveQuizResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1536,6 +1703,14 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ReadQuizRequest": {
+            "type": "object",
+            "properties": {
+                "quiz_id": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.RespondFriendRequestRequest": {
             "type": "object",
             "properties": {
@@ -1581,6 +1756,65 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.SolveQuestionRequest": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "quiz_question_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SolveQuestionResponse": {
+            "type": "object",
+            "properties": {
+                "correct_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "is_correct": {
+                    "type": "boolean"
+                },
+                "quiz_question_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SolveQuizRequest": {
+            "type": "object",
+            "properties": {
+                "attempts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.SolveQuestionRequest"
+                    }
+                },
+                "quiz_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SolveQuizResponse": {
+            "type": "object",
+            "properties": {
+                "is_correct": {
+                    "type": "boolean"
+                },
+                "questions_answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.SolveQuestionResponse"
+                    }
                 }
             }
         },
@@ -1783,6 +2017,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "id": {
+                    "type": "string"
                 },
                 "options": {
                     "type": "array",

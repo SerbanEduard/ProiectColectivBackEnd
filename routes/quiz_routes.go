@@ -12,5 +12,8 @@ func SetupQuizRoutes(r *gin.Engine) {
 	protected.Use(controller.JWTAuthMiddleware())
 	{
 		protected.POST("/quizzes", quizController.CreateQuiz)
+		protected.GET("/quizzes/:id", quizController.GetQuizWithAnswers)
+		protected.GET("/quizzes/:id/test", quizController.GetQuizWithoutAnswers)
+		protected.POST("/quizzes/:id/test", quizController.SolveQuiz)
 	}
 }
