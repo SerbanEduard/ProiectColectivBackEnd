@@ -11,19 +11,26 @@ import (
 // JWTAuthMiddleware verifies the Authorization header and stores claims in context.
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		auth := c.GetHeader("Authorization")
-		if auth == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
-			c.Abort()
-			return
+		// expected: "Bearer <token>" (HTTP) or "?token=<token>" (WebSocket)
+		var tokenString string
+
+		authHeader := c.GetHeader("Authorization")
+		if authHeader != "" {
+			if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+				tokenString = authHeader[7:]
+			} else {
+				tokenString = authHeader
+			}
+		} else {
+			// It might be a WebSocket request
+			if c.GetHeader("Upgrade") == "websocket" {
+				tokenString = c.Query("token")
+			}
 		}
 
-		// expected: "Bearer <token>"
-		var tokenString string
-		if len(auth) > 7 && auth[:7] == "Bearer " {
-			tokenString = auth[7:]
-		} else {
-			tokenString = auth
+		if tokenString == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+			return
 		}
 
 		claims, err := config.ValidateJWT(tokenString)
@@ -32,6 +39,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
 		c.Set("userClaims", claims)
 
 		c.Next()
