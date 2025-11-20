@@ -71,6 +71,10 @@ Server runs on `http://localhost:8080`
       {"quiz_question_id": "q1", "answer": ["4"]}
     ]
   }
+- `GET /quizzes/user/:userId` - Get quizzes created by a specific user with pagination (protected - requires Bearer token)
+  + Query parameters: `pageSize` (optional, default 10, max 100), `lastKey` (optional, for pagination)
+- `GET /quizzes/team/:teamId` - Get quizzes for a specific team with pagination (protected - requires Bearer token)
+  + Query parameters: `pageSize` (optional, default 10, max 100), `lastKey` (optional, for pagination)
 
 ## WebSockets
 

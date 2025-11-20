@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -22,4 +24,13 @@ func GetUserIDFromContext(c *gin.Context) (string, error) {
 		return userID, nil
 	}
 	return "", fmt.Errorf("userClaims not found in context")
+}
+
+// GenerateID generates a random ID for entities
+func GenerateID() (string, error) {
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }

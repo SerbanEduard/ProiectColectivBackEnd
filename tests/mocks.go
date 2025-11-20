@@ -7,13 +7,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type QuizRepositoryInterface interface {
-	Create(quiz entity.Quiz) error
-	Update(quiz entity.Quiz) error
-	GetById(id string) (entity.Quiz, error)
-	GetByUser(id string) ([]entity.Quiz, error)
-	GetByTeam(id string) ([]entity.Quiz, error)
-}
 type MockUserRepository struct {
 	mock.Mock
 }
@@ -276,6 +269,14 @@ type MockQuizRepository struct {
 	mock.Mock
 }
 
+func (m *MockQuizRepository) GetByUserAndTeam(userId string, teamId string, pageSize int, lastKey string) ([]entity.Quiz, string, error) {
+	args := m.Called(userId, teamId, pageSize, lastKey)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Error(2)
+	}
+	return args.Get(0).([]entity.Quiz), args.String(1), args.Error(2)
+}
+
 func (m *MockQuizRepository) Create(quiz entity.Quiz) error {
 	args := m.Called(quiz)
 	return args.Error(0)
@@ -295,20 +296,20 @@ func (m *MockQuizRepository) GetById(id string) (entity.Quiz, error) {
 	return args.Get(0).(entity.Quiz), args.Error(1)
 }
 
-func (m *MockQuizRepository) GetByUser(id string) ([]entity.Quiz, error) {
-	args := m.Called(id)
+func (m *MockQuizRepository) GetByUser(id string, pageSize int, lastKey string) ([]entity.Quiz, string, error) {
+	args := m.Called(id, pageSize, lastKey)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, args.String(1), args.Error(2)
 	}
-	return args.Get(0).([]entity.Quiz), args.Error(1)
+	return args.Get(0).([]entity.Quiz), args.String(1), args.Error(2)
 }
 
-func (m *MockQuizRepository) GetByTeam(id string) ([]entity.Quiz, error) {
-	args := m.Called(id)
+func (m *MockQuizRepository) GetByTeam(id string, pageSize int, lastKey string) ([]entity.Quiz, string, error) {
+	args := m.Called(id, pageSize, lastKey)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, args.String(1), args.Error(2)
 	}
-	return args.Get(0).([]entity.Quiz), args.Error(1)
+	return args.Get(0).([]entity.Quiz), args.String(1), args.Error(2)
 }
 
 // MockQuizService is used by controller tests to mock service layer behavior.
@@ -341,10 +342,26 @@ func (m *MockQuizService) GetQuizWithoutAnswersById(id string) (dto.ReadQuizResp
 	return args.Get(0).(dto.ReadQuizResponse), args.Error(1)
 }
 
-func (m *MockQuizService) SolveQuiz(request dto.SolveQuizRequest, userId string) (dto.SolveQuizResponse, error) {
-	args := m.Called(request, userId)
+func (m *MockQuizService) SolveQuiz(request dto.SolveQuizRequest, userId string, quizId string) (dto.SolveQuizResponse, error) {
+	args := m.Called(request, userId, quizId)
 	if args.Get(0) == nil {
 		return dto.SolveQuizResponse{}, args.Error(1)
 	}
 	return args.Get(0).(dto.SolveQuizResponse), args.Error(1)
+}
+
+func (m *MockQuizService) GetQuizzesByUserAndTeam(userId string, teamId string, pageSize int, lastKey string) ([]dto.ReadQuizResponse, string, error) {
+	args := m.Called(userId, teamId, pageSize, lastKey)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Error(2)
+	}
+	return args.Get(0).([]dto.ReadQuizResponse), args.String(1), args.Error(2)
+}
+
+func (m *MockQuizService) GetQuizzesByTeam(userId string, teamId string, pageSize int, lastKey string) ([]dto.ReadQuizResponse, string, error) {
+	args := m.Called(userId, teamId, pageSize, lastKey)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Error(2)
+	}
+	return args.Get(0).([]dto.ReadQuizResponse), args.String(1), args.Error(2)
 }

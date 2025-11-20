@@ -15,5 +15,7 @@ func SetupQuizRoutes(r *gin.Engine) {
 		protected.GET("/quizzes/:id", quizController.GetQuizWithAnswers)
 		protected.GET("/quizzes/:id/test", quizController.GetQuizWithoutAnswers)
 		protected.POST("/quizzes/:id/test", quizController.SolveQuiz)
+		protected.GET("/quizzes/user/:userId/team/:teamId", quizController.GetQuizzesByUserAndTeam)
+		protected.GET("/quizzes/team/:teamId", quizController.GetQuizzesByTeam)
 	}
 }

@@ -16,7 +16,6 @@ type SolveQuestionResponse struct {
 }
 
 type SolveQuizRequest struct {
-	QuizID   string                 `json:"quiz_id"`
 	Attempts []SolveQuestionRequest `json:"attempts"`
 }
 
