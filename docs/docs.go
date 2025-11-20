@@ -1402,6 +1402,61 @@ const docTemplate = `{
             }
         },
         "/users/{id}/statistics": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get a user's statistics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The user's ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.StatisticsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -1437,7 +1492,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateStatisticsResponse"
+                            "$ref": "#/definitions/dto.StatisticsResponse"
                         }
                     },
                     "400": {
@@ -1818,6 +1873,24 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.StatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "timeSpentOnTeams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TimeSpentOnTeam"
+                    }
+                },
+                "totalTimeSpentOnApp": {
+                    "type": "integer",
+                    "example": 7200000
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TeamMessageRequest": {
             "type": "object",
             "properties": {
@@ -1866,24 +1939,6 @@ const docTemplate = `{
                 "timeSpentOnTeam": {
                     "type": "integer",
                     "example": 900000
-                }
-            }
-        },
-        "dto.UpdateStatisticsResponse": {
-            "type": "object",
-            "properties": {
-                "timeSpentOnTeams": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.TimeSpentOnTeam"
-                    }
-                },
-                "totalTimeSpentOnApp": {
-                    "type": "integer",
-                    "example": 7200000
-                },
-                "userId": {
-                    "type": "string"
                 }
             }
         },

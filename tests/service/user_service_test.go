@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/service"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/tests"
@@ -86,6 +87,33 @@ func TestUserService_SignUp_EmailExists(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, response)
 	assert.Equal(t, ErrEmailExists, err.Error())
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_GetUserStatistics_Success(t *testing.T) {
+	mockRepo := new(tests.MockUserRepository)
+	mockTeamRepo := new(tests.MockTeamRepository)
+	userService := service.NewUserServiceWithRepo(mockRepo, mockTeamRepo)
+
+	user := &entity.User{
+		ID: TestUserID,
+		Statistics: &model.Statistics{
+			TotalTimeSpentOnApp: TestDuration1Hour,
+			TimeSpentOnTeams: []model.TimeSpentOnTeam{
+				{TeamId: TestTeamID, Duration: TestDuration30Min},
+			},
+		},
+	}
+
+	mockRepo.On("GetByID", TestUserID).Return(user, nil)
+	mockTeamRepo.On("GetTeamById", TestTeamID).Return(&entity.Team{Id: TestTeamID}, nil)
+
+	expectedStatistics := dto.NewStatisticsResponse(TestUserID, user.Statistics)
+
+	statistics, err := userService.GetUserStatistics(TestUserID)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expectedStatistics, statistics)
 	mockRepo.AssertExpectations(t)
 }
 

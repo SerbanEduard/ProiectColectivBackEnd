@@ -127,6 +127,14 @@ func (m *MockUserService) GetAllUsers() ([]*entity.User, error) {
 	return args.Get(0).([]*entity.User), args.Error(1)
 }
 
+func (m *MockUserService) GetUserStatistics(id string) (*dto.StatisticsResponse, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.StatisticsResponse), args.Error(1)
+}
+
 func (m *MockUserService) UpdateUserStatistics(id string, timeSpentOnApp int64, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error) {
 	args := m.Called(id, timeSpentOnApp, timeSpentOnTeam)
 	if args.Get(0) == nil {

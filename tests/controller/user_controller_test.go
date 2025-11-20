@@ -125,7 +125,7 @@ func TestUserController_UpdateUserStatistics_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var responseBody dto.UpdateStatisticsResponse
+	var responseBody dto.StatisticsResponse
 	json.Unmarshal(w.Body.Bytes(), &responseBody)
 	assert.Equal(t, TestUserID, responseBody.UserId)
 
