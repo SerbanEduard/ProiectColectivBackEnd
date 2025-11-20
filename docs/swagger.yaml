@@ -748,6 +748,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.SolveQuizRequest'
+      - description: The id for quiz
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
       - application/json
       responses:

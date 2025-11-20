@@ -137,6 +137,7 @@ func (qc *QuizController) GetQuizWithoutAnswers(c *gin.Context) {
 //	@Accept		json
 //	@Produce	json
 //	@Param		request	body		dto.SolveQuizRequest	true	"The solve quiz request"
+//	@Param		id		path		string					true	"The id for quiz"
 //	@Success	200		{object}	dto.SolveQuizResponse
 //	@Failure	403		{object}	map[string]string
 //	@Failure	404		{object}	map[string]string

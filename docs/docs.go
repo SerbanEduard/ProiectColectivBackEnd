@@ -559,6 +559,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/dto.SolveQuizRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "The id for quiz",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
