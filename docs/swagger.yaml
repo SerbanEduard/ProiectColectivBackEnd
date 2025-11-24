@@ -74,9 +74,26 @@ definitions:
       textContent:
         type: string
     type: object
-  dto.ReadQuizRequest:
+  dto.ReadQuizQuestionResponse:
+    properties:
+      question:
+        type: string
+      quiz_options:
+        items:
+          type: string
+        type: array
+      quiz_question_id:
+        type: string
+    type: object
+  dto.ReadQuizResponse:
     properties:
       quiz_id:
+        type: string
+      quiz_questions:
+        items:
+          $ref: '#/definitions/dto.ReadQuizQuestionResponse'
+        type: array
+      quiz_title:
         type: string
     type: object
   dto.RespondFriendRequestRequest:
@@ -136,8 +153,6 @@ definitions:
         items:
           $ref: '#/definitions/dto.SolveQuestionRequest'
         type: array
-      quiz_id:
-        type: string
     type: object
   dto.SolveQuizResponse:
     properties:
@@ -304,6 +319,8 @@ definitions:
       team_id:
         type: string
       user_id:
+        type: string
+      user_team_id:
         type: string
     type: object
   entity.Team:
@@ -722,7 +739,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ReadQuizRequest'
+            $ref: '#/definitions/dto.ReadQuizResponse'
         "404":
           description: Not Found
           schema:
@@ -781,6 +798,111 @@ paths:
       security:
       - Bearer: []
       summary: Solve a quiz
+  /quizzes/team/{teamId}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Team ID
+        in: path
+        name: teamId
+        required: true
+        type: string
+      - description: Page size (default 10)
+        in: query
+        name: pageSize
+        type: integer
+      - description: Last key for pagination
+        in: query
+        name: lastKey
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get quizzes by team with pagination
+  /quizzes/user/{userId}/team/{teamId}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: Team ID
+        in: path
+        name: teamId
+        required: true
+        type: string
+      - description: Page size (default 10)
+        in: query
+        name: pageSize
+        type: integer
+      - description: Last key for pagination
+        in: query
+        name: lastKey
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get quizzes by user with pagination
   /teams:
     get:
       description: Get teams - all teams, by name, or by prefix with limit

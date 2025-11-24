@@ -14,6 +14,7 @@ import (
 	"github.com/SerbanEduard/ProiectColectivBackEnd/service"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/tests"
 	. "github.com/SerbanEduard/ProiectColectivBackEnd/tests"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/validator"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
@@ -79,7 +80,7 @@ func TestQuizController_CreateQuiz_ServiceValidationError(t *testing.T) {
 	qc := controller.NewQuizControllerWithService(mockService)
 
 	request := entity.Quiz{QuizName: ""}
-	mockService.On("CreateQuiz", request).Return(dto.CreateQuizResponse{}, fmt.Errorf("%w: %s", service.ErrValidation, "name can not be null"))
+	mockService.On("CreateQuiz", request).Return(dto.CreateQuizResponse{}, fmt.Errorf("%w: %s", validator.ErrValidation, "name can not be null"))
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -191,7 +192,7 @@ func TestQuizController_GetQuizWithoutAnswers_ValidationError(t *testing.T) {
 	mockService := new(tests.MockQuizService)
 	qc := controller.NewQuizControllerWithService(mockService)
 
-	mockService.On("GetQuizWithoutAnswersById", "").Return(dto.ReadQuizResponse{}, fmt.Errorf("%w: %s", service.ErrValidation, "no id specified"))
+	mockService.On("GetQuizWithoutAnswersById", "").Return(dto.ReadQuizResponse{}, fmt.Errorf("%w: %s", validator.ErrValidation, "no id specified"))
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -209,8 +210,8 @@ func TestQuizController_SolveQuiz_Success(t *testing.T) {
 	mockService := new(tests.MockQuizService)
 	qc := controller.NewQuizControllerWithService(mockService)
 
+	quizID := "quiz-123"
 	request := dto.SolveQuizRequest{
-		QuizID: "q-1",
 		Attempts: []dto.SolveQuestionRequest{
 			{QuestionID: "question-1", Answer: []string{"4"}},
 		},
@@ -223,15 +224,16 @@ func TestQuizController_SolveQuiz_Success(t *testing.T) {
 		},
 	}
 
-	mockService.On("SolveQuiz", request, TestUserID).Return(expectedResponse, nil)
+	mockService.On("SolveQuiz", request, TestUserID, quizID).Return(expectedResponse, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	claims := jwt.MapClaims{"sub": TestUserID}
 	c.Set("userClaims", claims)
+	c.Params = []gin.Param{{Key: "id", Value: quizID}}
 
 	jsonData, _ := json.Marshal(request)
-	c.Request, _ = http.NewRequest("POST", "/quizzes/solve", bytes.NewBuffer(jsonData))
+	c.Request, _ = http.NewRequest("POST", "/quizzes/"+quizID+"/test", bytes.NewBuffer(jsonData))
 	c.Request.Header.Set("Content-Type", "application/json")
 
 	qc.SolveQuiz(c)
@@ -252,12 +254,15 @@ func TestQuizController_SolveQuiz_BadRequest_InvalidJSON(t *testing.T) {
 	mockService := new(tests.MockQuizService)
 	qc := controller.NewQuizControllerWithService(mockService)
 
+	quizID := "quiz-123"
+
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	claims := jwt.MapClaims{"sub": TestUserID}
 	c.Set("userClaims", claims)
+	c.Params = []gin.Param{{Key: "id", Value: quizID}}
 
-	c.Request, _ = http.NewRequest("POST", "/quizzes/solve", bytes.NewBuffer([]byte(`{invalid json}`)))
+	c.Request, _ = http.NewRequest("POST", "/quizzes/"+quizID+"/test", bytes.NewBuffer([]byte(`{invalid json}`)))
 	c.Request.Header.Set("Content-Type", "application/json")
 
 	qc.SolveQuiz(c)
@@ -271,22 +276,23 @@ func TestQuizController_SolveQuiz_ValidationError(t *testing.T) {
 	mockService := new(tests.MockQuizService)
 	qc := controller.NewQuizControllerWithService(mockService)
 
+	quizID := "quiz-123"
 	request := dto.SolveQuizRequest{
-		QuizID: "",
 		Attempts: []dto.SolveQuestionRequest{
 			{QuestionID: "question-1", Answer: []string{"4"}},
 		},
 	}
 
-	mockService.On("SolveQuiz", request, TestUserID).Return(dto.SolveQuizResponse{}, fmt.Errorf("%w: %s", service.ErrValidation, "no id specified"))
+	mockService.On("SolveQuiz", request, TestUserID, quizID).Return(dto.SolveQuizResponse{}, fmt.Errorf("%w: %s", validator.ErrValidation, "no id specified"))
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	claims := jwt.MapClaims{"sub": TestUserID}
 	c.Set("userClaims", claims)
+	c.Params = []gin.Param{{Key: "id", Value: quizID}}
 
 	jsonData, _ := json.Marshal(request)
-	c.Request, _ = http.NewRequest("POST", "/quizzes/solve", bytes.NewBuffer(jsonData))
+	c.Request, _ = http.NewRequest("POST", "/quizzes/"+quizID+"/test", bytes.NewBuffer(jsonData))
 	c.Request.Header.Set("Content-Type", "application/json")
 
 	qc.SolveQuiz(c)
@@ -301,22 +307,23 @@ func TestQuizController_SolveQuiz_QuizNotFound(t *testing.T) {
 	mockService := new(tests.MockQuizService)
 	qc := controller.NewQuizControllerWithService(mockService)
 
+	quizID := "nonexistent-quiz"
 	request := dto.SolveQuizRequest{
-		QuizID: "missing-quiz",
 		Attempts: []dto.SolveQuestionRequest{
 			{QuestionID: "question-1", Answer: []string{"4"}},
 		},
 	}
 
-	mockService.On("SolveQuiz", request, TestUserID).Return(dto.SolveQuizResponse{}, fmt.Errorf("%w: %s", service.ErrResourceNotFound, "quiz not found"))
+	mockService.On("SolveQuiz", request, TestUserID, quizID).Return(dto.SolveQuizResponse{}, fmt.Errorf("%w: %s", service.ErrResourceNotFound, "quiz not found"))
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	claims := jwt.MapClaims{"sub": TestUserID}
 	c.Set("userClaims", claims)
+	c.Params = []gin.Param{{Key: "id", Value: quizID}}
 
 	jsonData, _ := json.Marshal(request)
-	c.Request, _ = http.NewRequest("POST", "/quizzes/solve", bytes.NewBuffer(jsonData))
+	c.Request, _ = http.NewRequest("POST", "/quizzes/"+quizID+"/test", bytes.NewBuffer(jsonData))
 	c.Request.Header.Set("Content-Type", "application/json")
 
 	qc.SolveQuiz(c)
@@ -331,8 +338,8 @@ func TestQuizController_SolveQuiz_IncorrectAnswers(t *testing.T) {
 	mockService := new(tests.MockQuizService)
 	qc := controller.NewQuizControllerWithService(mockService)
 
+	quizID := "quiz-123"
 	request := dto.SolveQuizRequest{
-		QuizID: "q-1",
 		Attempts: []dto.SolveQuestionRequest{
 			{QuestionID: "question-1", Answer: []string{"3"}},
 		},
@@ -345,15 +352,16 @@ func TestQuizController_SolveQuiz_IncorrectAnswers(t *testing.T) {
 		},
 	}
 
-	mockService.On("SolveQuiz", request, TestUserID).Return(expectedResponse, nil)
+	mockService.On("SolveQuiz", request, TestUserID, quizID).Return(expectedResponse, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	claims := jwt.MapClaims{"sub": TestUserID}
 	c.Set("userClaims", claims)
+	c.Params = []gin.Param{{Key: "id", Value: quizID}}
 
 	jsonData, _ := json.Marshal(request)
-	c.Request, _ = http.NewRequest("POST", "/quizzes/solve", bytes.NewBuffer(jsonData))
+	c.Request, _ = http.NewRequest("POST", "/quizzes/"+quizID+"/test", bytes.NewBuffer(jsonData))
 	c.Request.Header.Set("Content-Type", "application/json")
 
 	qc.SolveQuiz(c)
@@ -365,5 +373,116 @@ func TestQuizController_SolveQuiz_IncorrectAnswers(t *testing.T) {
 	assert.False(t, resp.IsCorrect)
 	assert.Len(t, resp.QuestionResponses, 1)
 	assert.False(t, resp.QuestionResponses[0].IsCorrect)
+	mockService.AssertExpectations(t)
+}
+
+func TestQuizController_GetQuizzesByTeam_Success(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(tests.MockQuizService)
+	qc := controller.NewQuizControllerWithService(mockService)
+
+	expectedQuizzes := []dto.ReadQuizResponse{
+		{QuizID: "quiz1", QuizTitle: "Team Quiz 1"},
+		{QuizID: "quiz2", QuizTitle: "Team Quiz 2"},
+	}
+	expectedNextKey := "teamNextKey123"
+
+	claims := jwt.MapClaims{"sub": TestUserID}
+	mockService.On("GetQuizzesByTeam", TestUserID, TestTeamID, 10, "").Return(expectedQuizzes, expectedNextKey, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Set("userClaims", claims)
+	c.Params = []gin.Param{{Key: "teamId", Value: TestTeamID}}
+
+	qc.GetQuizzesByTeam(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var resp map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+
+	quizzes := resp["quizzes"].([]interface{})
+	assert.Len(t, quizzes, 2)
+	assert.Equal(t, expectedNextKey, resp["nextKey"])
+	mockService.AssertExpectations(t)
+}
+
+func TestQuizController_GetQuizzesByTeam_WithPagination(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(tests.MockQuizService)
+	qc := controller.NewQuizControllerWithService(mockService)
+
+	expectedQuizzes := []dto.ReadQuizResponse{
+		{QuizID: "quiz1", QuizTitle: "Team Quiz 1"},
+	}
+
+	claims := jwt.MapClaims{"sub": TestUserID}
+	mockService.On("GetQuizzesByTeam", TestUserID, TestTeamID, 20, "teamLastKey").Return(expectedQuizzes, "", nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Set("userClaims", claims)
+	c.Params = []gin.Param{{Key: "teamId", Value: TestTeamID}}
+	c.Request, _ = http.NewRequest("GET", "/quizzes/team/"+TestTeamID+"?pageSize=20&lastKey=teamLastKey", nil)
+
+	qc.GetQuizzesByTeam(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestQuizController_GetQuizzesByTeam_EmptyTeamId(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(tests.MockQuizService)
+	qc := controller.NewQuizControllerWithService(mockService)
+
+	claims := jwt.MapClaims{"sub": TestUserID}
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Set("userClaims", claims)
+	c.Params = []gin.Param{{Key: "teamId", Value: ""}}
+
+	qc.GetQuizzesByTeam(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestQuizController_GetQuizzesByTeam_UnauthorizedNoToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(tests.MockQuizService)
+	qc := controller.NewQuizControllerWithService(mockService)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = []gin.Param{{Key: "teamId", Value: TestTeamID}}
+
+	qc.GetQuizzesByTeam(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestQuizController_GetQuizzesByTeam_Forbidden(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(tests.MockQuizService)
+	qc := controller.NewQuizControllerWithService(mockService)
+
+	claims := jwt.MapClaims{"sub": TestUserID}
+	mockService.On("GetQuizzesByTeam", TestUserID, TestTeamID, 10, "").Return([]dto.ReadQuizResponse{}, "", fmt.Errorf("%w: %s", service.ErrForbidden, "user not in team"))
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Set("userClaims", claims)
+	c.Params = []gin.Param{{Key: "teamId", Value: TestTeamID}}
+
+	qc.GetQuizzesByTeam(c)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
 	mockService.AssertExpectations(t)
 }

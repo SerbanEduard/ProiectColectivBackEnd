@@ -11,11 +11,12 @@ type Question struct {
 }
 
 type Quiz struct {
-	ID        string     `json:"id"`
-	QuizName  string     `json:"quiz_name"`
-	UserID    string     `json:"user_id"`
-	TeamID    string     `json:"team_id"`
-	Questions []Question `json:"questions"`
+	ID         string     `json:"id"`
+	QuizName   string     `json:"quiz_name"`
+	UserID     string     `json:"user_id"`
+	TeamID     string     `json:"team_id"`
+	Questions  []Question `json:"questions"`
+	UserTeamId string     `json:"user_team_id"`
 }
 
 func NewQuestion(ID string, quizType model.QuizType, question string, answers []string, options []string) *Question {
@@ -29,10 +30,11 @@ func NewQuestion(ID string, quizType model.QuizType, question string, answers []
 
 func NewQuiz(ID string, quizName string, userID string, teamID string, questions []Question) *Quiz {
 	return &Quiz{
-		ID:        ID,
-		QuizName:  quizName,
-		UserID:    userID,
-		TeamID:    teamID,
-		Questions: questions,
+		ID:         ID,
+		QuizName:   quizName,
+		UserID:     userID,
+		TeamID:     teamID,
+		Questions:  questions,
+		UserTeamId: userID + "_" + teamID,
 	}
 }
