@@ -7,6 +7,137 @@
     },
     "basePath": "/",
     "paths": {
+        "/files": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get all files",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.File"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Upload a file (base64 content)",
+                "parameters": [
+                    {
+                        "description": "File upload request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.FileUploadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.FileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/files/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get file by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "File ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.File"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete a file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "File ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/friend-requests/{fromUserId}/{toUserId}": {
             "put": {
                 "description": "Accept or deny a friend request",
@@ -1675,6 +1806,66 @@
                 }
             }
         },
+        "dto.FileResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "integer"
+                },
+                "extension": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ownerId": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.FileUploadRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "extension",
+                "name",
+                "ownerId",
+                "size",
+                "type"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "extension": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ownerId": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.FriendRequestListResponse": {
             "type": "object",
             "properties": {
@@ -2060,6 +2251,38 @@
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "entity.File": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "extension": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ownerId": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "integer"
                 }
             }
         },

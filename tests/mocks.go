@@ -319,6 +319,42 @@ func (m *MockQuizRepository) GetByTeam(id string) ([]entity.Quiz, error) {
 	return args.Get(0).([]entity.Quiz), args.Error(1)
 }
 
+// MockFileRepository is used for file service tests
+type MockFileRepository struct {
+	mock.Mock
+}
+
+func (m *MockFileRepository) Create(file *entity.File) error {
+	args := m.Called(file)
+	return args.Error(0)
+}
+
+func (m *MockFileRepository) GetByID(id string) (*entity.File, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entity.File), args.Error(1)
+}
+
+func (m *MockFileRepository) GetAll() ([]*entity.File, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.File), args.Error(1)
+}
+
+func (m *MockFileRepository) Update(file *entity.File) error {
+	args := m.Called(file)
+	return args.Error(0)
+}
+
+func (m *MockFileRepository) Delete(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
 // MockQuizService is used by controller tests to mock service layer behavior.
 type MockQuizService struct {
 	mock.Mock
