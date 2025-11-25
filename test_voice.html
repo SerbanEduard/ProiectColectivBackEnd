@@ -1,170 +1,698 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Voice Chat Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Voice Room Client</title>
+    <style>
+        /* CSS from the previous advanced client for better aesthetics */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-top: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        button.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        button.warning {
+            background: linear-gradient(135deg, #ffc371 0%, #ff5c7c 100%);
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        #log {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        #log div {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        #log div:last-child {
+            border-bottom: none;
+        }
+
+        #remoteAudioContainer {
+            margin-top: 15px;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        #remoteAudioContainer audio {
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        /* Styles for Joinable Room List */
+        #joinableRoomList {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .room-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .room-item:hover {
+            border-color: #ffc371;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .room-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .room-info {
+            font-size: 13px;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.group {
+            background: #667eea;
+            color: white;
+        }
+
+        .badge.private {
+            background: #764ba2;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <h1>Voice Chat Test</h1>
-    <button id="join">Join & Start Call</button>
-    <button id="call">Manual Start Call</button>
-    <button id="mute">Mute</button>
-    <button id="unmute-audio">Enable Audio</button>
-    <button id="leave">Leave</button>
-    <div id="status">Disconnected</div>
-    <div id="log"></div>
-    
-    <script>
-        const teamId = 'test-team';
-        const userId = 'user-' + Math.random().toString(36).substr(2, 9);
-        let ws, localStream, peerConnection, isMuted = false, remoteAudio = null;
-        
-        function log(msg) {
-            document.getElementById('log').innerHTML += '<div>' + msg + '</div>';
+<div class="container">
+    <h1>📞 Unified Voice Room Client</h1>
+
+    <div class="card">
+        <h2>⚙️ Configuration</h2>
+        <div class="form-group">
+            <label>Backend URL</label>
+            <input type="text" id="backendUrl" value="http://localhost:8080">
+        </div>
+        <div class="form-group">
+            <label>User ID</label>
+            <input type="text" id="userId" value="user-a">
+        </div>
+        <div class="form-group">
+            <label>Team ID</label>
+            <input type="text" id="teamId" value="team-xyz">
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🔍 Joinable Calls</h2>
+        <button class="warning" onclick="fetchJoinableRooms()">Refresh Joinable Calls</button>
+        <div id="joinableRoomList">
+            <p style="color: #999; padding: 10px;">Click refresh to find active calls.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>➕ Create/Join Room</h2>
+        <div class="form-group">
+            <label>Room Type</label>
+            <select id="roomType">
+                <option value="group">Group Room (Team Call)</option>
+                <option value="private">Private Call (1-on-1)</option>
+            </select>
+        </div>
+
+        <div id="groupRoomOptions">
+            <div class="form-group">
+                <label>Room ID / Team ID (to join)</label>
+                <input type="text" id="groupIdInput" placeholder="Uses Team ID for joining/creating group rooms">
+            </div>
+            <button onclick="createAndJoinGroupRoom()">Create & Join Group</button>
+        </div>
+
+        <div id="privateCallOptions" style="display: none;">
+            <div class="form-group">
+                <label>Target User ID (for Private Call)</label>
+                <input type="text" id="targetUserId" value="user-b">
+            </div>
+            <button onclick="createAndJoinPrivateCall()">Start Private Call</button>
+        </div>
+
+        <div id="currentRoomInfo" class="status info" style="margin-top: 20px;">
+            Current Room: None
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🎮 Live Call Controls</h2>
+        <div id="connectionStatus" class="status disconnected">
+            Disconnected
+        </div>
+        <div id="remoteAudioContainer">
+            <p>Remote Audio:</p>
+        </div>
+        <button id="call" disabled>Manual Start Call (Try if auto-call fails)</button>
+        <button id="mute" disabled>Mute</button>
+        <button id="unmute-audio" disabled>Enable Audio (Browser autoplay fix)</button>
+        <button id="leave" class="danger" disabled>Leave</button>
+    </div>
+
+    <div class="card">
+        <h2>💬 Logs</h2>
+        <div id="log"></div>
+    </div>
+</div>
+
+<script>
+    let ws = null;
+    let localStream = null;
+    let peerConnection = null;
+    let isMuted = false;
+    let remoteAudio = null;
+    let currentRoomId = null;
+    let teamId = document.getElementById('teamId').value;
+    let userId = document.getElementById('userId').value;
+    const backendUrlInput = document.getElementById('backendUrl');
+
+    const iceConfig = {
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    };
+
+    // --- UI/Utility Functions ---
+
+    function log(msg) {
+        const logDiv = document.getElementById('log');
+        logDiv.innerHTML += '<div>' + new Date().toLocaleTimeString() + ' | ' + msg + '</div>';
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function updateStatus(type, message, elementId = 'connectionStatus') {
+        const statusDiv = document.getElementById(elementId);
+        statusDiv.className = `status ${type}`;
+        statusDiv.textContent = message;
+    }
+
+    function enableControls(enabled) {
+        document.getElementById('call').disabled = !enabled;
+        document.getElementById('mute').disabled = !enabled;
+        document.getElementById('unmute-audio').disabled = !enabled;
+        document.getElementById('leave').disabled = !enabled;
+    }
+
+    // Toggle room creation options based on type
+    document.getElementById('roomType').addEventListener('change', function() {
+        const isPrivate = this.value === 'private';
+        document.getElementById('groupRoomOptions').style.display = isPrivate ? 'none' : 'block';
+        document.getElementById('privateCallOptions').style.display = isPrivate ? 'block' : 'none';
+
+        // Update room ID field for group rooms
+        if (!isPrivate) {
+            document.getElementById('groupIdInput').value = document.getElementById('teamId').value;
         }
-        
-        document.getElementById('join').onclick = async () => {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                log('Microphone access granted');
-                
-                ws = new WebSocket(`ws://localhost:8080/voice/${teamId}?userId=${userId}`);
-                
-                ws.onopen = () => {
-                    document.getElementById('status').textContent = 'Connected - ' + userId;
-                    log('WebSocket connected');
-                    setupWebRTC();
-                };
-                
-                ws.onmessage = (event) => {
+    });
+
+    // Initialize with team ID in group field
+    document.getElementById('groupIdInput').value = document.getElementById('teamId').value;
+
+    // --- NEW: Fetch Joinable Rooms ---
+    async function fetchJoinableRooms() {
+        userId = document.getElementById('userId').value;
+        const backendUrl = backendUrlInput.value;
+        const url = `${backendUrl}/voice/joinable?userId=${encodeURIComponent(userId)}`;
+
+        log(`Fetching joinable rooms for user: ${userId}`);
+
+        try {
+            const response = await fetch(url, { mode: 'cors' });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const rooms = await response.json();
+            const roomListDiv = document.getElementById('joinableRoomList');
+            roomListDiv.innerHTML = '';
+
+            if (rooms.length === 0) {
+                roomListDiv.innerHTML = '<p style="color: #999; padding: 10px;">No joinable calls found.</p>';
+                log('No joinable calls found.');
+                return;
+            }
+
+            rooms.forEach(room => {
+                const roomDiv = document.createElement('div');
+                roomDiv.className = 'room-item';
+                roomDiv.innerHTML = `
+                    <h3>${room.name} <span class="badge ${room.type}">${room.type}</span></h3>
+                    <div class="room-info">ID: ${room.id}</div>
+                    <div class="room-info">Created By: ${room.createdBy}</div>
+                    <div class="room-info">Users: ${room.userCount} / 2</div>
+                    <button class="success" onclick="joinRoom('${room.id}')" style="margin-top: 10px;">Join Call</button>
+                `;
+                roomListDiv.appendChild(roomDiv);
+            });
+
+            log(`✅ Found ${rooms.length} joinable call(s).`);
+
+        } catch (error) {
+            log(`❌ Failed to fetch joinable rooms: ${error.message}`);
+            console.error('Fetch joinable rooms error:', error);
+        }
+    }
+
+
+    // --- CONNECTION/ROOM SETUP ---
+
+    async function createAndJoinGroupRoom() {
+        userId = document.getElementById('userId').value;
+        teamId = document.getElementById('teamId').value;
+        const groupId = document.getElementById('groupIdInput').value;
+
+        if (!groupId) {
+            log('Error: Group ID/Team ID required.');
+            return;
+        }
+
+        const backendUrl = backendUrlInput.value;
+        const createUrl = `${backendUrl}/voice/rooms/${encodeURIComponent(groupId)}?userId=${encodeURIComponent(userId)}&name=Group%20Call`;
+
+        try {
+            log('1. Attempting to create group room...');
+            // Attempt to create. The 409 Conflict error means we proceed to join.
+            const response = await fetch(createUrl, { method: 'POST', mode: 'cors' });
+
+            if (!response.ok && response.status !== 409) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            // Proceed to join regardless of 201 or 409
+            joinRoom(groupId);
+        } catch (error) {
+            log(`❌ Error during room creation attempt: ${error.message}`);
+        }
+    }
+
+    async function createAndJoinPrivateCall() {
+        userId = document.getElementById('userId').value;
+        teamId = document.getElementById('teamId').value;
+        const targetId = document.getElementById('targetUserId').value;
+        const backendUrl = backendUrlInput.value;
+
+        if (userId === targetId) {
+            log('Error: Cannot call yourself.');
+            return;
+        }
+
+        const callUrl = `${backendUrl}/voice/private/call?callerId=${encodeURIComponent(userId)}&targetId=${encodeURIComponent(targetId)}&teamId=${encodeURIComponent(teamId)}`;
+
+        try {
+            log('1. Attempting to start private call...');
+            const response = await fetch(callUrl, { method: 'POST', mode: 'cors' });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const roomData = await response.json();
+            log(`✅ Private call room created. Room ID: ${roomData.id}`);
+            joinRoom(roomData.id);
+
+        } catch (error) {
+            log(`❌ Error starting private call: ${error.message}`);
+        }
+    }
+
+    async function joinRoom(roomId) {
+        if (ws) {
+            leaveRoom();
+        }
+
+        userId = document.getElementById('userId').value;
+
+        try {
+            // 2. Get Microphone
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            log('2. Microphone access granted.');
+
+            // 3. Connect WebSocket
+            const wsUrl = backendUrlInput.value.replace('http://', 'ws://').replace('https://', 'wss://');
+            const url = `${wsUrl}/voice/join/${roomId}?userId=${encodeURIComponent(userId)}`;
+
+            log(`3. Connecting to WebSocket room: ${roomId}`);
+            ws = new WebSocket(url);
+            currentRoomId = roomId;
+
+            ws.onopen = () => {
+                updateStatus('connected', `✅ Connected to room: ${roomId} as ${userId}`);
+                document.getElementById('currentRoomInfo').textContent = `Current Room ID: ${roomId}`;
+                setupWebRTC();
+                enableControls(true);
+            };
+
+            ws.onmessage = (event) => {
+                try {
                     const data = JSON.parse(event.data);
                     log('Received: ' + data.type);
                     handleSignaling(data);
-                };
+                } catch (error) {
+                    log('❌ Failed to parse message: ' + event.data);
+                }
+            };
+
+            ws.onclose = () => {
+                leaveRoomCleanup();
+            };
+
+            ws.onerror = (error) => {
+                log('❌ WebSocket error');
+                console.error('WebSocket error:', error);
+            };
+
+        } catch (err) {
+            log('❌ Error during join/mic access: ' + err.message);
+            leaveRoomCleanup();
+        }
+    }
+
+    // --- WEBRTC Logic (Remains the same simple, robust 1-on-1 model) ---
+
+    function setupWebRTC() {
+        if (peerConnection) {
+            peerConnection.close();
+        }
+
+        peerConnection = new RTCPeerConnection(iceConfig);
+
+        // Add local stream tracks
+        localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+        });
+
+        // Handle remote tracks (audio stream)
+        peerConnection.ontrack = async (event) => {
+            log('Received remote audio stream');
+
+            const oldAudio = document.getElementById('remoteAudio');
+            if (oldAudio) oldAudio.remove();
+
+            remoteAudio = document.createElement('audio');
+            remoteAudio.id = 'remoteAudio';
+            remoteAudio.srcObject = event.streams[0];
+            remoteAudio.autoplay = true;
+            remoteAudio.controls = true;
+
+            document.getElementById('remoteAudioContainer').appendChild(remoteAudio);
+
+            try {
+                await remoteAudio.play();
+                log('Audio playback started');
             } catch (err) {
-                log('Error: ' + err.message);
+                log('Audio play failed (Click "Enable Audio"): ' + err.message);
             }
         };
-        
-        async function startCall() {
-            if (peerConnection) {
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-                ws.send(JSON.stringify({ 
-                    type: 'offer', 
-                    offer,
+
+        // Handle ICE candidates
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                ws.send(JSON.stringify({
+                    type: 'ice-candidate',
+                    candidate: event.candidate,
                     from: userId
                 }));
-                log('Sent offer');
-            }
-        }
-        
-        document.getElementById('call').onclick = startCall;
-        
-        function setupWebRTC() {
-            peerConnection = new RTCPeerConnection({
-                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-            });
-            
-            localStream.getTracks().forEach(track => {
-                peerConnection.addTrack(track, localStream);
-            });
-            
-            peerConnection.ontrack = async (event) => {
-                log('Received remote audio stream');
-                remoteAudio = new Audio();
-                remoteAudio.srcObject = event.streams[0];
-                remoteAudio.autoplay = true;
-                remoteAudio.volume = 1.0;
-                
-                try {
-                    await remoteAudio.play();
-                    log('Audio playback started');
-                } catch (err) {
-                    log('Audio play failed (click Enable Audio): ' + err.message);
-                }
-            };
-            
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
-                    ws.send(JSON.stringify({
-                        type: 'ice-candidate',
-                        candidate: event.candidate,
-                        from: userId
-                    }));
-                }
-            };
-            
-            log('WebRTC setup complete');
-        }
-        
-        async function handleSignaling(data) {
-            if (data.type === 'room-info') {
-                if (!data.canJoin) {
-                    log('ERROR: Room is full (max 2 users)');
-                    document.getElementById('status').textContent = 'Room Full';
-                    return;
-                }
-                // If we're the first user, start a call
-                if (data.userCount === 2) {
-                    setTimeout(() => startCall(), 1000);
-                    log('First user - will start call');
-                } else {
-                    log('Joined existing room with ' + data.userCount + ' users');
-                }
-            } else if (data.type === 'error') {
-                log('ERROR: ' + data.error);
-                document.getElementById('status').textContent = 'Error: ' + data.error;
-                return;
-            } else if (data.type === 'offer' && data.from !== userId) {
-                await peerConnection.setRemoteDescription(data.offer);
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-                ws.send(JSON.stringify({ 
-                    type: 'answer', 
-                    answer,
-                    from: userId
-                }));
-                log('Sent answer');
-            } else if (data.type === 'answer') {
-                await peerConnection.setRemoteDescription(data.answer);
-                log('Call established');
-            } else if (data.type === 'ice-candidate' && data.from !== userId) {
-                await peerConnection.addIceCandidate(data.candidate);
-            }
-        }
-        
-        document.getElementById('unmute-audio').onclick = async () => {
-            if (remoteAudio) {
-                try {
-                    await remoteAudio.play();
-                    log('Audio manually enabled');
-                } catch (err) {
-                    log('Manual audio enable failed: ' + err.message);
-                }
             }
         };
-        
-        document.getElementById('mute').onclick = () => {
-            if (localStream) {
-                const audioTrack = localStream.getAudioTracks()[0];
-                if (audioTrack) {
-                    isMuted = !isMuted;
-                    audioTrack.enabled = !isMuted;
-                    document.getElementById('mute').textContent = isMuted ? 'Unmute' : 'Mute';
-                    log(isMuted ? 'Muted' : 'Unmuted');
-                }
+
+        log('4. WebRTC setup complete. Ready to signal.');
+    }
+
+    async function startCall() {
+        if (peerConnection && ws && ws.readyState === WebSocket.OPEN) {
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            ws.send(JSON.stringify({
+                type: 'offer',
+                sdp: peerConnection.localDescription,
+                from: userId
+            }));
+            log('5. Sent offer');
+        } else {
+            log('Error: Cannot start call. PC or WS not ready.');
+        }
+    }
+
+    async function handleSignaling(data) {
+        if (data.type === 'error') {
+            log('ERROR: ' + data.error);
+            updateStatus('disconnected', 'Error: ' + data.error);
+            return;
+        }
+
+        if (data.type === 'room-info') {
+            if (data.userCount === 2) {
+                // If we are the second user to join, we initiate the call (send Offer)
+                setTimeout(() => startCall(), 500);
+                log('Joined as second user - auto-starting call (sending Offer)');
+            } else {
+                log('Joined as first user - waiting for peer...');
             }
-        };
-        
-        document.getElementById('leave').onclick = () => {
-            if (ws) ws.close();
-            if (localStream) localStream.getTracks().forEach(track => track.stop());
-            if (peerConnection) peerConnection.close();
-            document.getElementById('status').textContent = 'Disconnected';
-            document.getElementById('mute').textContent = 'Mute';
-            isMuted = false;
-            log('Disconnected');
-        };
-    </script>
+            return;
+        }
+
+        if (!peerConnection) {
+            log('Warning: Signaling data received but peerConnection not yet setup.');
+            return;
+        }
+
+        // --- Handle Offer (Answerer) ---
+        if (data.type === 'offer' && data.from !== userId) {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+
+            ws.send(JSON.stringify({
+                type: 'answer',
+                sdp: peerConnection.localDescription,
+                from: userId
+            }));
+            log('Sent answer');
+        }
+
+        // --- Handle Answer (Offerer) ---
+        else if (data.type === 'answer' && data.from !== userId) {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+            log('Call established');
+        }
+
+        // --- Handle Candidate ---
+        else if (data.type === 'ice-candidate' && data.from !== userId) {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
+
+        // Handle User Left
+        else if (data.type === 'user-left') {
+            log(`User ${data.userId} left. Closing PeerConnection.`);
+            leaveRoomCleanup();
+        }
+    }
+
+    // --- Controls ---
+
+    document.getElementById('call').onclick = startCall;
+
+    document.getElementById('unmute-audio').onclick = async () => {
+        const audioEl = document.getElementById('remoteAudio');
+        if (audioEl) {
+            try {
+                await audioEl.play();
+                log('Audio manually enabled');
+            } catch (err) {
+                log('Manual audio enable failed: ' + err.message);
+            }
+        }
+    };
+
+    document.getElementById('mute').onclick = () => {
+        if (localStream) {
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) {
+                isMuted = !isMuted;
+                audioTrack.enabled = !isMuted;
+                document.getElementById('mute').textContent = isMuted ? 'Unmute' : 'Mute';
+                log(isMuted ? 'Muted' : 'Unmuted');
+            }
+        }
+    };
+
+    document.getElementById('leave').onclick = leaveRoom;
+
+    function leaveRoom() {
+        if (ws) ws.close();
+        leaveRoomCleanup();
+    }
+
+    function leaveRoomCleanup() {
+        // Stop local stream
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
+        }
+
+        // Close peer connection
+        if (peerConnection) {
+            peerConnection.close();
+            peerConnection = null;
+        }
+
+        // Clean UI
+        ws = null;
+        currentRoomId = null;
+        isMuted = false;
+        document.getElementById('mute').textContent = 'Mute';
+        updateStatus('disconnected', 'Disconnected');
+        document.getElementById('currentRoomInfo').textContent = 'Current Room: None';
+        enableControls(false);
+
+        const oldAudio = document.getElementById('remoteAudio');
+        if (oldAudio) oldAudio.remove();
+
+        log('Disconnected and cleaned up.');
+
+        // Refresh the joinable rooms list after leaving a call
+        fetchJoinableRooms();
+    }
+
+    // Initial load
+    fetchJoinableRooms();
+</script>
 </body>
 </html>

@@ -32,6 +32,7 @@ func NewQuizControllerWithService(quizService service.QuizServiceInterface) *Qui
 // CreateQuiz
 //
 //	@Summary	Create a new quiz
+//	@Tags		quizzes
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -74,6 +75,7 @@ func (qc *QuizController) CreateQuiz(c *gin.Context) {
 // GetQuizWithAnswers
 //
 //	@Summary	Get a quiz with answers
+//	@Tags		quizzes
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -105,6 +107,7 @@ func (qc *QuizController) GetQuizWithAnswers(c *gin.Context) {
 // GetQuizWithoutAnswers
 //
 //	@Summary	Get a quiz without answers
+//	@Tags		quizzes
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -135,6 +138,7 @@ func (qc *QuizController) GetQuizWithoutAnswers(c *gin.Context) {
 // SolveQuiz
 //
 //	@Summary	Solve a quiz
+//	@Tags		quizzes
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -185,6 +189,7 @@ func (qc *QuizController) SolveQuiz(c *gin.Context) {
 // GetQuizzesByUserAndTeam
 //
 //	@Summary	Get quizzes by user with pagination
+//	@Tags		quizzes
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -243,6 +248,7 @@ func (qc *QuizController) GetQuizzesByUserAndTeam(c *gin.Context) {
 // GetQuizzesByTeam
 //
 //	@Summary	Get quizzes by team with pagination
+//	@Tags		quizzes
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json

@@ -54,6 +54,7 @@ type TeamServiceInterface interface {
 //
 //	@Summary		Create a new team
 //	@Description	Create a new team with the provided details
+//	@Tags			teams
 //	@Security		Bearer
 //	@Accept			json
 //	@Produce		json
@@ -81,6 +82,7 @@ func (tc *TeamController) NewTeam(c *gin.Context) {
 //
 //	@Summary		Get a team by ID
 //	@Description	Get team details by ID
+//	@Tags			teams
 //	@Security		Bearer
 //	@Produce		json
 //	@Param			id	path		string	true	"Team ID"
@@ -102,6 +104,7 @@ func (tc *TeamController) GetTeam(c *gin.Context) {
 //
 //	@Summary		Get teams with optional filtering
 //	@Description	Get teams - all teams, by name, or by prefix with limit
+//	@Tags			teams
 //	@Security		Bearer
 //	@Produce		json
 //	@Param			name	query		string	false	"Filter by exact name"
@@ -161,6 +164,7 @@ func (tc *TeamController) GetAllTeams(c *gin.Context) {
 //
 //	@Summary		Add a user to a team
 //	@Description	Add a user to a team by providing user ID and team ID
+//	@Tags			teams
 //	@Security		Bearer
 //	@Accept			json
 //	@Produce		json
@@ -187,6 +191,7 @@ func (tc *TeamController) AddUserToTeam(c *gin.Context) {
 //
 //	@Summary		Delete a user from a team
 //	@Description	Delete a user from a team by providing team ID
+//	@Tags			teams
 //	@Security		Bearer
 //	@Produce		json
 //	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
@@ -216,6 +221,7 @@ func (tc *TeamController) DeleteUserFromTeam(c *gin.Context) {
 //
 //	@Summary		Update a team
 //	@Description	Update team details by providing team ID and updated details
+//	@Tags			teams
 //	@Security		Bearer
 //	@Accept			json
 //	@Produce		json
@@ -244,6 +250,7 @@ func (tc *TeamController) UpdateTeam(c *gin.Context) {
 //
 //	@Summary		Delete a team
 //	@Description	Delete a team by providing team ID
+//	@Tags			teams
 //	@Security		Bearer
 //	@Produce		json
 //	@Param			id	path		string					true	"Team ID"

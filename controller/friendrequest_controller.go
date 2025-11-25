@@ -23,7 +23,8 @@ func (fc *FriendRequestController) SetFriendRequestService(service service.Frien
 
 // @Summary		Send a friend request
 // @Description	Send a friend request from one user to another
-// @Tags			default
+// @Tags			friend-requests
+// @Security		Bearer
 // @Param			fromUserId	path		string	true	"Sender User ID"
 // @Param			toUserId	path		string	true	"Recipient User ID"
 // @Success		201			{object}	nil
@@ -50,7 +51,8 @@ func (fc *FriendRequestController) SendFriendRequest(c *gin.Context) {
 
 // @Summary		Respond to a friend request
 // @Description	Accept or deny a friend request
-// @Tags			default
+// @Tags			friend-requests
+// @Security		Bearer
 // @Param			fromUserId	path		string							true	"Sender User ID"
 // @Param			toUserId	path		string							true	"Recipient User ID"
 // @Param			body		body		dto.RespondFriendRequestRequest	true	"Accept or deny"
@@ -88,7 +90,8 @@ func (fc *FriendRequestController) RespondToFriendRequest(c *gin.Context) {
 
 // @Summary		Get pending friend requests
 // @Description	Get pending friend requests for a user
-// @Tags			default
+// @Tags			friend-requests
+// @Security		Bearer
 // @Param			userId	path		string	true	"User ID"
 // @Success		200		{object}	dto.FriendRequestListResponse
 // @Failure		500		{object}	map[string]string

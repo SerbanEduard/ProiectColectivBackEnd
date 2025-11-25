@@ -15,11 +15,101 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/middleware": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Middleware to verify JWT token from Authorization header or query parameter",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "JWT Authentication Middleware",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Token for WebSocket connections",
+                        "name": "token",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token is valid",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/owner/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Middleware to ensure the authenticated user matches the resource owner",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Owner Authorization Middleware",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resource ID that must match authenticated user ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User is authorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/friend-requests/{fromUserId}/{toUserId}": {
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Accept or deny a friend request",
                 "tags": [
-                    "default"
+                    "friend-requests"
                 ],
                 "summary": "Respond to a friend request",
                 "parameters": [
@@ -81,9 +171,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Send a friend request from one user to another",
                 "tags": [
-                    "default"
+                    "friend-requests"
                 ],
                 "summary": "Send a friend request",
                 "parameters": [
@@ -129,9 +224,14 @@ const docTemplate = `{
         },
         "/friend-requests/{userId}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Get pending friend requests for a user",
                 "tags": [
-                    "default"
+                    "friend-requests"
                 ],
                 "summary": "Get pending friend requests",
                 "parameters": [
@@ -175,6 +275,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "messages"
                 ],
                 "summary": "Get all messages",
                 "parameters": [
@@ -243,6 +346,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "messages"
+                ],
                 "summary": "Create and send a message",
                 "parameters": [
                     {
@@ -293,6 +399,9 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
+                "tags": [
+                    "messages"
+                ],
                 "summary": "Connect the user to the message WebSocket",
                 "responses": {
                     "101": {
@@ -340,6 +449,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "messages"
+                ],
                 "summary": "Get a message by ID",
                 "parameters": [
                     {
@@ -386,6 +498,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "quizzes"
                 ],
                 "summary": "Create a new quiz",
                 "parameters": [
@@ -448,6 +563,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "quizzes"
                 ],
                 "summary": "Get quizzes by team with pagination",
                 "parameters": [
@@ -531,6 +649,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "quizzes"
+                ],
                 "summary": "Get quizzes by user with pagination",
                 "parameters": [
                     {
@@ -611,6 +732,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "quizzes"
+                ],
                 "summary": "Get a quiz with answers",
                 "parameters": [
                     {
@@ -662,6 +786,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "quizzes"
+                ],
                 "summary": "Get a quiz without answers",
                 "parameters": [
                     {
@@ -710,6 +837,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "quizzes"
                 ],
                 "summary": "Solve a quiz",
                 "parameters": [
@@ -778,6 +908,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "teams"
+                ],
                 "summary": "Get teams with optional filtering",
                 "parameters": [
                     {
@@ -838,6 +971,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "teams"
+                ],
                 "summary": "Create a new team",
                 "parameters": [
                     {
@@ -888,6 +1024,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "teams"
+                ],
                 "summary": "Add a user to a team",
                 "parameters": [
                     {
@@ -926,6 +1065,9 @@ const docTemplate = `{
                 "description": "Delete a user from a team by providing team ID",
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "teams"
                 ],
                 "summary": "Delete a user from a team",
                 "parameters": [
@@ -968,6 +1110,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "teams"
+                ],
                 "summary": "Get a team by ID",
                 "parameters": [
                     {
@@ -1006,6 +1151,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "teams"
                 ],
                 "summary": "Update a team",
                 "parameters": [
@@ -1059,6 +1207,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "teams"
+                ],
                 "summary": "Delete a team",
                 "parameters": [
                     {
@@ -1107,6 +1258,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "users"
+                ],
                 "summary": "Get all users",
                 "responses": {
                     "200": {
@@ -1138,6 +1292,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "users"
                 ],
                 "summary": "Login user by email or username and return JWT",
                 "parameters": [
@@ -1195,6 +1352,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "users"
                 ],
                 "summary": "Register a new user",
                 "parameters": [
@@ -1258,6 +1418,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "users"
+                ],
                 "summary": "Get a user by ID",
                 "parameters": [
                     {
@@ -1297,6 +1460,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "users"
                 ],
                 "summary": "Delete a user",
                 "parameters": [
@@ -1349,6 +1515,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "users"
                 ],
                 "summary": "Update user profile (selective fields)",
                 "parameters": [
@@ -1408,9 +1577,14 @@ const docTemplate = `{
         },
         "/users/{id}/friends": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Get list of friends for a user (accepted requests)",
                 "tags": [
-                    "default"
+                    "users"
                 ],
                 "summary": "Get friends for a user",
                 "parameters": [
@@ -1455,9 +1629,14 @@ const docTemplate = `{
         },
         "/users/{id}/mutual/{otherId}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Get list of mutual friends between userA and userB",
                 "tags": [
-                    "default"
+                    "users"
                 ],
                 "summary": "Get mutual friends between two users",
                 "parameters": [
@@ -1520,6 +1699,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "users"
+                ],
                 "summary": "Update user password",
                 "parameters": [
                     {
@@ -1580,6 +1762,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "users"
+                ],
                 "summary": "Get a user's statistics",
                 "parameters": [
                     {
@@ -1638,6 +1823,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "users"
+                ],
                 "summary": "Update user statistics",
                 "parameters": [
                     {
@@ -1694,25 +1882,29 @@ const docTemplate = `{
                 }
             }
         },
-        "/voice/{teamId}": {
+        "/voice/join/{roomId}": {
             "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "summary": "Join voice chat room",
+                "description": "Establishes a WebSocket connection for voice communication in a room",
+                "tags": [
+                    "voice"
+                ],
+                "summary": "Join a voice room via WebSocket",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Team ID",
-                        "name": "teamId",
+                        "description": "Room ID to join",
+                        "name": "roomId",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "User ID",
+                        "description": "User ID joining the room",
                         "name": "userId",
                         "in": "query",
                         "required": true
@@ -1720,7 +1912,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "101": {
-                        "description": "Switching Protocols - WebSocket connection established",
+                        "description": "Switching Protocols",
                         "schema": {
                             "type": "string"
                         }
@@ -1734,8 +1926,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1743,8 +1935,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "403": {
-                        "description": "Room is full",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1755,14 +1947,170 @@ const docTemplate = `{
                 }
             }
         },
-        "/voice/{teamId}/leave": {
-            "delete": {
+        "/voice/joinable": {
+            "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "summary": "Leave voice chat room",
+                "description": "Returns all group and private rooms that the user is authorized to join and are not full",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "voice"
+                ],
+                "summary": "Get joinable voice rooms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID of the client",
+                        "name": "userId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/controller.RoomResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/voice/private/call": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Creates a private voice room for two users with restricted access",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "voice"
+                ],
+                "summary": "Start a private voice call",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the user initiating the call",
+                        "name": "callerId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID of the user being called",
+                        "name": "targetId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Team ID for context",
+                        "name": "teamId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/entity.VoiceRoom"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/voice/rooms/{teamId}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Returns all group voice rooms belonging to a specific team",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "voice"
+                ],
+                "summary": "Get active voice rooms for a team",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team ID",
+                        "name": "teamId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/controller.RoomResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Creates a new voice room for team members",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "voice"
+                ],
+                "summary": "Create a group voice room",
                 "parameters": [
                     {
                         "type": "string",
@@ -1773,33 +2121,27 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "User ID",
+                        "description": "User ID of the creator",
                         "name": "userId",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Room name (optional)",
+                        "name": "name",
+                        "in": "query"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Successfully left room",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/entity.VoiceRoom"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Room not found",
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1820,6 +2162,33 @@ const docTemplate = `{
                 },
                 "team": {
                     "$ref": "#/definitions/dto.TeamMessageRequest"
+                }
+            }
+        },
+        "controller.RoomResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "integer"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "teamId": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "userCount": {
+                    "type": "integer",
+                    "example": 2
                 }
             }
         },
@@ -2368,6 +2737,29 @@ const docTemplate = `{
                     }
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.VoiceRoom": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "integer"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "teamId": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
