@@ -5,15 +5,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// VoiceRoutes sets up all the API routes for voice chat functionality.
 func VoiceRoutes(router *gin.Engine) {
 	voiceController := controller.NewVoiceController()
 
-	// Protected endpoints - require JWT
 	voice := router.Group("/voice")
 	voice.Use(controller.JWTAuthMiddleware())
 	{
-		voice.GET("/:teamId", voiceController.JoinVoiceRoom)
+		voice.GET("/join/:roomId", voiceController.JoinVoiceRoom)
 		voice.POST("/rooms/:teamId", voiceController.CreateVoiceRoom)
-		voice.DELETE("/:teamId/leave", voiceController.LeaveVoiceRoom)
+		voice.GET("/rooms/:teamId", voiceController.GetActiveRooms)
+		voice.POST("/private/call", voiceController.StartPrivateCall)
+		voice.GET("/joinable", voiceController.GetJoinableRooms)
 	}
 }

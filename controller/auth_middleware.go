@@ -8,7 +8,17 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// JWTAuthMiddleware verifies the Authorization header and stores claims in context.
+// JWTAuthMiddleware verifies the Authorization header and stores claims in context
+//
+//	@Summary		JWT Authentication Middleware
+//	@Description	Middleware to verify JWT token from Authorization header or query parameter
+//	@Tags			auth
+//	@Security		Bearer
+//	@Param			Authorization	header		string				false	"Bearer token"
+//	@Param			token			query		string				false	"Token for WebSocket connections"
+//	@Success		200				{string}	string				"Token is valid"
+//	@Failure		401				{object}	map[string]string	"Unauthorized"
+//	@Router			/auth/middleware [post]
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// expected: "Bearer <token>" (HTTP) or "?token=<token>" (WebSocket)
@@ -46,8 +56,16 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// RequireOwner ensures the authenticated subject (sub claim) matches the provided
-// path parameter (for example :id). Use as a route-level middleware after JWTAuthMiddleware.
+// RequireOwner ensures the authenticated subject matches the provided path parameter
+//
+//	@Summary		Owner Authorization Middleware
+//	@Description	Middleware to ensure the authenticated user matches the resource owner
+//	@Tags			auth
+//	@Security		Bearer
+//	@Param			id	path		string				true	"Resource ID that must match authenticated user ID"
+//	@Success		200	{string}	string				"User is authorized"
+//	@Failure		403	{object}	map[string]string	"Forbidden"
+//	@Router			/auth/owner/{id} [post]
 func RequireOwner(paramName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimsI, ok := c.Get("userClaims")

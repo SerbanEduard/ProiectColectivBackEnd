@@ -29,7 +29,7 @@ func SetupRoutes() *gin.Engine {
 	r.Use(gin.Recovery())
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://studyflow-6qwx.onrender.com", "http://localhost:3000"},
+		AllowOrigins:     []string{"https://studyflow-6qwx.onrender.com", "http://localhost:3000", "*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
