@@ -194,8 +194,8 @@ func (mc *MessageController) GetMessages(c *gin.Context) {
 		c.JSON(http.StatusOK, resp)
 	case "team":
 		teamId := c.Query("teamId")
-		if err := c.ShouldBindJSON(teamId); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if teamId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": MissingParameter})
 			return
 		}
 
