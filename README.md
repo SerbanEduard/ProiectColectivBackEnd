@@ -80,7 +80,7 @@ Server runs on `http://localhost:8080`
 
 The WebSocket then sends messages of type:
 
-```json
+```
 {
   type: "direct_message" | "team_message",
   payload: {
