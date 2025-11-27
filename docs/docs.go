@@ -2282,8 +2282,8 @@ const docTemplate = `{
                 "receiverId": {
                     "type": "string"
                 },
-                "senderId": {
-                    "type": "string"
+                "sender": {
+                    "$ref": "#/definitions/dto.SenderDTO"
                 },
                 "sentAt": {
                     "type": "string"
@@ -2335,6 +2335,32 @@ const docTemplate = `{
             "properties": {
                 "accept": {
                     "type": "boolean"
+                }
+            }
+        },
+        "dto.SenderDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lastname": {
+                    "type": "string"
+                },
+                "topicsOfInterest": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TopicOfInterest"
+                    }
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
