@@ -82,19 +82,19 @@ The WebSocket then sends messages of type:
 
 ```json
 {
-  "type": "string",
-  "payload": {
-    "senderId": "string",
-    "receiverId": "string",
-    "textContent": "string"
+  type: "direct_message" | "team_message",
+  payload: {
+	id: string
+    senderId: string,
+	sentAt: string,            // the date as a string
+    receiverId: string | null,
+	teamId: string | null,
+    textContent: string
   }
 }
 ```
 
-- **type**: `"direct_message"` or `"team_message"`
-- **senderId**: the sending `userID`
-- **receiverId**: either a `userID` or `teamID` depending on `type`
-- **textContent**: the actual message content
+**Important**: The sender DOES NOT receive the message he sent back via WebSocket.
 
 ## Swagger Support
 
