@@ -164,7 +164,6 @@ func (tc *TeamController) GetAllTeams(c *gin.Context) {
 //
 //	@Security		Bearer
 //
-//	@Tags			Teams
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.UserToTeamRequest	true	"User ID and Team ID"
@@ -193,7 +192,6 @@ func (tc *TeamController) AddUserToTeam(c *gin.Context) {
 //
 //	@Security		Bearer
 //
-//	@Tags			Teams
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.UserToTeamRequest		true	"User ID and Team ID"
