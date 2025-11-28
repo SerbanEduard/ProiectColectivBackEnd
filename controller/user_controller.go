@@ -59,7 +59,6 @@ type UserServiceInterface interface {
 // SignUp
 //
 //	@Summary	Register a new user
-//	@Tags		users
 //	@Accept		json
 //	@Produce	json
 //	@Param		request	body		dto.SignUpUserRequest	true	"The sign-up request"
@@ -99,7 +98,6 @@ func (uc *UserController) SignUp(c *gin.Context) {
 // GetUser
 //
 //	@Summary	Get a user by ID
-//	@Tags		users
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -121,7 +119,6 @@ func (uc *UserController) GetUser(c *gin.Context) {
 // GetAllUsers
 //
 //	@Summary	Get all users
-//	@Tags		users
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -141,7 +138,6 @@ func (uc *UserController) GetAllUsers(c *gin.Context) {
 // UpdateUser
 //
 //	@Summary	Update user profile (selective fields)
-//	@Tags		users
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -173,7 +169,6 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 // UpdateUserPassword
 //
 //	@Summary	Update user password
-//	@Tags		users
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -204,7 +199,6 @@ func (uc *UserController) UpdateUserPassword(c *gin.Context) {
 // DeleteUser
 //
 //	@Summary	Delete a user
-//	@Tags		users
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -231,7 +225,6 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 // GetUserStatistics
 //
 //	@Summary	Get a user's statistics
-//	@Tags		users
 //	@Security	Bearer
 //	@Produce	json
 //	@Param		id	path		string	true	"The user's ID"
@@ -259,7 +252,6 @@ func (uc *UserController) GetUserStatistics(c *gin.Context) {
 // UpdateUserStatistics
 //
 //	@Summary	Update user statistics
-//	@Tags		users
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -302,7 +294,6 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 //
 //	@Summary		Login user by email or username and return JWT
 //	@Description	Accepts either `email` or `username` along with `password`. Returns an access token and the full user (without password).
-//	@Tags			users
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		dto.LoginRequest	true	"The login request (email or username + password)"
@@ -339,7 +330,6 @@ func (uc *UserController) Login(c *gin.Context) {
 //
 //	@Summary		Get friends for a user
 //	@Description	Get list of friends for a user (accepted requests)
-//	@Tags			users
 //	@Security		Bearer
 //	@Param			id	path		string	true	"User ID"
 //	@Success		200	{array}		entity.User
@@ -371,7 +361,6 @@ func (uc *UserController) GetFriends(c *gin.Context) {
 //
 //	@Summary		Get mutual friends between two users
 //	@Description	Get list of mutual friends between userA and userB
-//	@Tags			users
 //	@Security		Bearer
 //	@Param			id		path		string	true	"User A ID"
 //	@Param			otherId	path		string	true	"User B ID"

@@ -476,8 +476,6 @@ paths:
       security:
       - Bearer: []
       summary: JWT Authentication Middleware
-      tags:
-      - auth
   /auth/owner/{id}:
     post:
       description: Middleware to ensure the authenticated user matches the resource
@@ -502,8 +500,6 @@ paths:
       security:
       - Bearer: []
       summary: Owner Authorization Middleware
-      tags:
-      - auth
   /friend-requests/{fromUserId}/{toUserId}:
     post:
       description: Send a friend request from one user to another
@@ -536,8 +532,6 @@ paths:
       security:
       - Bearer: []
       summary: Send a friend request
-      tags:
-      - friend-requests
     put:
       description: Accept or deny a friend request
       parameters:
@@ -581,8 +575,6 @@ paths:
       security:
       - Bearer: []
       summary: Respond to a friend request
-      tags:
-      - friend-requests
   /friend-requests/{userId}:
     get:
       description: Get pending friend requests for a user
@@ -606,8 +598,6 @@ paths:
       security:
       - Bearer: []
       summary: Get pending friend requests
-      tags:
-      - friend-requests
   /messages:
     get:
       consumes:
@@ -653,8 +643,6 @@ paths:
       security:
       - Bearer: []
       summary: Get all messages
-      tags:
-      - messages
     post:
       consumes:
       - application/json
@@ -692,8 +680,6 @@ paths:
       security:
       - Bearer: []
       summary: Create and send a message
-      tags:
-      - messages
   /messages/{id}:
     get:
       consumes:
@@ -724,8 +710,6 @@ paths:
       security:
       - Bearer: []
       summary: Get a message by ID
-      tags:
-      - messages
   /messages/connect:
     get:
       responses:
@@ -752,8 +736,6 @@ paths:
       security:
       - Bearer: []
       summary: Connect the user to the message WebSocket
-      tags:
-      - messages
   /quizzes:
     post:
       consumes:
@@ -793,8 +775,6 @@ paths:
       security:
       - Bearer: []
       summary: Create a new quiz
-      tags:
-      - quizzes
   /quizzes/{id}:
     get:
       consumes:
@@ -827,8 +807,6 @@ paths:
       security:
       - Bearer: []
       summary: Get a quiz with answers
-      tags:
-      - quizzes
   /quizzes/{id}/test:
     get:
       consumes:
@@ -861,8 +839,6 @@ paths:
       security:
       - Bearer: []
       summary: Get a quiz without answers
-      tags:
-      - quizzes
     post:
       consumes:
       - application/json
@@ -906,8 +882,6 @@ paths:
       security:
       - Bearer: []
       summary: Solve a quiz
-      tags:
-      - quizzes
   /quizzes/team/{teamId}:
     get:
       consumes:
@@ -961,8 +935,6 @@ paths:
       security:
       - Bearer: []
       summary: Get quizzes by team with pagination
-      tags:
-      - quizzes
   /quizzes/user/{userId}/team/{teamId}:
     get:
       consumes:
@@ -1015,8 +987,6 @@ paths:
       security:
       - Bearer: []
       summary: Get quizzes by user with pagination
-      tags:
-      - quizzes
   /teams:
     get:
       description: Get teams - all teams, by name, or by prefix with limit
@@ -1055,8 +1025,6 @@ paths:
       security:
       - Bearer: []
       summary: Get teams with optional filtering
-      tags:
-      - teams
     post:
       consumes:
       - application/json
@@ -1088,8 +1056,6 @@ paths:
       security:
       - Bearer: []
       summary: Create a new team
-      tags:
-      - teams
   /teams/{id}:
     delete:
       description: Delete a team by providing team ID
@@ -1120,8 +1086,6 @@ paths:
       security:
       - Bearer: []
       summary: Delete a team
-      tags:
-      - teams
     get:
       description: Get team details by ID
       parameters:
@@ -1145,8 +1109,6 @@ paths:
       security:
       - Bearer: []
       summary: Get a team by ID
-      tags:
-      - teams
     put:
       consumes:
       - application/json
@@ -1183,8 +1145,6 @@ paths:
       security:
       - Bearer: []
       summary: Update a team
-      tags:
-      - teams
   /teams/users:
     delete:
       description: Delete a user from a team by providing team ID
@@ -1211,8 +1171,6 @@ paths:
       security:
       - Bearer: []
       summary: Delete a user from a team
-      tags:
-      - teams
     put:
       consumes:
       - application/json
@@ -1240,8 +1198,6 @@ paths:
       security:
       - Bearer: []
       summary: Add a user to a team
-      tags:
-      - teams
   /users:
     get:
       consumes:
@@ -1264,8 +1220,6 @@ paths:
       security:
       - Bearer: []
       summary: Get all users
-      tags:
-      - users
   /users/{id}:
     delete:
       consumes:
@@ -1300,8 +1254,6 @@ paths:
       security:
       - Bearer: []
       summary: Delete a user
-      tags:
-      - users
     get:
       consumes:
       - application/json
@@ -1327,8 +1279,6 @@ paths:
       security:
       - Bearer: []
       summary: Get a user by ID
-      tags:
-      - users
     patch:
       consumes:
       - application/json
@@ -1372,8 +1322,6 @@ paths:
       security:
       - Bearer: []
       summary: Update user profile (selective fields)
-      tags:
-      - users
   /users/{id}/friends:
     get:
       description: Get list of friends for a user (accepted requests)
@@ -1405,8 +1353,6 @@ paths:
       security:
       - Bearer: []
       summary: Get friends for a user
-      tags:
-      - users
   /users/{id}/mutual/{otherId}:
     get:
       description: Get list of mutual friends between userA and userB
@@ -1443,8 +1389,6 @@ paths:
       security:
       - Bearer: []
       summary: Get mutual friends between two users
-      tags:
-      - users
   /users/{id}/password:
     put:
       consumes:
@@ -1485,8 +1429,6 @@ paths:
       security:
       - Bearer: []
       summary: Update user password
-      tags:
-      - users
   /users/{id}/statistics:
     get:
       parameters:
@@ -1523,8 +1465,6 @@ paths:
       security:
       - Bearer: []
       summary: Get a user's statistics
-      tags:
-      - users
     put:
       consumes:
       - application/json
@@ -1568,8 +1508,6 @@ paths:
       security:
       - Bearer: []
       summary: Update user statistics
-      tags:
-      - users
   /users/login:
     post:
       consumes:
@@ -1609,8 +1547,6 @@ paths:
               type: string
             type: object
       summary: Login user by email or username and return JWT
-      tags:
-      - users
   /users/signup:
     post:
       consumes:
@@ -1648,8 +1584,6 @@ paths:
               type: string
             type: object
       summary: Register a new user
-      tags:
-      - users
   /voice/join/{roomId}:
     get:
       description: Establishes a WebSocket connection for voice communication in a
@@ -1691,8 +1625,6 @@ paths:
       security:
       - Bearer: []
       summary: Join a voice room via WebSocket
-      tags:
-      - voice
   /voice/joinable:
     get:
       consumes:
@@ -1723,8 +1655,6 @@ paths:
       security:
       - Bearer: []
       summary: Get joinable voice rooms
-      tags:
-      - voice
   /voice/private/call:
     post:
       consumes:
@@ -1761,8 +1691,6 @@ paths:
       security:
       - Bearer: []
       summary: Start a private voice call
-      tags:
-      - voice
   /voice/rooms/{teamId}:
     get:
       consumes:
@@ -1786,8 +1714,6 @@ paths:
       security:
       - Bearer: []
       summary: Get active voice rooms for a team
-      tags:
-      - voice
     post:
       consumes:
       - application/json
@@ -1823,8 +1749,6 @@ paths:
       security:
       - Bearer: []
       summary: Create a group voice room
-      tags:
-      - voice
 securityDefinitions:
   Bearer:
     description: 'Bearer JWT token. Example: "Bearer YOUR_TOKEN"'

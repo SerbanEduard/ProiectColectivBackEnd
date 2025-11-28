@@ -15,9 +15,6 @@
                     }
                 ],
                 "description": "Middleware to verify JWT token from Authorization header or query parameter",
-                "tags": [
-                    "auth"
-                ],
                 "summary": "JWT Authentication Middleware",
                 "parameters": [
                     {
@@ -60,9 +57,6 @@
                     }
                 ],
                 "description": "Middleware to ensure the authenticated user matches the resource owner",
-                "tags": [
-                    "auth"
-                ],
                 "summary": "Owner Authorization Middleware",
                 "parameters": [
                     {
@@ -100,9 +94,6 @@
                     }
                 ],
                 "description": "Accept or deny a friend request",
-                "tags": [
-                    "friend-requests"
-                ],
                 "summary": "Respond to a friend request",
                 "parameters": [
                     {
@@ -169,9 +160,6 @@
                     }
                 ],
                 "description": "Send a friend request from one user to another",
-                "tags": [
-                    "friend-requests"
-                ],
                 "summary": "Send a friend request",
                 "parameters": [
                     {
@@ -222,9 +210,6 @@
                     }
                 ],
                 "description": "Get pending friend requests for a user",
-                "tags": [
-                    "friend-requests"
-                ],
                 "summary": "Get pending friend requests",
                 "parameters": [
                     {
@@ -267,9 +252,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "messages"
                 ],
                 "summary": "Get all messages",
                 "parameters": [
@@ -338,9 +320,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "messages"
-                ],
                 "summary": "Create and send a message",
                 "parameters": [
                     {
@@ -391,9 +370,6 @@
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "messages"
-                ],
                 "summary": "Connect the user to the message WebSocket",
                 "responses": {
                     "101": {
@@ -441,9 +417,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "messages"
-                ],
                 "summary": "Get a message by ID",
                 "parameters": [
                     {
@@ -490,9 +463,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "quizzes"
                 ],
                 "summary": "Create a new quiz",
                 "parameters": [
@@ -555,9 +525,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "quizzes"
                 ],
                 "summary": "Get quizzes by team with pagination",
                 "parameters": [
@@ -641,9 +608,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "quizzes"
-                ],
                 "summary": "Get quizzes by user with pagination",
                 "parameters": [
                     {
@@ -724,9 +688,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "quizzes"
-                ],
                 "summary": "Get a quiz with answers",
                 "parameters": [
                     {
@@ -778,9 +739,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "quizzes"
-                ],
                 "summary": "Get a quiz without answers",
                 "parameters": [
                     {
@@ -829,9 +787,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "quizzes"
                 ],
                 "summary": "Solve a quiz",
                 "parameters": [
@@ -900,9 +855,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "teams"
-                ],
                 "summary": "Get teams with optional filtering",
                 "parameters": [
                     {
@@ -963,9 +915,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "teams"
-                ],
                 "summary": "Create a new team",
                 "parameters": [
                     {
@@ -1016,9 +965,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "teams"
-                ],
                 "summary": "Add a user to a team",
                 "parameters": [
                     {
@@ -1057,9 +1003,6 @@
                 "description": "Delete a user from a team by providing team ID",
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "teams"
                 ],
                 "summary": "Delete a user from a team",
                 "parameters": [
@@ -1102,9 +1045,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "teams"
-                ],
                 "summary": "Get a team by ID",
                 "parameters": [
                     {
@@ -1143,9 +1083,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "teams"
                 ],
                 "summary": "Update a team",
                 "parameters": [
@@ -1199,9 +1136,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "teams"
-                ],
                 "summary": "Delete a team",
                 "parameters": [
                     {
@@ -1250,9 +1184,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "users"
-                ],
                 "summary": "Get all users",
                 "responses": {
                     "200": {
@@ -1284,9 +1215,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "users"
                 ],
                 "summary": "Login user by email or username and return JWT",
                 "parameters": [
@@ -1344,9 +1272,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "users"
                 ],
                 "summary": "Register a new user",
                 "parameters": [
@@ -1410,9 +1335,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "users"
-                ],
                 "summary": "Get a user by ID",
                 "parameters": [
                     {
@@ -1452,9 +1374,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "users"
                 ],
                 "summary": "Delete a user",
                 "parameters": [
@@ -1507,9 +1426,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "users"
                 ],
                 "summary": "Update user profile (selective fields)",
                 "parameters": [
@@ -1575,9 +1491,6 @@
                     }
                 ],
                 "description": "Get list of friends for a user (accepted requests)",
-                "tags": [
-                    "users"
-                ],
                 "summary": "Get friends for a user",
                 "parameters": [
                     {
@@ -1627,9 +1540,6 @@
                     }
                 ],
                 "description": "Get list of mutual friends between userA and userB",
-                "tags": [
-                    "users"
-                ],
                 "summary": "Get mutual friends between two users",
                 "parameters": [
                     {
@@ -1691,9 +1601,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "users"
-                ],
                 "summary": "Update user password",
                 "parameters": [
                     {
@@ -1754,9 +1661,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "users"
-                ],
                 "summary": "Get a user's statistics",
                 "parameters": [
                     {
@@ -1814,9 +1718,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "users"
                 ],
                 "summary": "Update user statistics",
                 "parameters": [
@@ -1882,9 +1783,6 @@
                     }
                 ],
                 "description": "Establishes a WebSocket connection for voice communication in a room",
-                "tags": [
-                    "voice"
-                ],
                 "summary": "Join a voice room via WebSocket",
                 "parameters": [
                     {
@@ -1953,9 +1851,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "voice"
-                ],
                 "summary": "Get joinable voice rooms",
                 "parameters": [
                     {
@@ -2001,9 +1896,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "voice"
                 ],
                 "summary": "Start a private voice call",
                 "parameters": [
@@ -2061,9 +1953,6 @@
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "voice"
-                ],
                 "summary": "Get active voice rooms for a team",
                 "parameters": [
                     {
@@ -2098,9 +1987,6 @@
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "voice"
                 ],
                 "summary": "Create a group voice room",
                 "parameters": [

@@ -46,7 +46,6 @@ func NewMessageControllerWithService(messageService service.MessageServiceInterf
 // Connect
 //
 //	@Summary	Connect the user to the message WebSocket
-//	@Tags		messages
 //	@Security	Bearer
 //	@Success	101	{string}	string					"Switching Protocols - WebSocket connection established"
 //	@Failure	400	{object}	map[string]interface{}	"Bad Request"
@@ -75,7 +74,6 @@ func (mc *MessageController) Connect(c *gin.Context) {
 //
 //	@Summary		Create and send a message
 //	@Description	Create and send a message either to another user or to a team
-//	@Tags			messages
 //	@Security		Bearer
 //	@Accept			json
 //	@Produce		json
@@ -136,7 +134,6 @@ func (mc *MessageController) NewMessage(c *gin.Context) {
 // GetMessage
 //
 //	@Summary	Get a message by ID
-//	@Tags		messages
 //	@Security	Bearer
 //	@Accept		json
 //	@Produce	json
@@ -164,7 +161,6 @@ func (mc *MessageController) GetMessage(c *gin.Context) {
 //
 //	@Summary		Get all messages
 //	@Description	Get messages between 2 users or within a team
-//	@Tags			messages
 //	@Security		Bearer
 //	@Accept			json
 //	@Produce		json
