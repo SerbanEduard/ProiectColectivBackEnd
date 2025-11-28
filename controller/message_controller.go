@@ -122,7 +122,7 @@ func (mc *MessageController) NewMessage(c *gin.Context) {
 		// Send to team members via WebSocket
 		team, _ := mc.teamService.GetTeamById(request.TeamId)
 		userIDs := slices.DeleteFunc(team.UsersIds, func(uid string) bool {
-			return uid != request.SenderID // Don't send to sender
+			return uid == request.SenderID // Don't send to sender
 		})
 		mc.hub.SendMany(userIDs, *hub.NewMessage(hub.TeamBroadcast, request))
 
