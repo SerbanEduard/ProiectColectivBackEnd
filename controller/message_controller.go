@@ -102,7 +102,7 @@ func (mc *MessageController) NewMessage(c *gin.Context) {
 
 		c.JSON(http.StatusCreated, resp)
 
-		mc.hub.Send(request.ReceiverID, *hub.NewMessage(hub.DirectMessage, request))
+		mc.hub.Send(request.ReceiverID, *hub.NewMessage(hub.DirectMessage, resp))
 
 	case "team":
 		var request dto.TeamMessageRequest
@@ -124,7 +124,7 @@ func (mc *MessageController) NewMessage(c *gin.Context) {
 		userIDs := slices.DeleteFunc(team.UsersIds, func(uid string) bool {
 			return uid == request.SenderID // Don't send to sender
 		})
-		mc.hub.SendMany(userIDs, *hub.NewMessage(hub.TeamBroadcast, request))
+		mc.hub.SendMany(userIDs, *hub.NewMessage(hub.TeamBroadcast, resp))
 
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": BadMessageTypeError})
