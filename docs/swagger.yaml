@@ -1,12 +1,5 @@
 basePath: /
 definitions:
-  dto.AddUserToTeamResponse:
-    properties:
-      team:
-        $ref: '#/definitions/entity.Team'
-      user:
-        $ref: '#/definitions/entity.User'
-    type: object
   controller.MessageRequestUnion:
     properties:
       direct:
@@ -31,6 +24,13 @@ definitions:
       userCount:
         example: 2
         type: integer
+    type: object
+  dto.AddUserToTeamResponse:
+    properties:
+      team:
+        $ref: '#/definitions/entity.Team'
+      user:
+        $ref: '#/definitions/entity.User'
     type: object
   dto.CreateQuizResponse:
     properties:
@@ -1244,8 +1244,6 @@ paths:
       security:
       - Bearer: []
       summary: Delete a user from a team
-      tags:
-      - Teams
     put:
       consumes:
       - application/json
@@ -1273,8 +1271,6 @@ paths:
       security:
       - Bearer: []
       summary: Add a user to a team
-      tags:
-      - Teams
   /users:
     get:
       consumes:

@@ -1066,9 +1066,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "Teams"
-                ],
                 "summary": "Add a user to a team",
                 "parameters": [
                     {
@@ -1111,9 +1108,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "Teams"
                 ],
                 "summary": "Delete a user from a team",
                 "parameters": [
@@ -2144,17 +2138,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.AddUserToTeamResponse": {
-            "type": "object",
-            "properties": {
-                "team": {
-                    "$ref": "#/definitions/entity.Team"
-                },
-                "user": {
-                    "$ref": "#/definitions/entity.User"
-                }
-            }
-        },
         "controller.MessageRequestUnion": {
             "type": "object",
             "properties": {
@@ -2190,6 +2173,17 @@ const docTemplate = `{
                 "userCount": {
                     "type": "integer",
                     "example": 2
+                }
+            }
+        },
+        "dto.AddUserToTeamResponse": {
+            "type": "object",
+            "properties": {
+                "team": {
+                    "$ref": "#/definitions/entity.Team"
+                },
+                "user": {
+                    "$ref": "#/definitions/entity.User"
                 }
             }
         },
