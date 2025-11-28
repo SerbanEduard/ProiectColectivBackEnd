@@ -217,67 +217,6 @@ func (tc *TeamController) DeleteUserFromTeam(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetXTeamsByPrefix
-//
-//	@Summary		Get X teams by prefix
-//	@Description	Get a list of X teams that start with the specified prefix
-//	@Produce		json
-//	@Param			prefix	query		string	true	"Prefix to search for"
-//	@Param			limit	query		int		true	"Number of teams to retrieve"
-//	@Success		200		{array}		entity.Team
-//	@Failure		400		{object}	map[string]interface{}	"Bad Request: Missing prefix or limit query parameters, or limit is NaN"
-//	@Failure		500		{object}	map[string]interface{}	"Internal Server Error"
-//	@Router			/teams/search [get]
-func (tc *TeamController) GetXTeamsByPrefix(c *gin.Context) {
-	prefix := c.Query("prefix")
-	xStr := c.Query("limit")
-
-	if prefix == "" || xStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing prefix or limit query parameters"})
-		return
-	}
-
-	x, err := strconv.Atoi(xStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Limit must be a number"})
-		return
-	}
-
-	teams, err := tc.teamService.GetXTeamsByPrefix(prefix, x)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, teams)
-}
-
-// GetTeamsByName
-//
-//	@Summary		Get teams by name
-//	@Description	Get a list of teams that match the specified name
-//	@Produce		json
-//	@Param			name	query		string	true	"Name to search for"
-//	@Success		200		{array}		entity.Team
-//	@Failure		400		{object}	map[string]interface{}	"Bad Request: Missing 'name' query parameter"
-//	@Failure		500		{object}	map[string]interface{}	"Internal Server Error"
-//	@Router			/teams/by-name [get]
-func (tc *TeamController) GetTeamsByName(c *gin.Context) {
-	name := c.Query("name")
-	if name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing 'name' query parameter"})
-		return
-	}
-
-	teams, err := tc.teamService.GetTeamsByName(name)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, teams)
-}
-
 // UpdateTeam
 //
 //	@Summary		Update a team
