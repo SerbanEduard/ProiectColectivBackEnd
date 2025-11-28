@@ -120,6 +120,14 @@ func (m *MockUserService) GetAllUsers() ([]*entity.User, error) {
 	return args.Get(0).([]*entity.User), args.Error(1)
 }
 
+func (m *MockUserService) GetUserStatistics(id string) (*dto.StatisticsResponse, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.StatisticsResponse), args.Error(1)
+}
+
 func (m *MockUserService) UpdateUserStatistics(id string, timeSpentOnApp int64, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error) {
 	args := m.Called(id, timeSpentOnApp, timeSpentOnTeam)
 	if args.Get(0) == nil {
@@ -263,4 +271,105 @@ func (m *MockTeamRepository) Update(team *entity.Team) error {
 func (m *MockTeamRepository) Delete(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
+}
+
+type MockQuizRepository struct {
+	mock.Mock
+}
+
+func (m *MockQuizRepository) GetByUserAndTeam(userId string, teamId string, pageSize int, lastKey string) ([]entity.Quiz, string, error) {
+	args := m.Called(userId, teamId, pageSize, lastKey)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Error(2)
+	}
+	return args.Get(0).([]entity.Quiz), args.String(1), args.Error(2)
+}
+
+func (m *MockQuizRepository) Create(quiz entity.Quiz) error {
+	args := m.Called(quiz)
+	return args.Error(0)
+}
+
+func (m *MockQuizRepository) Update(quiz entity.Quiz) error {
+	args := m.Called(quiz)
+	return args.Error(0)
+}
+
+func (m *MockQuizRepository) GetById(id string) (entity.Quiz, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		// Asigură-te că primul argument este o valoare zero (entity.Quiz{}) dacă este nil, și returnează eroarea.
+		return entity.Quiz{}, args.Error(1)
+	}
+	return args.Get(0).(entity.Quiz), args.Error(1)
+}
+
+func (m *MockQuizRepository) GetByUser(id string, pageSize int, lastKey string) ([]entity.Quiz, string, error) {
+	args := m.Called(id, pageSize, lastKey)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Error(2)
+	}
+	return args.Get(0).([]entity.Quiz), args.String(1), args.Error(2)
+}
+
+func (m *MockQuizRepository) GetByTeam(id string, pageSize int, lastKey string) ([]entity.Quiz, string, error) {
+	args := m.Called(id, pageSize, lastKey)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Error(2)
+	}
+	return args.Get(0).([]entity.Quiz), args.String(1), args.Error(2)
+}
+
+// MockQuizService is used by controller tests to mock service layer behavior.
+type MockQuizService struct {
+	mock.Mock
+}
+
+func (m *MockQuizService) CreateQuiz(request entity.Quiz) (dto.CreateQuizResponse, error) {
+	args := m.Called(request)
+	var resp dto.CreateQuizResponse
+	if args.Get(0) != nil {
+		resp = args.Get(0).(dto.CreateQuizResponse)
+	}
+	return resp, args.Error(1)
+}
+
+func (m *MockQuizService) GetQuizWithAnswersById(id string) (entity.Quiz, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return entity.Quiz{}, args.Error(1)
+	}
+	return args.Get(0).(entity.Quiz), args.Error(1)
+}
+
+func (m *MockQuizService) GetQuizWithoutAnswersById(id string) (dto.ReadQuizResponse, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return dto.ReadQuizResponse{}, args.Error(1)
+	}
+	return args.Get(0).(dto.ReadQuizResponse), args.Error(1)
+}
+
+func (m *MockQuizService) SolveQuiz(request dto.SolveQuizRequest, userId string, quizId string) (dto.SolveQuizResponse, error) {
+	args := m.Called(request, userId, quizId)
+	if args.Get(0) == nil {
+		return dto.SolveQuizResponse{}, args.Error(1)
+	}
+	return args.Get(0).(dto.SolveQuizResponse), args.Error(1)
+}
+
+func (m *MockQuizService) GetQuizzesByUserAndTeam(userId string, teamId string, pageSize int, lastKey string) ([]dto.ReadQuizResponse, string, error) {
+	args := m.Called(userId, teamId, pageSize, lastKey)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Error(2)
+	}
+	return args.Get(0).([]dto.ReadQuizResponse), args.String(1), args.Error(2)
+}
+
+func (m *MockQuizService) GetQuizzesByTeam(userId string, teamId string, pageSize int, lastKey string) ([]dto.ReadQuizResponse, string, error) {
+	args := m.Called(userId, teamId, pageSize, lastKey)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Error(2)
+	}
+	return args.Get(0).([]dto.ReadQuizResponse), args.String(1), args.Error(2)
 }

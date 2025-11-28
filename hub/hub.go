@@ -1,0 +1,142 @@
+package hub
+
+import (
+	"sync"
+	"time"
+
+	"github.com/gorilla/websocket"
+)
+
+const (
+	readWait  = 30 * time.Second
+	writeWait = 10 * time.Second
+
+	// MUST be LESS than readWait
+	pingFrequency = (readWait * 9) / 10 // pingFrequency = 90% * readWait
+)
+
+type Hub[T any] struct {
+	// The clients connected to this hub
+	clients map[string]*Client[T]
+	mu      sync.RWMutex
+}
+
+func NewHub[T any]() *Hub[T] {
+	return &Hub[T]{
+		clients: make(map[string]*Client[T]),
+	}
+}
+
+func (h *Hub[T]) Register(client *Client[T]) {
+	h.mu.Lock()
+	h.clients[client.ClientID] = client
+	h.mu.Unlock()
+
+	// Start the read and write pump
+	go h.readPump(client)
+	go h.writePump(client)
+}
+
+func (h *Hub[T]) Unregister(client *Client[T]) {
+	h.mu.Lock()
+	_, ok := h.clients[client.ClientID]
+	if ok {
+		delete(h.clients, client.ClientID)
+	}
+	h.mu.Unlock()
+
+	if ok {
+		close(client.outbound)
+		err := client.Conn.Close()
+		if err != nil {
+			return
+		}
+	}
+}
+
+func (h *Hub[T]) Send(clientID string, msg T) {
+	h.mu.Lock()
+	client, ok := h.clients[clientID]
+	h.mu.Unlock()
+
+	if !ok {
+		// Client is offline
+		return
+	}
+
+	select {
+	case client.outbound <- msg:
+		// Sent to outbound channel
+	default:
+		// Channel is full
+	}
+}
+
+func (h *Hub[T]) SendMany(clientIDs []string, msg T) {
+	for _, id := range clientIDs {
+		h.Send(id, msg)
+	}
+}
+
+// writePump continuously reads from the outbound channel and writes to the WebSocket
+func (h *Hub[T]) writePump(client *Client[T]) {
+	ticker := time.NewTicker(pingFrequency)
+	defer func() {
+		// Unregister the client on exit
+		h.Unregister(client)
+	}()
+
+	for {
+		select {
+		case msg, ok := <-client.outbound:
+			if !ok {
+				// The hub closed the channel
+				err := client.Conn.WriteControl(websocket.CloseMessage, []byte{}, time.Now().Add(writeWait))
+				if err != nil {
+					return
+				}
+			}
+
+			// Send the message as JSON
+			err := client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				return
+			}
+			err = client.Conn.WriteJSON(msg)
+			if err != nil {
+				return
+			}
+		case <-ticker.C:
+			// Send a ping message
+			if err := client.Conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(writeWait)); err != nil {
+				// Client disconnected
+				return
+			}
+		}
+	}
+}
+
+// readPump continuously checks for disconnection
+func (h *Hub[T]) readPump(client *Client[T]) {
+	defer func() {
+		h.Unregister(client)
+	}()
+
+	// Check for timeouts
+	err := client.Conn.SetReadDeadline(time.Now().Add(readWait))
+	if err != nil {
+		return
+	}
+	client.Conn.SetPongHandler(func(string) error {
+		// Reset the deadline when a pong message is received
+		return client.Conn.SetReadDeadline(time.Now().Add(readWait))
+	})
+
+	for {
+		_, _, err := client.Conn.ReadMessage()
+		if err != nil {
+			// WebSocket sent a disconnect message
+			return
+		}
+	}
+}

@@ -14,6 +14,7 @@ func SetupUserRoutes(r *gin.Engine) {
 	r.GET("/users", userController.GetAllUsers)
 	r.PATCH("/users/:id", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.UpdateUser)
 	r.PUT("/users/:id/password", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.UpdateUserPassword)
+	r.GET("/users/:id/statistics", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.GetUserStatistics)
 	r.PUT("/users/:id/statistics", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.UpdateUserStatistics)
 	r.DELETE("/users/:id", controller.JWTAuthMiddleware(), controller.RequireOwner("id"), userController.DeleteUser)
 

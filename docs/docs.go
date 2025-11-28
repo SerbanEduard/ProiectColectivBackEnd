@@ -15,12 +15,93 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/middleware": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Middleware to verify JWT token from Authorization header or query parameter",
+                "summary": "JWT Authentication Middleware",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Token for WebSocket connections",
+                        "name": "token",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token is valid",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/owner/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Middleware to ensure the authenticated user matches the resource owner",
+                "summary": "Owner Authorization Middleware",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resource ID that must match authenticated user ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User is authorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/friend-requests/{fromUserId}/{toUserId}": {
             "put": {
-                "description": "Accept or deny a friend request",
-                "tags": [
-                    "default"
+                "security": [
+                    {
+                        "Bearer": []
+                    }
                 ],
+                "description": "Accept or deny a friend request",
                 "summary": "Respond to a friend request",
                 "parameters": [
                     {
@@ -81,10 +162,12 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Send a friend request from one user to another",
-                "tags": [
-                    "default"
+                "security": [
+                    {
+                        "Bearer": []
+                    }
                 ],
+                "description": "Send a friend request from one user to another",
                 "summary": "Send a friend request",
                 "parameters": [
                     {
@@ -129,10 +212,12 @@ const docTemplate = `{
         },
         "/friend-requests/{userId}": {
             "get": {
-                "description": "Get pending friend requests for a user",
-                "tags": [
-                    "default"
+                "security": [
+                    {
+                        "Bearer": []
+                    }
                 ],
+                "description": "Get pending friend requests for a user",
                 "summary": "Get pending friend requests",
                 "parameters": [
                     {
@@ -162,8 +247,225 @@ const docTemplate = `{
                 }
             }
         },
+        "/messages": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get messages between 2 users or within a team",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get all messages",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Messages type (direct/team)",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User1 ID (direct message)",
+                        "name": "user1Id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "User2 ID (direct message)",
+                        "name": "user2Id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Team ID (team message)",
+                        "name": "teamId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.MessageDTO"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Create and send a message either to another user or to a team",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create and send a message",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Message type (direct/team)",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "The message request (this is only for documentation purposes, the actual request should be either DirectMessageRequest or TeamMessageRequest)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.MessageRequestUnion"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/connect": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "summary": "Connect the user to the message WebSocket",
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols - WebSocket connection established",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get a message by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The message ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/quizzes": {
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -200,6 +502,337 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/team/{teamId}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get quizzes by team with pagination",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team ID",
+                        "name": "teamId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default 10)",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Last key for pagination",
+                        "name": "lastKey",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/user/{userId}/team/{teamId}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get quizzes by user with pagination",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Team ID",
+                        "name": "teamId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default 10)",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Last key for pagination",
+                        "name": "lastKey",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get a quiz with answers",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The id for quiz",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.Quiz"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/quizzes/{id}/test": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get a quiz without answers",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The id for quiz",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ReadQuizResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Solve a quiz",
+                "parameters": [
+                    {
+                        "description": "The solve quiz request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SolveQuizRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "The id for quiz",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SolveQuizResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -964,10 +1597,12 @@ const docTemplate = `{
         },
         "/users/{id}/friends": {
             "get": {
-                "description": "Get list of friends for a user (accepted requests)",
-                "tags": [
-                    "default"
+                "security": [
+                    {
+                        "Bearer": []
+                    }
                 ],
+                "description": "Get list of friends for a user (accepted requests)",
                 "summary": "Get friends for a user",
                 "parameters": [
                     {
@@ -1011,10 +1646,12 @@ const docTemplate = `{
         },
         "/users/{id}/mutual/{otherId}": {
             "get": {
-                "description": "Get list of mutual friends between userA and userB",
-                "tags": [
-                    "default"
+                "security": [
+                    {
+                        "Bearer": []
+                    }
                 ],
+                "description": "Get list of mutual friends between userA and userB",
                 "summary": "Get mutual friends between two users",
                 "parameters": [
                     {
@@ -1127,6 +1764,61 @@ const docTemplate = `{
             }
         },
         "/users/{id}/statistics": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get a user's statistics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The user's ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.StatisticsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -1162,7 +1854,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateStatisticsResponse"
+                            "$ref": "#/definitions/dto.StatisticsResponse"
                         }
                     },
                     "400": {
@@ -1195,25 +1887,26 @@ const docTemplate = `{
                 }
             }
         },
-        "/voice/{teamId}": {
+        "/voice/join/{roomId}": {
             "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "summary": "Join voice chat room",
+                "description": "Establishes a WebSocket connection for voice communication in a room",
+                "summary": "Join a voice room via WebSocket",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Team ID",
-                        "name": "teamId",
+                        "description": "Room ID to join",
+                        "name": "roomId",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "User ID",
+                        "description": "User ID joining the room",
                         "name": "userId",
                         "in": "query",
                         "required": true
@@ -1221,7 +1914,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "101": {
-                        "description": "Switching Protocols - WebSocket connection established",
+                        "description": "Switching Protocols",
                         "schema": {
                             "type": "string"
                         }
@@ -1235,8 +1928,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1244,8 +1937,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "403": {
-                        "description": "Room is full",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1256,14 +1949,158 @@ const docTemplate = `{
                 }
             }
         },
-        "/voice/{teamId}/leave": {
-            "delete": {
+        "/voice/joinable": {
+            "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "summary": "Leave voice chat room",
+                "description": "Returns all group and private rooms that the user is authorized to join and are not full",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get joinable voice rooms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID of the client",
+                        "name": "userId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/controller.RoomResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/voice/private/call": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Creates a private voice room for two users with restricted access",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Start a private voice call",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the user initiating the call",
+                        "name": "callerId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID of the user being called",
+                        "name": "targetId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Team ID for context",
+                        "name": "teamId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/entity.VoiceRoom"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/voice/rooms/{teamId}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Returns all group voice rooms belonging to a specific team",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get active voice rooms for a team",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team ID",
+                        "name": "teamId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/controller.RoomResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Creates a new voice room for team members",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create a group voice room",
                 "parameters": [
                     {
                         "type": "string",
@@ -1274,33 +2111,27 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "User ID",
+                        "description": "User ID of the creator",
                         "name": "userId",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Room name (optional)",
+                        "name": "name",
+                        "in": "query"
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Successfully left room",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/entity.VoiceRoom"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Room not found",
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1324,10 +2155,62 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.MessageRequestUnion": {
+            "type": "object",
+            "properties": {
+                "direct": {
+                    "$ref": "#/definitions/dto.DirectMessageRequest"
+                },
+                "team": {
+                    "$ref": "#/definitions/dto.TeamMessageRequest"
+                }
+            }
+        },
+        "controller.RoomResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "integer"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "teamId": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "userCount": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
         "dto.CreateQuizResponse": {
             "type": "object",
             "properties": {
                 "quiz_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DirectMessageRequest": {
+            "type": "object",
+            "properties": {
+                "receiverId": {
+                    "type": "string"
+                },
+                "senderId": {
+                    "type": "string"
+                },
+                "textContent": {
                     "type": "string"
                 }
             }
@@ -1391,6 +2274,63 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MessageDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "receiverId": {
+                    "type": "string"
+                },
+                "senderId": {
+                    "type": "string"
+                },
+                "sentAt": {
+                    "type": "string"
+                },
+                "teamId": {
+                    "type": "string"
+                },
+                "textContent": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ReadQuizQuestionResponse": {
+            "type": "object",
+            "properties": {
+                "question": {
+                    "type": "string"
+                },
+                "quiz_options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "quiz_question_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ReadQuizResponse": {
+            "type": "object",
+            "properties": {
+                "quiz_id": {
+                    "type": "string"
+                },
+                "quiz_questions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ReadQuizQuestionResponse"
+                    }
+                },
+                "quiz_title": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.RespondFriendRequestRequest": {
             "type": "object",
             "properties": {
@@ -1439,6 +2379,94 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.SolveQuestionRequest": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "quiz_question_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SolveQuestionResponse": {
+            "type": "object",
+            "properties": {
+                "correct_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "is_correct": {
+                    "type": "boolean"
+                },
+                "quiz_question_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SolveQuizRequest": {
+            "type": "object",
+            "properties": {
+                "attempts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.SolveQuestionRequest"
+                    }
+                }
+            }
+        },
+        "dto.SolveQuizResponse": {
+            "type": "object",
+            "properties": {
+                "is_correct": {
+                    "type": "boolean"
+                },
+                "questions_answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.SolveQuestionResponse"
+                    }
+                }
+            }
+        },
+        "dto.StatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "timeSpentOnTeams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TimeSpentOnTeam"
+                    }
+                },
+                "totalTimeSpentOnApp": {
+                    "type": "integer",
+                    "example": 7200000
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TeamMessageRequest": {
+            "type": "object",
+            "properties": {
+                "senderId": {
+                    "type": "string"
+                },
+                "teamId": {
+                    "type": "string"
+                },
+                "textContent": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TeamRequest": {
             "type": "object",
             "properties": {
@@ -1473,24 +2501,6 @@ const docTemplate = `{
                 "timeSpentOnTeam": {
                     "type": "integer",
                     "example": 900000
-                }
-            }
-        },
-        "dto.UpdateStatisticsResponse": {
-            "type": "object",
-            "properties": {
-                "timeSpentOnTeams": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.TimeSpentOnTeam"
-                    }
-                },
-                "totalTimeSpentOnApp": {
-                    "type": "integer",
-                    "example": 7200000
-                },
-                "userId": {
-                    "type": "string"
                 }
             }
         },
@@ -1625,6 +2635,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "id": {
+                    "type": "string"
+                },
                 "options": {
                     "type": "array",
                     "items": {
@@ -1658,6 +2671,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                },
+                "user_team_id": {
                     "type": "string"
                 }
             }
@@ -1722,6 +2738,29 @@ const docTemplate = `{
                     }
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.VoiceRoom": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "integer"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "teamId": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }

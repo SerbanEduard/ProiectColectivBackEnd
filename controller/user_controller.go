@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -51,6 +52,7 @@ type UserServiceInterface interface {
 	UpdateUserPassword(userID string, req *dto.UserPasswordRequestDTO) error
 	DeleteUser(id string) error
 	GetAllUsers() ([]*entity.User, error)
+	GetUserStatistics(id string) (*dto.StatisticsResponse, error)
 	UpdateUserStatistics(id string, timeSpentOnApp int64, timeSpentOnTeam model.TimeSpentOnTeam) (*entity.User, error)
 }
 
@@ -220,6 +222,33 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": userDeletedSuccessfully})
 }
 
+// GetUserStatistics
+//
+//	@Summary	Get a user's statistics
+//	@Security	Bearer
+//	@Produce	json
+//	@Param		id	path		string	true	"The user's ID"
+//	@Success	200	{object}	dto.StatisticsResponse
+//	@Failure	401	{object}	map[string]string
+//	@Failure	404	{object}	map[string]string
+//	@Failure	500	{object}	map[string]string
+//	@Router		/users/{id}/statistics [get]
+func (uc *UserController) GetUserStatistics(c *gin.Context) {
+	id := c.Param("id")
+	statistics, err := uc.userService.GetUserStatistics(id)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if statistics == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Errorf(userNotFoundError)})
+		return
+	}
+
+	c.JSON(http.StatusOK, statistics)
+}
+
 // UpdateUserStatistics
 //
 //	@Summary	Update user statistics
@@ -228,7 +257,7 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 //	@Produce	json
 //	@Param		id		path		string						true	"The user's ID"
 //	@Param		request	body		dto.UpdateStatisticsRequest	true	"The statistics update request"
-//	@Success	200		{object}	dto.UpdateStatisticsResponse
+//	@Success	200		{object}	dto.StatisticsResponse
 //	@Failure	400		{object}	map[string]string
 //	@Failure	404		{object}	map[string]string
 //	@Failure	500		{object}	map[string]string
@@ -257,7 +286,7 @@ func (uc *UserController) UpdateUserStatistics(c *gin.Context) {
 		return
 	}
 
-	response := dto.NewUpdateStatisticsResponse(updatedUser.ID, updatedUser.Statistics)
+	response := dto.NewStatisticsResponse(updatedUser.ID, updatedUser.Statistics)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -301,7 +330,7 @@ func (uc *UserController) Login(c *gin.Context) {
 //
 //	@Summary		Get friends for a user
 //	@Description	Get list of friends for a user (accepted requests)
-//	@Tags			default
+//	@Security		Bearer
 //	@Param			id	path		string	true	"User ID"
 //	@Success		200	{array}		entity.User
 //	@Failure		400	{object}	map[string]string
@@ -332,7 +361,7 @@ func (uc *UserController) GetFriends(c *gin.Context) {
 //
 //	@Summary		Get mutual friends between two users
 //	@Description	Get list of mutual friends between userA and userB
-//	@Tags			default
+//	@Security		Bearer
 //	@Param			id		path		string	true	"User A ID"
 //	@Param			otherId	path		string	true	"User B ID"
 //	@Success		200		{array}		entity.User

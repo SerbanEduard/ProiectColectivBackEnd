@@ -8,14 +8,14 @@ type UpdateStatisticsRequest struct {
 	TimeSpentOnTeam int64  `json:"timeSpentOnTeam" example:"900000" description:"Time spent on team in milliseconds"`
 }
 
-type UpdateStatisticsResponse struct {
+type StatisticsResponse struct {
 	UserId              string                  `json:"userId"`
 	TotalTimeSpentOnApp int64                   `json:"totalTimeSpentOnApp" example:"7200000" description:"Total time spent on app in milliseconds"`
 	TimeSpentOnTeams    []model.TimeSpentOnTeam `json:"timeSpentOnTeams"`
 }
 
-func NewUpdateStatisticsResponse(userId string, statistics *model.Statistics) *UpdateStatisticsResponse {
-	return &UpdateStatisticsResponse{
+func NewStatisticsResponse(userId string, statistics *model.Statistics) *StatisticsResponse {
+	return &StatisticsResponse{
 		UserId:              userId,
 		TotalTimeSpentOnApp: statistics.TotalTimeSpentOnApp,
 		TimeSpentOnTeams:    statistics.TimeSpentOnTeams,

@@ -50,12 +50,62 @@ Server runs on `http://localhost:8080`
 - `GET/teams/by-name?name=` - Get team(s) by name
 - `PUT/teams/:id` - Update team
 - `DELETE/teams/:id`  - Delete team
+
+- `POST /quizzes` - Create a quiz (protected - requires Bearer token)
+  + JSON example:
+  {
+    "quiz_name": "Sample Quiz",
+    "user_id": "123",
+    "team_id": "team123",
+    "questions": [
+      {"type": "multiple_choice", "question": "What is 2+2?", "options": ["1", "2", "4"], "answers": ["4"]}
+    ]
+  }
+- `GET /quizzes/:id` - Get a quiz with answers (protected - requires Bearer token)
+- `GET /quizzes/:id/test` - Get a quiz without answers for taking the test (protected - requires Bearer token)
+- `POST /quizzes/:id/test` - Submit quiz answers and get results (protected - requires Bearer token)
+  + JSON example:
+  {
+    "quiz_id": "quiz123",
+    "attempts": [
+      {"quiz_question_id": "q1", "answer": ["4"]}
+    ]
+  }
+- `GET /quizzes/user/:userId` - Get quizzes created by a specific user with pagination (protected - requires Bearer token)
+  + Query parameters: `pageSize` (optional, default 10, max 100), `lastKey` (optional, for pagination)
+- `GET /quizzes/team/:teamId` - Get quizzes for a specific team with pagination (protected - requires Bearer token)
+  + Query parameters: `pageSize` (optional, default 10, max 100), `lastKey` (optional, for pagination)
+
+## WebSockets
+
+### Real-time messaging
+
+`GET /messages/connect?token=<JWT>`: Connect to real-time messaging
+
+The WebSocket then sends messages of type:
+
+```
+{
+  type: "direct_message" | "team_message",
+  payload: {
+	id: string
+    senderId: string,
+	sentAt: string,            // the date as a string
+    receiverId: string | null,
+	teamId: string | null,
+    textContent: string
+  }
+}
+```
+
+**Important**: The sender DOES NOT receive the message he sent back via WebSocket.
+
 ## Swagger Support
 
 Swagger UI runs on `http://localhost:8080/swagger/index.html`
 
 ### How to use
 
-- Annotate the controller functions with comments as seen in the documentation [here](https://github.com/swaggo/swag/blob/master/README.md#declarative-comments-format)
-- Optionally run `swag fmt -g main.go` in the project root to format the annotation comments
-- Generate the Swagger files using `swag init -g main.go` in the project root. The generated file are located in `docs/`
+- Annotate the controller functions with comments as seen in the documentation [here](https://github.com/swaggo/swag/blob/master/README.md#declarative-comments-format).
+- Run `swag fmt -g main.go` in the project root to format the annotation comments.
+- Generate the Swagger files using `swag init -g main.go` in the project root. The generated files are located in `docs/`.

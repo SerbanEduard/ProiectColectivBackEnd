@@ -1,7 +1,5 @@
 package dto
 
-import "github.com/SerbanEduard/ProiectColectivBackEnd/model"
-
 type CreateQuizResponse struct {
 	QuizID string `json:"quiz_id"`
 }
@@ -18,7 +16,6 @@ type SolveQuestionResponse struct {
 }
 
 type SolveQuizRequest struct {
-	QuizID   string                 `json:"quiz_id"`
 	Attempts []SolveQuestionRequest `json:"attempts"`
 }
 
@@ -40,7 +37,6 @@ type ReadQuizQuestionResponse struct {
 type ReadQuizResponse struct {
 	QuizID        string                     `json:"quiz_id"`
 	QuizTitle     string                     `json:"quiz_title"`
-	QuizType      model.QuizType             `json:"quiz_type"`
 	QuizQuestions []ReadQuizQuestionResponse `json:"quiz_questions"`
 }
 
