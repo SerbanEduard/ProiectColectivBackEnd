@@ -23,9 +23,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Middleware to verify JWT token from Authorization header or query parameter",
-                "tags": [
-                    "auth"
-                ],
                 "summary": "JWT Authentication Middleware",
                 "parameters": [
                     {
@@ -68,9 +65,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Middleware to ensure the authenticated user matches the resource owner",
-                "tags": [
-                    "auth"
-                ],
                 "summary": "Owner Authorization Middleware",
                 "parameters": [
                     {
@@ -108,9 +102,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Accept or deny a friend request",
-                "tags": [
-                    "friend-requests"
-                ],
                 "summary": "Respond to a friend request",
                 "parameters": [
                     {
@@ -177,9 +168,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Send a friend request from one user to another",
-                "tags": [
-                    "friend-requests"
-                ],
                 "summary": "Send a friend request",
                 "parameters": [
                     {
@@ -230,9 +218,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Get pending friend requests for a user",
-                "tags": [
-                    "friend-requests"
-                ],
                 "summary": "Get pending friend requests",
                 "parameters": [
                     {
@@ -275,9 +260,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "messages"
                 ],
                 "summary": "Get all messages",
                 "parameters": [
@@ -346,9 +328,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "messages"
-                ],
                 "summary": "Create and send a message",
                 "parameters": [
                     {
@@ -399,9 +378,6 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "tags": [
-                    "messages"
-                ],
                 "summary": "Connect the user to the message WebSocket",
                 "responses": {
                     "101": {
@@ -449,9 +425,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "messages"
-                ],
                 "summary": "Get a message by ID",
                 "parameters": [
                     {
@@ -498,9 +471,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "quizzes"
                 ],
                 "summary": "Create a new quiz",
                 "parameters": [
@@ -563,9 +533,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "quizzes"
                 ],
                 "summary": "Get quizzes by team with pagination",
                 "parameters": [
@@ -649,9 +616,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "quizzes"
-                ],
                 "summary": "Get quizzes by user with pagination",
                 "parameters": [
                     {
@@ -732,9 +696,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "quizzes"
-                ],
                 "summary": "Get a quiz with answers",
                 "parameters": [
                     {
@@ -786,9 +747,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "quizzes"
-                ],
                 "summary": "Get a quiz without answers",
                 "parameters": [
                     {
@@ -837,9 +795,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "quizzes"
                 ],
                 "summary": "Solve a quiz",
                 "parameters": [
@@ -908,9 +863,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "teams"
-                ],
                 "summary": "Get teams with optional filtering",
                 "parameters": [
                     {
@@ -971,9 +923,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "teams"
-                ],
                 "summary": "Create a new team",
                 "parameters": [
                     {
@@ -1024,9 +973,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "teams"
-                ],
                 "summary": "Add a user to a team",
                 "parameters": [
                     {
@@ -1065,9 +1011,6 @@ const docTemplate = `{
                 "description": "Delete a user from a team by providing team ID",
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "teams"
                 ],
                 "summary": "Delete a user from a team",
                 "parameters": [
@@ -1110,9 +1053,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "teams"
-                ],
                 "summary": "Get a team by ID",
                 "parameters": [
                     {
@@ -1151,9 +1091,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "teams"
                 ],
                 "summary": "Update a team",
                 "parameters": [
@@ -1207,9 +1144,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "teams"
-                ],
                 "summary": "Delete a team",
                 "parameters": [
                     {
@@ -1258,9 +1192,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "users"
-                ],
                 "summary": "Get all users",
                 "responses": {
                     "200": {
@@ -1292,9 +1223,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "users"
                 ],
                 "summary": "Login user by email or username and return JWT",
                 "parameters": [
@@ -1352,9 +1280,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "users"
                 ],
                 "summary": "Register a new user",
                 "parameters": [
@@ -1418,9 +1343,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "users"
-                ],
                 "summary": "Get a user by ID",
                 "parameters": [
                     {
@@ -1460,9 +1382,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "users"
                 ],
                 "summary": "Delete a user",
                 "parameters": [
@@ -1515,9 +1434,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "users"
                 ],
                 "summary": "Update user profile (selective fields)",
                 "parameters": [
@@ -1583,9 +1499,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Get list of friends for a user (accepted requests)",
-                "tags": [
-                    "users"
-                ],
                 "summary": "Get friends for a user",
                 "parameters": [
                     {
@@ -1635,9 +1548,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Get list of mutual friends between userA and userB",
-                "tags": [
-                    "users"
-                ],
                 "summary": "Get mutual friends between two users",
                 "parameters": [
                     {
@@ -1699,9 +1609,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "users"
-                ],
                 "summary": "Update user password",
                 "parameters": [
                     {
@@ -1762,9 +1669,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "users"
-                ],
                 "summary": "Get a user's statistics",
                 "parameters": [
                     {
@@ -1822,9 +1726,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "users"
                 ],
                 "summary": "Update user statistics",
                 "parameters": [
@@ -1890,9 +1791,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Establishes a WebSocket connection for voice communication in a room",
-                "tags": [
-                    "voice"
-                ],
                 "summary": "Join a voice room via WebSocket",
                 "parameters": [
                     {
@@ -1961,9 +1859,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "voice"
-                ],
                 "summary": "Get joinable voice rooms",
                 "parameters": [
                     {
@@ -2009,9 +1904,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "voice"
                 ],
                 "summary": "Start a private voice call",
                 "parameters": [
@@ -2069,9 +1961,6 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "voice"
-                ],
                 "summary": "Get active voice rooms for a team",
                 "parameters": [
                     {
@@ -2106,9 +1995,6 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
-                ],
-                "tags": [
-                    "voice"
                 ],
                 "summary": "Create a group voice room",
                 "parameters": [

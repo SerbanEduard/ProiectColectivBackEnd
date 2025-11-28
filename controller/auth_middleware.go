@@ -12,7 +12,6 @@ import (
 //
 //	@Summary		JWT Authentication Middleware
 //	@Description	Middleware to verify JWT token from Authorization header or query parameter
-//	@Tags			auth
 //	@Security		Bearer
 //	@Param			Authorization	header		string				false	"Bearer token"
 //	@Param			token			query		string				false	"Token for WebSocket connections"
@@ -60,7 +59,6 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 //
 //	@Summary		Owner Authorization Middleware
 //	@Description	Middleware to ensure the authenticated user matches the resource owner
-//	@Tags			auth
 //	@Security		Bearer
 //	@Param			id	path		string				true	"Resource ID that must match authenticated user ID"
 //	@Success		200	{string}	string				"User is authorized"

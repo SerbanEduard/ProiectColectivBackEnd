@@ -53,7 +53,6 @@ func NewVoiceController() *VoiceController {
 //
 //	@Summary		Start a private voice call
 //	@Description	Creates a private voice room for two users with restricted access
-//	@Tags			voice
 //	@Accept			json
 //	@Produce		json
 //	@Security		Bearer
@@ -101,7 +100,6 @@ func (vc *VoiceController) StartPrivateCall(c *gin.Context) {
 //
 //	@Summary		Get joinable voice rooms
 //	@Description	Returns all group and private rooms that the user is authorized to join and are not full
-//	@Tags			voice
 //	@Accept			json
 //	@Produce		json
 //	@Security		Bearer
@@ -162,7 +160,6 @@ func (vc *VoiceController) GetJoinableRooms(c *gin.Context) {
 //
 //	@Summary		Create a group voice room
 //	@Description	Creates a new voice room for team members
-//	@Tags			voice
 //	@Accept			json
 //	@Produce		json
 //	@Security		Bearer
@@ -210,7 +207,6 @@ func (vc *VoiceController) CreateVoiceRoom(c *gin.Context) {
 //
 //	@Summary		Get active voice rooms for a team
 //	@Description	Returns all group voice rooms belonging to a specific team
-//	@Tags			voice
 //	@Accept			json
 //	@Produce		json
 //	@Security		Bearer
@@ -249,7 +245,6 @@ func (vc *VoiceController) GetActiveRooms(c *gin.Context) {
 //
 //	@Summary		Join a voice room via WebSocket
 //	@Description	Establishes a WebSocket connection for voice communication in a room
-//	@Tags			voice
 //	@Security		Bearer
 //	@Param			roomId	path		string	true	"Room ID to join"
 //	@Param			userId	query		string	true	"User ID joining the room"
