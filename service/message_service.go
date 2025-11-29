@@ -44,7 +44,8 @@ func (ms *MessageService) CreateDirectMessage(request *dto.DirectMessageRequest)
 		return nil, err
 	}
 
-	if _, err := ms.userRepo.GetByID(request.SenderID); err != nil {
+	sender, err := ms.userRepo.GetByID(request.SenderID)
+	if err != nil {
 		return nil, fmt.Errorf("sender not found")
 	}
 
@@ -68,7 +69,8 @@ func (ms *MessageService) CreateDirectMessage(request *dto.DirectMessageRequest)
 		return nil, err
 	}
 
-	dtoMessage := dto.NewMessageDTO(message.ID, message.SenderID, request.ReceiverID, "", message.TextContent, message.SentAt)
+	senderDTO := dto.NewSenderDTO(sender)
+	dtoMessage := dto.NewMessageDTO(message.ID, request.ReceiverID, "", message.TextContent, message.SentAt, *senderDTO)
 	return dtoMessage, nil
 }
 
@@ -77,7 +79,8 @@ func (ms *MessageService) CreateTeamMessage(request *dto.TeamMessageRequest) (*d
 		return nil, err
 	}
 
-	if _, err := ms.userRepo.GetByID(request.SenderID); err != nil {
+	sender, err := ms.userRepo.GetByID(request.SenderID)
+	if err != nil {
 		return nil, fmt.Errorf("sender not found")
 	}
 
@@ -101,7 +104,8 @@ func (ms *MessageService) CreateTeamMessage(request *dto.TeamMessageRequest) (*d
 		return nil, err
 	}
 
-	dtoMessage := dto.NewMessageDTO(message.ID, message.SenderID, "", request.TeamId, message.TextContent, message.SentAt)
+	senderDTO := dto.NewSenderDTO(sender)
+	dtoMessage := dto.NewMessageDTO(message.ID, "", request.TeamId, message.TextContent, message.SentAt, *senderDTO)
 	return dtoMessage, nil
 }
 
@@ -111,7 +115,14 @@ func (ms *MessageService) GetMessageByID(id string) (*dto.MessageDTO, error) {
 	if message.ConversationKey != "" && key_err != nil {
 		return nil, err
 	}
-	dtoMessage := dto.NewMessageDTO(message.ID, message.SenderID, receiverId, message.TeamID, message.TextContent, message.SentAt)
+
+	sender, err := ms.userRepo.GetByID(message.SenderID)
+	if err != nil {
+		return nil, fmt.Errorf("sender not found")
+	}
+
+	senderDTO := dto.NewSenderDTO(sender)
+	dtoMessage := dto.NewMessageDTO(message.ID, receiverId, message.TeamID, message.TextContent, message.SentAt, *senderDTO)
 	return dtoMessage, err
 }
 
@@ -130,7 +141,14 @@ func (ms *MessageService) GetDirectMessages(user1Id, user2Id string) ([]*dto.Mes
 		if message.ConversationKey != "" && key_err != nil {
 			return nil, err
 		}
-		dtoMessage := dto.NewMessageDTO(message.ID, message.SenderID, receiverId, message.TeamID, message.TextContent, message.SentAt)
+
+		sender, err := ms.userRepo.GetByID(message.SenderID)
+		if err != nil {
+			return nil, fmt.Errorf("sender not found")
+		}
+
+		senderDTO := dto.NewSenderDTO(sender)
+		dtoMessage := dto.NewMessageDTO(message.ID, receiverId, message.TeamID, message.TextContent, message.SentAt, *senderDTO)
 		dtoMessages = append(dtoMessages, dtoMessage)
 	}
 	return dtoMessages, err
@@ -144,7 +162,14 @@ func (ms *MessageService) GetTeamMessages(teamId string) ([]*dto.MessageDTO, err
 	messages, err := ms.messageRepo.GetByTeamID(teamId)
 	dtoMessages := []*dto.MessageDTO{}
 	for _, message := range messages {
-		dtoMessage := dto.NewMessageDTO(message.ID, message.SenderID, "", message.TeamID, message.TextContent, message.SentAt)
+
+		sender, err := ms.userRepo.GetByID(message.SenderID)
+		if err != nil {
+			return nil, fmt.Errorf("sender not found")
+		}
+
+		senderDTO := dto.NewSenderDTO(sender)
+		dtoMessage := dto.NewMessageDTO(message.ID, "", message.TeamID, message.TextContent, message.SentAt, *senderDTO)
 		dtoMessages = append(dtoMessages, dtoMessage)
 	}
 	return dtoMessages, err

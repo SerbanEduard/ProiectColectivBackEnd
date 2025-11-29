@@ -162,3 +162,29 @@ type UserPasswordRequestDTO struct {
 	OldPassword string `json:"oldPassword"`
 	NewPassword string `json:"newPassword"`
 }
+
+type SenderDTO struct {
+	ID               string                   `json:"id"`
+	FirstName        string                   `json:"firstname,omitempty"`
+	LastName         string                   `json:"lastname,omitempty"`
+	Username         string                   `json:"username,omitempty"`
+	Email            string                   `json:"email,omitempty"`
+	TopicsOfInterest *[]model.TopicOfInterest `json:"topicsOfInterest,omitempty"`
+}
+
+func NewSenderDTO(u *entity.User) *SenderDTO {
+	resp := &SenderDTO{
+		ID:        u.ID,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+		Username:  u.Username,
+		Email:     u.Email,
+	}
+	if u.TopicsOfInterest != nil {
+		resp.TopicsOfInterest = u.TopicsOfInterest
+	} else {
+		empty := []model.TopicOfInterest{}
+		resp.TopicsOfInterest = &empty
+	}
+	return resp
+}

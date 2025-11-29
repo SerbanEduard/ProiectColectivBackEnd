@@ -31,18 +31,18 @@ func NewTeamMessageRequest(senderId, teamId, textContent string) *TeamMessageReq
 }
 
 type MessageDTO struct {
-	ID          string `json:"id"`
-	SenderID    string `json:"senderId"`
-	SentAt      string `json:"sentAt"`
-	ReceiverID  string `json:"receiverId,omitempty"`
-	TeamID      string `json:"teamId,omitempty"`
-	TextContent string `json:"textContent"`
+	ID          string    `json:"id"`
+	Sender      SenderDTO `json:"sender"`
+	SentAt      string    `json:"sentAt"`
+	ReceiverID  string    `json:"receiverId,omitempty"`
+	TeamID      string    `json:"teamId,omitempty"`
+	TextContent string    `json:"textContent"`
 }
 
-func NewMessageDTO(id, senderId, receiverId, teamId, textContent string, sentAt time.Time) *MessageDTO {
+func NewMessageDTO(id, receiverId, teamId, textContent string, sentAt time.Time, sender SenderDTO) *MessageDTO {
 	return &MessageDTO{
 		ID:          id,
-		SenderID:    senderId,
+		Sender:      sender,
 		SentAt:      sentAt.Format(time.RFC3339),
 		ReceiverID:  receiverId,
 		TeamID:      teamId,
