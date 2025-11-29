@@ -1,6 +1,9 @@
 package dto
 
-import "github.com/SerbanEduard/ProiectColectivBackEnd/model"
+import (
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
+)
 
 type TeamRequest struct {
 	Name        string                `json:"name"`
@@ -47,5 +50,17 @@ func NewUserToTeamRequest(userId, teamId string) *UserToTeamRequest {
 	return &UserToTeamRequest{
 		UserID: userId,
 		TeamID: teamId,
+	}
+}
+
+type AddUserToTeamResponse struct {
+	User entity.User `json:"user"`
+	Team entity.Team `json:"team"`
+}
+
+func NewAddUserToTeamResponse(user entity.User, team entity.Team) *AddUserToTeamResponse {
+	return &AddUserToTeamResponse{
+		User: user,
+		Team: team,
 	}
 }

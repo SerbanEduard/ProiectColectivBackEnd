@@ -65,18 +65,18 @@ func (ts *TeamService) CreateTeam(request *dto.TeamRequest) (*entity.Team, error
 	return &team, nil
 }
 
-func (ts *TeamService) AddUserToTeam(idUser string, idTeam string) error {
+func (ts *TeamService) AddUserToTeam(idUser string, idTeam string) (*entity.User, *entity.Team, error) {
 	user, err := ts.userRepository.GetByID(idUser)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	team, err := ts.teamRepository.GetTeamById(idTeam)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	for _, u := range team.UsersIds {
 		if idUser == u {
-			return errors.New("user is already part of the team")
+			return nil, nil, errors.New("user is already part of the team")
 		}
 	}
 	team.UsersIds = append(team.UsersIds, idUser)
@@ -86,22 +86,22 @@ func (ts *TeamService) AddUserToTeam(idUser string, idTeam string) error {
 	*user.TeamsIds = append(*user.TeamsIds, idTeam)
 
 	if err := ts.userRepository.Update(user); err != nil {
-		return err
+		return nil, nil, err
 	}
 	if err := ts.teamRepository.Update(team); err != nil {
-		return err
+		return nil, nil, err
 	}
-	return nil
+	return user, team, nil
 }
 
-func (ts *TeamService) DeleteUserFromTeam(idUser string, idTeam string) error {
+func (ts *TeamService) DeleteUserFromTeam(idUser string, idTeam string) (*entity.User, *entity.Team, error) {
 	user, err := ts.userRepository.GetByID(idUser)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	team, err := ts.teamRepository.GetTeamById(idTeam)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	var ok bool = false
 	for _, u := range team.UsersIds {
@@ -111,7 +111,7 @@ func (ts *TeamService) DeleteUserFromTeam(idUser string, idTeam string) error {
 		}
 	}
 	if !ok {
-		return errors.New("the user is not a part of this team")
+		return nil, nil, errors.New("the user is not a part of this team")
 	}
 	usersIds := removeString(team.UsersIds, user.ID)
 	teamsIds := removeString(*user.TeamsIds, team.Id)
@@ -120,12 +120,12 @@ func (ts *TeamService) DeleteUserFromTeam(idUser string, idTeam string) error {
 	user.TeamsIds = &teamsIds
 
 	if err := ts.userRepository.Update(user); err != nil {
-		return err
+		return nil, nil, err
 	}
 	if err := ts.teamRepository.Update(team); err != nil {
-		return err
+		return nil, nil, err
 	}
-	return nil
+	return user, team, nil
 }
 
 func (ts *TeamService) GetTeamById(id string) (*entity.Team, error) {

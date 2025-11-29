@@ -25,6 +25,13 @@ definitions:
         example: 2
         type: integer
     type: object
+  dto.AddUserToTeamResponse:
+    properties:
+      team:
+        $ref: '#/definitions/entity.Team'
+      user:
+        $ref: '#/definitions/entity.User'
+    type: object
   dto.CreateQuizResponse:
     properties:
       quiz_id:
@@ -1164,7 +1171,9 @@ paths:
       summary: Update a team
   /teams/users:
     delete:
-      description: Delete a user from a team by providing team ID
+      consumes:
+      - application/json
+      description: Deletes a user from a team by providing team ID
       parameters:
       - description: User ID and Team ID
         in: body
@@ -1176,14 +1185,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: User deleted from team
+          description: User removed from team
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.AddUserToTeamResponse'
         "400":
-          description: 'Bad Request: Invalid request body or missing userId or teamId'
+          description: Invalid request body or error
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
       security:
       - Bearer: []
@@ -1191,7 +1200,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Add a user to a team by providing user ID and team ID
+      description: Adds a user to a team by providing user ID and team ID
       parameters:
       - description: User ID and Team ID
         in: body
@@ -1203,14 +1212,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: User added to team
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.AddUserToTeamResponse'
         "400":
-          description: 'Bad Request: Invalid request body or missing userId or teamId'
+          description: Invalid request body or error
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
       security:
       - Bearer: []

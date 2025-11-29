@@ -966,7 +966,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Add a user to a team by providing user ID and team ID",
+                "description": "Adds a user to a team by providing user ID and team ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -987,17 +987,18 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "User added to team",
+                        "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/dto.AddUserToTeamResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Invalid request body or missing userId or teamId",
+                        "description": "Invalid request body or error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -1008,7 +1009,10 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Delete a user from a team by providing team ID",
+                "description": "Deletes a user from a team by providing team ID",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1026,17 +1030,18 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "User deleted from team",
+                        "description": "User removed from team",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/dto.AddUserToTeamResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Invalid request body or missing userId or teamId",
+                        "description": "Invalid request body or error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -2075,6 +2080,17 @@ const docTemplate = `{
                 "userCount": {
                     "type": "integer",
                     "example": 2
+                }
+            }
+        },
+        "dto.AddUserToTeamResponse": {
+            "type": "object",
+            "properties": {
+                "team": {
+                    "$ref": "#/definitions/entity.Team"
+                },
+                "user": {
+                    "$ref": "#/definitions/entity.User"
                 }
             }
         },
