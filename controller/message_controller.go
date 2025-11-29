@@ -2,7 +2,6 @@ package controller
 
 import (
 	"net/http"
-	"slices"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/hub"
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/dto"
@@ -102,7 +101,9 @@ func (mc *MessageController) NewMessage(c *gin.Context) {
 
 		c.JSON(http.StatusCreated, resp)
 
-		mc.hub.Send(request.ReceiverID, *hub.NewMessage(hub.DirectMessage, resp))
+		msg := hub.NewMessage(hub.DirectMessage, resp)
+		mc.hub.Send(request.ReceiverID, *msg)
+		mc.hub.Send(request.SenderID, *msg)
 
 	case "team":
 		var request dto.TeamMessageRequest
@@ -121,10 +122,7 @@ func (mc *MessageController) NewMessage(c *gin.Context) {
 
 		// Send to team members via WebSocket
 		team, _ := mc.teamService.GetTeamById(request.TeamId)
-		userIDs := slices.DeleteFunc(team.UsersIds, func(uid string) bool {
-			return uid == request.SenderID // Don't send to sender
-		})
-		mc.hub.SendMany(userIDs, *hub.NewMessage(hub.TeamBroadcast, resp))
+		mc.hub.SendMany(team.UsersIds, *hub.NewMessage(hub.TeamBroadcast, resp))
 
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": BadMessageTypeError})
