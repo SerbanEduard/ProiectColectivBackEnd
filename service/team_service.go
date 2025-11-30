@@ -50,19 +50,19 @@ func (ts *TeamService) CreateTeam(request *dto.TeamRequest) (*entity.Team, error
 	if err != nil {
 		return nil, err
 	}
-	usersIds := []string{request.UserId}
 	team := *entity.NewTeam(
 		id,
 		request.Name,
 		request.Description,
 		request.IsPublic,
-		usersIds,
+		nil,
 		request.TeamTopic,
 	)
 	if err := ts.teamRepository.Create(&team); err != nil {
 		return nil, err
 	}
-	return &team, nil
+	ts.AddUserToTeam(request.UserId, id)
+	return ts.teamRepository.GetTeamById(id)
 }
 
 func (ts *TeamService) AddUserToTeam(idUser string, idTeam string) (*entity.User, *entity.Team, error) {
