@@ -25,6 +25,21 @@ definitions:
         example: 2
         type: integer
     type: object
+  dto.CreateEventRequest:
+    properties:
+      description:
+        type: string
+      duration:
+        type: integer
+      initiatorId:
+        type: string
+      name:
+        type: string
+      startsAt:
+        type: string
+      teamId:
+        type: string
+    type: object
   dto.CreateQuizResponse:
     properties:
       quiz_id:
@@ -37,6 +52,29 @@ definitions:
       senderId:
         type: string
       textContent:
+        type: string
+    type: object
+  dto.EventDTO:
+    properties:
+      acceptedCount:
+        type: integer
+      declinedCount:
+        type: integer
+      description:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: string
+      initiatorId:
+        type: string
+      name:
+        type: string
+      pendingCount:
+        type: integer
+      startsAt:
+        type: string
+      teamId:
         type: string
     type: object
   dto.FriendRequestListResponse:
@@ -230,6 +268,24 @@ definitions:
       teamtopic:
         $ref: '#/definitions/model.TopicOfInterest'
       userid:
+        type: string
+    type: object
+  dto.UpdateEventRequest:
+    properties:
+      description:
+        type: string
+      duration:
+        type: integer
+      name:
+        type: string
+      startsAt:
+        type: string
+    type: object
+  dto.UpdateEventStatusRequest:
+    properties:
+      status:
+        type: string
+      userId:
         type: string
     type: object
   dto.UpdateStatisticsRequest:
@@ -517,6 +573,195 @@ paths:
       security:
       - Bearer: []
       summary: Owner Authorization Middleware
+  /events:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Team ID
+        in: query
+        name: teamId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.EventDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get events by team id
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create event request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.EventDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Create new event
+  /events/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Event deleted successfully"}]
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete event by id
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.EventDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get event by id
+    patch:
+      consumes:
+      - application/json
+      description: Update event name, description, start time and/or duration
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update event request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.EventDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Update event details
+  /events/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update event status request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateEventStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.EventDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Update user status for event
   /friend-requests/{fromUserId}/{toUserId}:
     post:
       description: Send a friend request from one user to another
