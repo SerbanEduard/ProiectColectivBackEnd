@@ -239,6 +239,32 @@ definitions:
       userid:
         type: string
     type: object
+  dto.TeamRequestCreateDTO:
+    properties:
+      teamId:
+        type: string
+      userId:
+        type: string
+    required:
+    - teamId
+    - userId
+    type: object
+  dto.TeamRequestItemDTO:
+    properties:
+      id:
+        type: string
+      teamId:
+        type: string
+      userId:
+        type: string
+    type: object
+  dto.TeamRequestsResponseDTO:
+    properties:
+      requests:
+        items:
+          $ref: '#/definitions/dto.TeamRequestItemDTO'
+        type: array
+    type: object
   dto.UpdateStatisticsRequest:
     properties:
       teamId:
@@ -1011,6 +1037,148 @@ paths:
       security:
       - Bearer: []
       summary: Get quizzes by user with pagination
+  /teamRequests:
+    get:
+      description: Fetches all pending team requests in the system.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TeamRequestsResponseDTO'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get all team requests
+    post:
+      consumes:
+      - application/json
+      description: Creates a join request for a user to join a team.
+      parameters:
+      - description: Team and User IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TeamRequestCreateDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.TeamRequestItemDTO'
+        "400":
+          description: Invalid request or validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create a new team request
+  /teamRequests/{id}/accept:
+    put:
+      description: Accepts a pending team request, adds the user to the team, and
+        deletes the request.
+      parameters:
+      - description: Team Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AddUserToTeamResponse'
+        "400":
+          description: Bad Request or Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Accept a team request
+  /teamRequests/{id}/reject:
+    delete:
+      description: Rejects and deletes a pending team request.
+      parameters:
+      - description: Team Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team request rejected
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request or Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Reject a team request
+  /teamRequests/user/{userId}:
+    get:
+      description: Fetches all pending team requests created by a given user.
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TeamRequestsResponseDTO'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get all team requests for a specific user
   /teams:
     get:
       description: Get teams - all teams, by name, or by prefix with limit

@@ -49,6 +49,7 @@ func SetupRoutes() *gin.Engine {
 	SetupFriendRequestRoutes(r)
 	VoiceRoutes(r)
 	SetupQuizRoutes(r)
+	SetupTeamRequestRoutes(r)
 
 	return r
 }
