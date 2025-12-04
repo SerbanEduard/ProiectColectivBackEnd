@@ -3,17 +3,20 @@ package controller
 import (
 	"crypto/rand"
 	"encoding/hex"
+
+	"log"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/SerbanEduard/ProiectColectivBackEnd/model/entity"
+	"github.com/SerbanEduard/ProiectColectivBackEnd/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
 const (
-	MaxRoomCapacity = 2
+	MaxRoomCapacity = 10
 	DefaultRoomName = "Voice Call"
 	RoomTypeGroup   = "group"
 	RoomTypePrivate = "private"
@@ -23,7 +26,7 @@ const (
 	MsgTypeError      = "error"
 	MsgTypeRoomInfo   = "room-info"
 	MsgTypeUserLeft   = "user-left"
-	ErrorRoomFull     = "Room is full (max 2 users)"
+	ErrorRoomFull     = "Room is full (max users)"
 	ErrorRoomExists   = "Voice room already exists for this team"
 	ErrorRoomNotFound = "Voice room not found"
 	ErrorUnauthorized = "You are not invited to this call"
@@ -39,13 +42,20 @@ type RoomResponse struct {
 }
 
 type VoiceController struct {
-	mu    sync.RWMutex
-	rooms map[string]*entity.VoiceRoom
+	userService  UserServiceInterface
+	mu           sync.RWMutex
+	rooms        map[string]*entity.VoiceRoom
+	pendingDel   map[string]bool // tracks rooms scheduled for deletion
+	cleanupDelay time.Duration   // deletion grace period
 }
 
+// NewVoiceController constructs the controller
 func NewVoiceController() *VoiceController {
 	return &VoiceController{
-		rooms: make(map[string]*entity.VoiceRoom),
+		userService:  service.NewUserService(),
+		rooms:        make(map[string]*entity.VoiceRoom),
+		pendingDel:   make(map[string]bool),
+		cleanupDelay: 5 * time.Second,
 	}
 }
 
@@ -91,6 +101,10 @@ func (vc *VoiceController) StartPrivateCall(c *gin.Context) {
 
 	vc.mu.Lock()
 	vc.rooms[roomId] = newRoom
+
+	if vc.pendingDel[roomId] {
+		delete(vc.pendingDel, roomId)
+	}
 	vc.mu.Unlock()
 
 	c.JSON(http.StatusCreated, newRoom)
@@ -198,6 +212,10 @@ func (vc *VoiceController) CreateVoiceRoom(c *gin.Context) {
 
 	vc.mu.Lock()
 	vc.rooms[teamId] = newRoom
+
+	if vc.pendingDel[teamId] {
+		delete(vc.pendingDel, teamId)
+	}
 	vc.mu.Unlock()
 
 	c.JSON(http.StatusCreated, newRoom)
@@ -283,6 +301,13 @@ func (vc *VoiceController) JoinVoiceRoom(c *gin.Context) {
 		vc.sendErrorAndClose(conn, ErrorRoomFull)
 		return
 	}
+
+	vc.mu.Lock()
+	if vc.pendingDel[roomId] {
+		delete(vc.pendingDel, roomId)
+	}
+	vc.mu.Unlock()
+
 	room.Mutex.Lock()
 	room.Clients[conn] = userId
 	room.Mutex.Unlock()
@@ -310,29 +335,73 @@ func (vc *VoiceController) canJoinRoom(room *entity.VoiceRoom) bool {
 	return len(room.Clients) < MaxRoomCapacity
 }
 
-func (vc *VoiceController) sendErrorAndClose(conn *websocket.Conn, errorMsg string) {
-	vc.sendError(conn, errorMsg)
-	conn.Close()
-}
-
 func (vc *VoiceController) sendError(conn *websocket.Conn, errorMsg string) {
-	conn.WriteJSON(map[string]interface{}{
+	conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	_ = conn.WriteJSON(map[string]interface{}{
 		"type":  MsgTypeError,
 		"error": errorMsg,
 	})
+	conn.SetWriteDeadline(time.Time{})
 }
 
+// sendErrorAndClose sends an error message and closes the websocket connection.
+func (vc *VoiceController) sendErrorAndClose(conn *websocket.Conn, errorMsg string) {
+	vc.sendError(conn, errorMsg)
+	_ = conn.Close()
+}
+
+// safeWriteToConn sends JSON on conn, sets deadline and logs the error.
+func (vc *VoiceController) safeWriteToConn(conn *websocket.Conn, uid string, msg interface{}) error {
+	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	err := conn.WriteJSON(msg)
+	conn.SetWriteDeadline(time.Time{})
+	if err != nil {
+		log.Printf("websocket write to user %s failed: %v", uid, err)
+	}
+	return err
+}
+
+// getUsername tries to resolve a username for a given userId.
+func (vc *VoiceController) getUsername(userId string) string {
+	user, err := vc.userService.GetUserByID(userId)
+	if err != nil {
+		return ""
+	}
+	return user.Username
+}
+
+// sendRoomInfo writes the room-info message to a connection.
 func (vc *VoiceController) sendRoomInfo(conn *websocket.Conn, room *entity.VoiceRoom, canJoin bool) {
 	room.Mutex.RLock()
 	userCount := len(room.Clients)
+	var usersList []map[string]string
+	for _, uid := range room.Clients {
+		uname := vc.getUsername(uid)
+		usersList = append(usersList, map[string]string{
+			"userId":   uid,
+			"username": uname,
+		})
+	}
 	room.Mutex.RUnlock()
 
 	response := map[string]interface{}{
 		"type":      MsgTypeRoomInfo,
 		"userCount": userCount,
+		"users":     usersList,
 		"canJoin":   canJoin,
 	}
-	conn.WriteJSON(response)
+
+	room.Mutex.RLock()
+	uid, ok := room.Clients[conn]
+	room.Mutex.RUnlock()
+	if !ok {
+		return
+	}
+
+	if err := vc.safeWriteToConn(conn, uid, response); err != nil {
+		vc.handleUserDisconnect(room, conn, uid, room.Id)
+		_ = conn.Close()
+	}
 }
 
 func (vc *VoiceController) handleRoomInfoRequest(msg map[string]interface{}, conn *websocket.Conn, room *entity.VoiceRoom) bool {
@@ -345,7 +414,6 @@ func (vc *VoiceController) handleRoomInfoRequest(msg map[string]interface{}, con
 
 func (vc *VoiceController) routeToOtherUser(room *entity.VoiceRoom, sender *websocket.Conn, msg map[string]interface{}) {
 	room.Mutex.RLock()
-	defer room.Mutex.RUnlock()
 	senderId, _ := room.Clients[sender]
 	forwardMsg := make(map[string]interface{})
 	for k, v := range msg {
@@ -353,13 +421,48 @@ func (vc *VoiceController) routeToOtherUser(room *entity.VoiceRoom, sender *webs
 	}
 	forwardMsg["from"] = senderId
 
-	for conn := range room.Clients {
-		if conn != sender {
-			conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-			conn.WriteJSON(forwardMsg)
-			conn.SetWriteDeadline(time.Time{})
-			break
+	var failed []struct {
+		conn *websocket.Conn
+		uid  string
+	}
+
+	if toRaw, ok := msg["to"]; ok {
+		if toId, ok2 := toRaw.(string); ok2 {
+			for conn, uid := range room.Clients {
+				if uid == toId {
+					if err := vc.safeWriteToConn(conn, uid, forwardMsg); err != nil {
+						failed = append(failed, struct {
+							conn *websocket.Conn
+							uid  string
+						}{conn, uid})
+					}
+					break
+				}
+			}
+			room.Mutex.RUnlock()
+			for _, f := range failed {
+				vc.handleUserDisconnect(room, f.conn, f.uid, room.Id)
+				_ = f.conn.Close()
+			}
+			return
 		}
+	}
+
+	for conn, uid := range room.Clients {
+		if conn != sender {
+			if err := vc.safeWriteToConn(conn, uid, forwardMsg); err != nil {
+				failed = append(failed, struct {
+					conn *websocket.Conn
+					uid  string
+				}{conn, uid})
+			}
+		}
+	}
+	room.Mutex.RUnlock()
+
+	for _, f := range failed {
+		vc.handleUserDisconnect(room, f.conn, f.uid, room.Id)
+		_ = f.conn.Close()
 	}
 }
 
@@ -369,9 +472,31 @@ func (vc *VoiceController) handleUserDisconnect(room *entity.VoiceRoom, conn *we
 	room.Mutex.Unlock()
 
 	vc.notifyUserLeft(room, userId)
-	if len(room.Clients) == 0 {
+
+	room.Mutex.RLock()
+	remaining := len(room.Clients)
+	room.Mutex.RUnlock()
+
+	if remaining == 0 {
 		vc.mu.Lock()
-		delete(vc.rooms, roomId)
+		if !vc.pendingDel[roomId] {
+			vc.pendingDel[roomId] = true
+			delay := vc.cleanupDelay
+			go func(rid string, d time.Duration) {
+				time.Sleep(d)
+				vc.mu.Lock()
+				defer vc.mu.Unlock()
+				if r, ok := vc.rooms[rid]; ok {
+					r.Mutex.RLock()
+					cnt := len(r.Clients)
+					r.Mutex.RUnlock()
+					if cnt == 0 {
+						delete(vc.rooms, rid)
+					}
+				}
+				delete(vc.pendingDel, rid)
+			}(roomId, delay)
+		}
 		vc.mu.Unlock()
 	}
 }
@@ -386,12 +511,23 @@ func (vc *VoiceController) notifyUserLeft(room *entity.VoiceRoom, userId string)
 
 func (vc *VoiceController) broadcastToAll(room *entity.VoiceRoom, msg map[string]interface{}) {
 	room.Mutex.RLock()
-	defer room.Mutex.RUnlock()
+	var failed []struct {
+		conn *websocket.Conn
+		uid  string
+	}
+	for client, uid := range room.Clients {
+		if err := vc.safeWriteToConn(client, uid, msg); err != nil {
+			failed = append(failed, struct {
+				conn *websocket.Conn
+				uid  string
+			}{client, uid})
+		}
+	}
+	room.Mutex.RUnlock()
 
-	for client := range room.Clients {
-		client.SetWriteDeadline(time.Now().Add(10 * time.Second))
-		client.WriteJSON(msg)
-		client.SetWriteDeadline(time.Time{})
+	for _, f := range failed {
+		vc.handleUserDisconnect(room, f.conn, f.uid, room.Id)
+		_ = f.conn.Close()
 	}
 }
 
