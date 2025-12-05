@@ -355,6 +355,14 @@ func (m *MockFileRepository) Delete(id string) error {
 	return args.Error(0)
 }
 
+func (m *MockFileRepository) GetByContextID(contextType, contextID string) ([]*entity.File, error) {
+	args := m.Called(contextType, contextID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entity.File), args.Error(1)
+}
+
 // MockQuizService is used by controller tests to mock service layer behavior.
 type MockQuizService struct {
 	mock.Mock

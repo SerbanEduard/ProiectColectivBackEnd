@@ -19,6 +19,7 @@ type FileRepositoryInterface interface {
 	Create(file *entity.File) error
 	GetByID(id string) (*entity.File, error)
 	GetAll() ([]*entity.File, error)
+	GetByContextID(contextType, contextID string) ([]*entity.File, error)
 	Update(file *entity.File) error
 	Delete(id string) error
 }
@@ -59,6 +60,30 @@ func (fr *FileRepository) GetAll() ([]*entity.File, error) {
 	files := make([]*entity.File, 0, len(filesMap))
 	for _, f := range filesMap {
 		files = append(files, f)
+	}
+	return files, nil
+}
+
+func (fr *FileRepository) GetByContextID(contextType, contextID string) ([]*entity.File, error) {
+	ctx := context.Background()
+	ref := config.FirebaseDB.NewRef(filesCollection)
+
+	// Query by contextType first, then filter by contextID
+	query := ref.OrderByChild("contextType").EqualTo(contextType)
+	results, err := query.GetOrdered(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	files := make([]*entity.File, 0)
+	for _, r := range results {
+		var file entity.File
+		if err := r.Unmarshal(&file); err != nil {
+			return nil, err
+		}
+		if file.ContextID == contextID {
+			files = append(files, &file)
+		}
 	}
 	return files, nil
 }

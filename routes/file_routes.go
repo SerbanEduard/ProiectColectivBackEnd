@@ -8,13 +8,13 @@ import (
 func FileRoutes(router *gin.Engine) {
 	fileController := controller.NewFileController()
 
-	router.GET("/files", fileController.GetAllFiles)
-	router.GET("/files/:id", fileController.GetFile)
-
-	files := router.Group("/files")
-	files.Use(controller.JWTAuthMiddleware())
+	// All file endpoints are under /teams/:id/files (requires JWT)
+	teams := router.Group("/teams")
+	teams.Use(controller.JWTAuthMiddleware())
 	{
-		files.POST("", fileController.UploadFile)
-		files.DELETE(":id", fileController.DeleteFile)
+		teams.GET("/:id/files", fileController.GetFilesByTeam)
+		teams.POST("/:id/files", fileController.UploadFile)
+		teams.GET("/:id/files/:fileId", fileController.GetFile)
+		teams.DELETE("/:id/files/:fileId", fileController.DeleteFile)
 	}
 }
