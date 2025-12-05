@@ -17,13 +17,17 @@ Download from [golang.org/dl](https://golang.org/dl/)
   go mod tidy
 ```
 
-2. Create `.env` file with Firebase configuration:
+2. Configure environment variables:
+  - Copy `.env.example` to `.env` and fill values
 ```
 FIREBASE_DATABASE_URL=https://your-project-id-default-rtdb.region.firebasedatabase.app/
 FIREBASE_CREDENTIALS_PATH=secret/your-firebase-adminsdk-key.json
+JWT_SECRET=replace_this_with_a_secure_secret
+# optional
+# GIN_MODE=debug
 ```
 
-3. Add your Firebase service account key to `secret/` directory
+3. Place your Firebase Admin SDK key JSON under `secret/` (gitignored)
 
 ## Run Server
 
