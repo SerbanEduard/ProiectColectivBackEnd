@@ -23,13 +23,17 @@ const (
 )
 
 const (
-	MsgTypeError      = "error"
-	MsgTypeRoomInfo   = "room-info"
-	MsgTypeUserLeft   = "user-left"
-	ErrorRoomFull     = "Room is full (max users)"
-	ErrorRoomExists   = "Voice room already exists for this team"
-	ErrorRoomNotFound = "Voice room not found"
-	ErrorUnauthorized = "You are not invited to this call"
+	MsgTypeError         = "error"
+	MsgTypeRoomInfo      = "room-info"
+	MsgTypeUserLeft      = "user-left"
+	MsgTypeScreenState   = "screen-state"
+	MsgTypeScreenStart   = "screenshare-start"
+	MsgTypeScreenStop    = "screenshare-stop"
+	ErrorRoomFull        = "Room is full (max users)"
+	ErrorRoomExists      = "Voice room already exists for this team"
+	ErrorRoomNotFound    = "Voice room not found"
+	ErrorUnauthorized    = "You are not invited to this call"
+	ErrorPresenterActive = "A presenter is already active"
 )
 
 var upgrader = websocket.Upgrader{
@@ -195,6 +199,7 @@ func (vc *VoiceController) CreateVoiceRoom(c *gin.Context) {
 	vc.mu.RLock()
 	if _, exists := vc.rooms[teamId]; exists {
 		vc.mu.RUnlock()
+		log.Printf("[voice] CreateVoiceRoom: room already exists for teamId=%s", teamId)
 		c.JSON(http.StatusConflict, gin.H{"error": ErrorRoomExists})
 		return
 	}
@@ -218,6 +223,7 @@ func (vc *VoiceController) CreateVoiceRoom(c *gin.Context) {
 	}
 	vc.mu.Unlock()
 
+	log.Printf("[voice] CreateVoiceRoom: created roomId=%s name=%q by userId=%s", teamId, roomName, userId)
 	c.JSON(http.StatusCreated, newRoom)
 }
 
@@ -275,6 +281,7 @@ func (vc *VoiceController) JoinVoiceRoom(c *gin.Context) {
 	roomId := c.Param("roomId")
 	userId := c.Query("userId")
 
+	log.Printf("[voice] JoinVoiceRoom: request roomId=%s userId=%s", roomId, userId)
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return
@@ -283,9 +290,27 @@ func (vc *VoiceController) JoinVoiceRoom(c *gin.Context) {
 
 	vc.mu.RLock()
 	room, exists := vc.rooms[roomId]
+	// Fallback: if not found by key, search by TeamId match (group rooms)
+	if !exists {
+		for _, r := range vc.rooms {
+			if r != nil && r.TeamId == roomId && r.Type == RoomTypeGroup {
+				room = r
+				exists = true
+				break
+			}
+		}
+	}
 	vc.mu.RUnlock()
 
 	if !exists {
+		// Log existing room IDs to help diagnose mismatched ids
+		vc.mu.RLock()
+		keys := make([]string, 0, len(vc.rooms))
+		for k := range vc.rooms {
+			keys = append(keys, k)
+		}
+		vc.mu.RUnlock()
+		log.Printf("[voice] JoinVoiceRoom: room not found for id=%s; existing=%v", roomId, keys)
 		vc.sendErrorAndClose(conn, ErrorRoomNotFound)
 		return
 	}
@@ -312,7 +337,21 @@ func (vc *VoiceController) JoinVoiceRoom(c *gin.Context) {
 	room.Clients[conn] = userId
 	room.Mutex.Unlock()
 
-	defer vc.handleUserDisconnect(room, conn, userId, roomId)
+	log.Printf("[voice] JoinVoiceRoom: joined roomId=%s userId=%s currentUsers=%d", room.Id, userId, func() int { room.Mutex.RLock(); defer room.Mutex.RUnlock(); return len(room.Clients) }())
+
+	defer vc.handleUserDisconnect(room, conn, userId, room.Id)
+
+	// Emit a hello message to confirm delivery path
+	_ = vc.safeWriteToConn(conn, userId, map[string]interface{}{
+		"type":    "hello",
+		"message": "welcome",
+	})
+	// Also broadcast hello to others
+	vc.broadcastToAll(room, map[string]interface{}{
+		"type":    "hello",
+		"from":    userId,
+		"message": "user joined",
+	})
 
 	vc.sendRoomInfo(conn, room, true)
 
@@ -372,6 +411,7 @@ func (vc *VoiceController) getUsername(userId string) string {
 
 // sendRoomInfo writes the room-info message to a connection.
 func (vc *VoiceController) sendRoomInfo(conn *websocket.Conn, room *entity.VoiceRoom, canJoin bool) {
+	log.Printf("[voice] sendRoomInfo: canJoin=%v presenterId=%s", canJoin, room.ScreenPresenter)
 	room.Mutex.RLock()
 	userCount := len(room.Clients)
 	var usersList []map[string]string
@@ -382,13 +422,15 @@ func (vc *VoiceController) sendRoomInfo(conn *websocket.Conn, room *entity.Voice
 			"username": uname,
 		})
 	}
+	presenter := room.ScreenPresenter
 	room.Mutex.RUnlock()
 
 	response := map[string]interface{}{
-		"type":      MsgTypeRoomInfo,
-		"userCount": userCount,
-		"users":     usersList,
-		"canJoin":   canJoin,
+		"type":        MsgTypeRoomInfo,
+		"userCount":   userCount,
+		"users":       usersList,
+		"canJoin":     canJoin,
+		"presenterId": presenter,
 	}
 
 	room.Mutex.RLock()
@@ -399,6 +441,7 @@ func (vc *VoiceController) sendRoomInfo(conn *websocket.Conn, room *entity.Voice
 	}
 
 	if err := vc.safeWriteToConn(conn, uid, response); err != nil {
+		log.Printf("[voice] sendRoomInfo: write failed to uid=%s err=%v", uid, err)
 		vc.handleUserDisconnect(room, conn, uid, room.Id)
 		_ = conn.Close()
 	}
@@ -413,6 +456,20 @@ func (vc *VoiceController) handleRoomInfoRequest(msg map[string]interface{}, con
 }
 
 func (vc *VoiceController) routeToOtherUser(room *entity.VoiceRoom, sender *websocket.Conn, msg map[string]interface{}) {
+	// Intercept screenshare control messages
+	if t, ok := msg["type"].(string); ok {
+		switch t {
+		case MsgTypeScreenStart:
+			log.Printf("[voice] routeToOtherUser: screenshare-start from sender")
+			vc.handleScreenStart(room, sender)
+			return
+		case MsgTypeScreenStop:
+			log.Printf("[voice] routeToOtherUser: screenshare-stop from sender")
+			vc.handleScreenStop(room, sender)
+			return
+		}
+	}
+
 	room.Mutex.RLock()
 	senderId, _ := room.Clients[sender]
 	forwardMsg := make(map[string]interface{})
@@ -430,6 +487,7 @@ func (vc *VoiceController) routeToOtherUser(room *entity.VoiceRoom, sender *webs
 		if toId, ok2 := toRaw.(string); ok2 {
 			for conn, uid := range room.Clients {
 				if uid == toId {
+					log.Printf("[voice] routeToOtherUser: targeted send to uid=%s type=%v", uid, msg["type"])
 					if err := vc.safeWriteToConn(conn, uid, forwardMsg); err != nil {
 						failed = append(failed, struct {
 							conn *websocket.Conn
@@ -450,6 +508,7 @@ func (vc *VoiceController) routeToOtherUser(room *entity.VoiceRoom, sender *webs
 
 	for conn, uid := range room.Clients {
 		if conn != sender {
+			log.Printf("[voice] routeToOtherUser: broadcast send to uid=%s type=%v", uid, msg["type"])
 			if err := vc.safeWriteToConn(conn, uid, forwardMsg); err != nil {
 				failed = append(failed, struct {
 					conn *websocket.Conn
@@ -469,9 +528,22 @@ func (vc *VoiceController) routeToOtherUser(room *entity.VoiceRoom, sender *webs
 func (vc *VoiceController) handleUserDisconnect(room *entity.VoiceRoom, conn *websocket.Conn, userId, roomId string) {
 	room.Mutex.Lock()
 	delete(room.Clients, conn)
+	// Clear presenter if the user was sharing the screen
+	if room.ScreenPresenter == userId {
+		room.ScreenPresenter = ""
+	}
 	room.Mutex.Unlock()
 
 	vc.notifyUserLeft(room, userId)
+
+	// If presenter cleared, notify peers of screen-state change
+	if userId != "" {
+		vc.broadcastToAll(room, map[string]interface{}{
+			"type":        MsgTypeScreenState,
+			"presenterId": room.ScreenPresenter,
+			"active":      room.ScreenPresenter != "",
+		})
+	}
 
 	room.Mutex.RLock()
 	remaining := len(room.Clients)
@@ -501,6 +573,47 @@ func (vc *VoiceController) handleUserDisconnect(room *entity.VoiceRoom, conn *we
 	}
 }
 
+func (vc *VoiceController) handleScreenStart(room *entity.VoiceRoom, sender *websocket.Conn) {
+	room.Mutex.Lock()
+	uid := room.Clients[sender]
+	if room.ScreenPresenter != "" && room.ScreenPresenter != uid {
+		_ = vc.safeWriteToConn(sender, uid, map[string]interface{}{
+			"type":  MsgTypeError,
+			"error": ErrorPresenterActive,
+		})
+		room.Mutex.Unlock()
+		return
+	}
+	room.ScreenPresenter = uid
+	users := len(room.Clients)
+	room.Mutex.Unlock()
+	log.Printf("[voice] handleScreenStart: presenter=%s users=%d", uid, users)
+	vc.broadcastToAll(room, map[string]interface{}{
+		"type":        MsgTypeScreenState,
+		"presenterId": uid,
+		"active":      true,
+	})
+}
+
+func (vc *VoiceController) handleScreenStop(room *entity.VoiceRoom, sender *websocket.Conn) {
+	room.Mutex.Lock()
+	uid := room.Clients[sender]
+	shouldBroadcast := false
+	if room.ScreenPresenter == uid {
+		room.ScreenPresenter = ""
+		shouldBroadcast = true
+	}
+	room.Mutex.Unlock()
+	if shouldBroadcast {
+		log.Printf("[voice] handleScreenStop: presenter cleared by %s", uid)
+		vc.broadcastToAll(room, map[string]interface{}{
+			"type":        MsgTypeScreenState,
+			"presenterId": "",
+			"active":      false,
+		})
+	}
+}
+
 func (vc *VoiceController) notifyUserLeft(room *entity.VoiceRoom, userId string) {
 	msg := map[string]interface{}{
 		"type":   MsgTypeUserLeft,
@@ -510,13 +623,16 @@ func (vc *VoiceController) notifyUserLeft(room *entity.VoiceRoom, userId string)
 }
 
 func (vc *VoiceController) broadcastToAll(room *entity.VoiceRoom, msg map[string]interface{}) {
+	log.Printf("[voice] broadcastToAll: type=%v", msg["type"])
 	room.Mutex.RLock()
 	var failed []struct {
 		conn *websocket.Conn
 		uid  string
 	}
 	for client, uid := range room.Clients {
+		log.Printf("[voice] broadcastToAll: sending to uid=%s", uid)
 		if err := vc.safeWriteToConn(client, uid, msg); err != nil {
+			log.Printf("[voice] broadcastToAll: write failed to uid=%s err=%v", uid, err)
 			failed = append(failed, struct {
 				conn *websocket.Conn
 				uid  string
@@ -526,6 +642,7 @@ func (vc *VoiceController) broadcastToAll(room *entity.VoiceRoom, msg map[string
 	room.Mutex.RUnlock()
 
 	for _, f := range failed {
+		log.Printf("[voice] broadcastToAll: disconnecting failed uid=%s", f.uid)
 		vc.handleUserDisconnect(room, f.conn, f.uid, room.Id)
 		_ = f.conn.Close()
 	}

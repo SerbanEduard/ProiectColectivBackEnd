@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Screen Share Demo (Voice Room)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 20px; background: #f7f7fb; }
+    .card { background: #fff; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    label { display: block; margin: 8px 0 4px; font-weight: 600; }
+    input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    button { margin-top: 10px; margin-right: 8px; padding: 10px 14px; border: 0; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    button.primary { background: #6c63ff; color: #fff; }
+    button.warn { background: #ff7a59; color: #fff; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    video { width: 100%; background: #111; border-radius: 8px; }
+    #log { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; background: #0e1111; color: #cfe8ff; border-radius: 8px; padding: 10px; max-height: 240px; overflow: auto; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#eee; font-size:12px; margin-left:8px; }
+  </style>
+  </head>
+  <body>
+  <div class="card">
+    <h2>Config</h2>
+    <label>Backend URL</label>
+    <input id="backendUrl" value="http://localhost:8080" />
+    <label>Team ID</label>
+    <input id="teamId" value="team-xyz" />
+    <label>User ID</label>
+    <input id="userId" value="user-a" />
+    <label>JWT (optional, for WS query param)</label>
+    <input id="jwt" placeholder="eyJhbGciOi..." />
+    <div>
+      <button class="primary" onclick="discoverAndConnect()">Discover & Connect</button>
+      <button class="warn" onclick="disconnectWS()">Disconnect</button>
+      <span id="status" class="badge">disconnected</span>
+    </div>
+    <div style="margin-top:10px;">
+      <button onclick="createRoom()">Create Room (HTTP)</button>
+      <button onclick="listRooms()">List Rooms (HTTP)</button>
+      <button onclick="requestRoomInfo()">Request room-info</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h3>Presenter</h3>
+      <button class="primary" onclick="startScreenShare()">Start Screen Share</button>
+      <button class="warn" onclick="stopScreenShare()">Stop Screen Share</button>
+      <video id="localVideo" autoplay muted playsinline></video>
+    </div>
+    <div class="card">
+      <h3>Viewer</h3>
+      <video id="remoteVideo" autoplay playsinline controls muted></video>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Logs</h3>
+    <div id="log"></div>
+  </div>
+
+<script>
+  const backendUrlEl = document.getElementById('backendUrl');
+  const teamIdEl = document.getElementById('teamId');
+  const userIdEl = document.getElementById('userId');
+  const jwtEl = document.getElementById('jwt');
+  const statusEl = document.getElementById('status');
+  const localVideo = document.getElementById('localVideo');
+  const remoteVideo = document.getElementById('remoteVideo');
+  const logEl = document.getElementById('log');
+
+  let ws = null;
+  let screenStream = null;            // For presenter
+  const pcs = new Map();              // userId -> RTCPeerConnection
+  let presenterId = '';
+
+  const iceConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+  const log = (m) => { logEl.textContent += `[${new Date().toLocaleTimeString()}] ${m}\n`; logEl.scrollTop = logEl.scrollHeight; };
+  const setStatus = (s) => { statusEl.textContent = s; };
+
+  function wsUrl(roomId) {
+    const base = backendUrlEl.value.trim().replace('http://', 'ws://').replace('https://', 'wss://');
+    const userId = encodeURIComponent(userIdEl.value.trim());
+    const jwt = jwtEl.value.trim();
+    const token = jwt ? `&token=${encodeURIComponent(jwt)}` : '';
+    return `${base}/voice/join/${roomId}?userId=${userId}${token}`;
+  }
+
+  async function createRoom() {
+    const base = backendUrlEl.value.trim().replace(/\/$/, '');
+    const teamId = encodeURIComponent(teamIdEl.value.trim());
+    const userId = encodeURIComponent(userIdEl.value.trim());
+    const jwt = jwtEl.value.trim();
+    if (!jwt) { log('CreateRoom: JWT required'); return; }
+    const name = encodeURIComponent('Group Call');
+    const url = `${base}/voice/rooms/${teamId}?userId=${userId}&name=${name}`;
+    log('CreateRoom POST ' + url);
+    try {
+      const res = await fetch(url, { method: 'POST', headers: { 'Authorization': `Bearer ${jwt}` } });
+      const txt = await res.text();
+      log('CreateRoom status ' + res.status + ' body ' + txt);
+    } catch (e) {
+      log('CreateRoom error: ' + e.message);
+    }
+  }
+
+  function requestRoomInfo() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'room-info' }));
+      log('Sent room-info request');
+    }
+  }
+
+  function ensurePC(peerUserId, asPresenter) {
+    let pc = pcs.get(peerUserId);
+    if (pc) return pc;
+    pc = new RTCPeerConnection(iceConfig);
+    pcs.set(peerUserId, pc);
+
+    // STATE
+    pc.onconnectionstatechange = () => {
+      log(`pc(${peerUserId}).connectionState=${pc.connectionState}`);
+    };
+    pc.oniceconnectionstatechange = () => {
+      log(`pc(${peerUserId}).iceConnectionState=${pc.iceConnectionState}`);
+    };
+
+    // ICE
+    pc.onicecandidate = (evt) => {
+      if (evt.candidate && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'ice-candidate', to: peerUserId, candidate: evt.candidate }));
+        log(`sent ice-candidate to ${peerUserId}`);
+      }
+    };
+
+    // Tracks (viewer side receives remote video)
+    pc.ontrack = (evt) => {
+      log(`ontrack from ${peerUserId}`);
+      const [stream] = evt.streams;
+      if (stream) {
+        remoteVideo.srcObject = stream;
+        try { remoteVideo.play(); } catch {}
+      }
+    };
+
+    // If we are presenter and we already have screen tracks, attach them
+    if (asPresenter && screenStream) {
+      screenStream.getTracks().forEach(t => pc.addTrack(t, screenStream));
+    }
+
+    return pc;
+  }
+
+  async function connectWS(roomId) {
+    if (ws && ws.readyState === WebSocket.OPEN) return;
+    const url = wsUrl(encodeURIComponent(roomId));
+    log('Connecting to: ' + url);
+    ws = new WebSocket(url);
+    ws.onopen = () => {
+      log('WS connected'); setStatus('connected');
+      // Ask server to send room-info immediately so viewer learns presenterId
+      try { ws.send(JSON.stringify({ type: 'room-info' })); log('Sent room-info request (onopen)'); } catch {}
+    };
+    ws.onclose = () => { log('WS closed'); setStatus('disconnected'); cleanupAll(); };
+    ws.onerror = (e) => { log('WS error'); console.error(e); };
+    ws.onmessage = (ev) => {
+      log('WS message: ' + ev.data);
+      try {
+        const obj = JSON.parse(ev.data);
+        handleSignal(obj);
+      } catch (e) {
+        log('parse error: ' + e.message);
+      }
+    };
+  }
+
+  function disconnectWS() { if (ws) ws.close(); }
+
+  async function listRooms() {
+    const base = backendUrlEl.value.trim().replace(/\/$/, '');
+    const teamId = encodeURIComponent(teamIdEl.value.trim());
+    const jwt = jwtEl.value.trim();
+    if (!jwt) { log('ListRooms: JWT required'); return; }
+    const url = `${base}/voice/rooms/${teamId}`;
+    log('ListRooms GET ' + url);
+    try {
+      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${jwt}` } });
+      const txt = await res.text();
+      log('ListRooms status ' + res.status + ' body ' + txt);
+    } catch (e) {
+      log('ListRooms error: ' + e.message);
+    }
+  }
+
+  async function discoverAndConnect() {
+    const base = backendUrlEl.value.trim().replace(/\/$/, '');
+    const teamId = teamIdEl.value.trim();
+    const jwt = jwtEl.value.trim();
+    const userId = userIdEl.value.trim();
+    if (!teamId || !jwt || !userId) {
+      log('Discover: teamId, userId, JWT required');
+      return;
+    }
+    const url = `${base}/voice/rooms/${encodeURIComponent(teamId)}`;
+    log('Discover GET ' + url);
+    try {
+      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${jwt}` } });
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const roomId = data[0].id || data[0].Id || teamId; // fallback
+        log('Found roomId=' + roomId + ' (joining)');
+        await connectWS(roomId);
+      } else {
+        log('No rooms found for team. Create first.');
+      }
+    } catch (e) {
+      log('Discover error: ' + e.message);
+    }
+  }
+
+  async function startScreenShare() {
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      localVideo.srcObject = screenStream;
+      // Notify server to broadcast screen-state; server will enforce single presenter
+      ws?.send(JSON.stringify({ type: 'screenshare-start' }));
+      log('Requested screenshare-start');
+      // Attach to existing PCs if any viewer already connected
+      for (const [peerUserId, pc] of pcs) {
+        screenStream.getTracks().forEach(t => pc.addTrack(t, screenStream));
+      }
+    } catch (e) {
+      log('getDisplayMedia error: ' + e.message);
+    }
+  }
+
+  function stopScreenShare() {
+    if (screenStream) {
+      screenStream.getTracks().forEach(t => t.stop());
+      screenStream = null;
+      localVideo.srcObject = null;
+    }
+    ws?.send(JSON.stringify({ type: 'screenshare-stop' }));
+    log('Requested screenshare-stop');
+    // Close all PCs if we were presenter
+    for (const [peerUserId, pc] of pcs) { pc.close(); }
+    pcs.clear();
+  }
+
+  async function handleSignal(msg) {
+    const me = userIdEl.value;
+    switch (msg.type) {
+      case 'hello': {
+        log(`hello: ${msg.message} from=${msg.from ?? 'server'}`);
+        break;
+      }
+      case 'error':
+        log('Server error: ' + msg.error);
+        break;
+      case 'screen-state': {
+        presenterId = msg.presenterId || '';
+        log(`screen-state -> active=${!!msg.active}, presenterId=${presenterId}`);
+        if (presenterId && presenterId !== me) {
+          // subscribe to presenter
+          ws?.send(JSON.stringify({ type: 'screenshare-subscribe', to: presenterId }));
+          log('Sent screenshare-subscribe to presenter');
+        } else if (!presenterId) {
+          // presenter stopped
+          remoteVideo.srcObject = null;
+          for (const [peerUserId, pc] of pcs) { pc.close(); }
+          pcs.clear();
+        }
+        break;
+      }
+      case 'room-info': {
+        // Presenter may already be active when we join
+        if (msg.presenterId) {
+          presenterId = msg.presenterId;
+          if (presenterId !== me) {
+            ws?.send(JSON.stringify({ type: 'screenshare-subscribe', to: presenterId }));
+            log('Sent screenshare-subscribe (room-info)');
+          }
+        }
+        break;
+      }
+      case 'screenshare-subscribe': {
+        // We are presenter; a viewer asks to subscribe
+        if (!screenStream) return; // not presenting
+        const viewerId = msg.from;
+        const pc = ensurePC(viewerId, true);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        ws?.send(JSON.stringify({ type: 'offer', to: viewerId, sdp: pc.localDescription }));
+        log('Presenter -> sent offer to ' + viewerId);
+        break;
+      }
+      case 'offer': {
+        // We are viewer receiving offer from presenter
+        const from = msg.from;
+        const pc = ensurePC(from, false);
+        await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        ws?.send(JSON.stringify({ type: 'answer', to: from, sdp: pc.localDescription }));
+        log('Viewer -> sent answer to ' + from);
+        break;
+      }
+      case 'answer': {
+        // We are presenter receiving answer from a viewer
+        const from = msg.from;
+        const pc = pcs.get(from);
+        if (pc) {
+          await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+          log('Presenter <- applied answer from ' + from);
+        }
+        break;
+      }
+      case 'ice-candidate': {
+        const from = msg.from;
+        const pc = pcs.get(from);
+        if (pc && msg.candidate) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
+            log(`addIceCandidate from ${from} OK`);
+          } catch (e) { log('addIceCandidate error: ' + e.message); }
+        }
+        break;
+      }
+      case 'user-left': {
+        const uid = msg.userId;
+        const pc = pcs.get(uid);
+        if (pc) { pc.close(); pcs.delete(uid); }
+        break;
+      }
+    }
+  }
+
+  function cleanupAll() {
+    if (screenStream) { screenStream.getTracks().forEach(t => t.stop()); screenStream = null; }
+    localVideo.srcObject = null; remoteVideo.srcObject = null;
+    for (const [, pc] of pcs) pc.close();
+    pcs.clear();
+  }
+</script>
+</body>
+</html>

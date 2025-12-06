@@ -17,4 +17,7 @@ type VoiceRoom struct {
 	AllowedUsers map[string]bool            `json:"-"`
 	Clients      map[*websocket.Conn]string `json:"-"`
 	Mutex        sync.RWMutex               `json:"-"`
+
+	// Current screenshare presenter userId (empty if none)
+	ScreenPresenter string `json:"-"`
 }
