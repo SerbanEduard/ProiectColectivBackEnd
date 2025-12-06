@@ -46,6 +46,72 @@ definitions:
       textContent:
         type: string
     type: object
+  dto.FileListResponse:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/dto.FileUploadResponse'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      totalCount:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  dto.FileUploadRequest:
+    properties:
+      content:
+        type: string
+      contextId:
+        description: Set automatically from URL (teamId or chatId)
+        type: string
+      contextType:
+        description: Set automatically from URL ("team" or "chat")
+        type: string
+      extension:
+        type: string
+      name:
+        type: string
+      ownerId:
+        type: string
+      size:
+        type: integer
+      type:
+        type: string
+    required:
+    - content
+    - extension
+    - name
+    - ownerId
+    - size
+    - type
+    type: object
+  dto.FileUploadResponse:
+    properties:
+      contextId:
+        type: string
+      contextType:
+        type: string
+      createdAt:
+        type: integer
+      extension:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      ownerId:
+        type: string
+      size:
+        type: integer
+      type:
+        type: string
+      updatedAt:
+        type: integer
+    type: object
   dto.FriendRequestListResponse:
     properties:
       requests:
@@ -330,6 +396,33 @@ definitions:
         type: array
       username:
         type: string
+    type: object
+  entity.File:
+    properties:
+      content:
+        type: string
+      contextId:
+        description: teamId or chatId
+        type: string
+      contextType:
+        description: '"team" or "chat"'
+        type: string
+      createdAt:
+        type: integer
+      extension:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      ownerId:
+        type: string
+      size:
+        type: integer
+      type:
+        type: string
+      updatedAt:
+        type: integer
     type: object
   entity.Question:
     properties:
@@ -1169,6 +1262,168 @@ paths:
       security:
       - Bearer: []
       summary: Update a team
+  /teams/{id}/files:
+    get:
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 10, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FileListResponse'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get all files for a team (metadata only, paginated)
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: File upload request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.FileUploadRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.FileUploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Upload a file to a team (base64 content)
+  /teams/{id}/files/{fileId}:
+    delete:
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete a file
+    get:
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: File ID
+        in: path
+        name: fileId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.File'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get file by id (with content)
   /teams/users:
     delete:
       consumes:
